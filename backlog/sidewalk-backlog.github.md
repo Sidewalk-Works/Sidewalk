@@ -1,0 +1,260 @@
+# Sidewalk Next Backlog Slice
+
+This file continues the local backlog after #1066 and prepares the next 125 issues for GitHub.
+
+Configured start number: 1067
+
+## sprint-6 - Notifications and civic engagement
+
+Build the user notification, subscription, and engagement layer that keeps citizens informed without overwhelming them.
+
+- #1067 Design the notification preference center for report updates and moderation events
+  - labels: `sprint-6`, `frontend-web`
+- #1068 Design an in-app notification inbox for status changes and civic activity
+  - labels: `sprint-6`, `frontend-web`
+- #1069 Design subscription rules for following reports, categories, and locations
+  - labels: `sprint-6`, `frontend-web`
+- #1070 Design delivery channel controls for email, push, and on-site alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1071 Design quiet hours and digest behavior for low-noise community updates
+  - labels: `sprint-6`, `frontend-web`
+- #1072 Design unread count and badge behavior across web and mobile surfaces
+  - labels: `sprint-6`, `frontend-web`
+- #1073 Design notification grouping for repeated updates on the same case
+  - labels: `sprint-6`, `frontend-web`
+- #1074 Design per-topic subscription management for neighborhoods and issue categories
+  - labels: `sprint-6`, `frontend-web`
+- #1075 Design watch lists for civic cases that need continued follow-up
+  - labels: `sprint-6`, `frontend-web`
+- #1076 Design public activity signals that help users see new progress quickly
+  - labels: `sprint-6`, `frontend-web`
+- #1077 Design notification filters for urgency, category, and proximity
+  - labels: `sprint-6`, `frontend-web`
+- #1078 Design email summary templates for daily and weekly update digests
+  - labels: `sprint-6`, `frontend-web`
+- #1079 Design mobile push registration and opt-out handling for alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1080 Design in-app toast and banner patterns for real-time status changes
+  - labels: `sprint-6`, `frontend-web`
+- #1081 Design community mention notifications for comments and moderator replies
+  - labels: `sprint-6`, `frontend-web`
+- #1082 Design case follow rules tied to report ownership and participation
+  - labels: `sprint-6`, `frontend-web`
+- #1083 Design opt-in reminders for stale reports that need user attention
+  - labels: `sprint-6`, `frontend-web`
+- #1084 Design notification history views for auditing what was sent and when
+  - labels: `sprint-6`, `frontend-web`
+- #1085 Design trigger rules for major lifecycle changes in a report thread
+  - labels: `sprint-6`, `frontend-web`
+- #1086 Design subscription cleanup behavior when reports are closed or merged
+  - labels: `sprint-6`, `frontend-web`
+- #1087 Design respectful notification defaults for new users and anonymous visitors
+  - labels: `sprint-6`, `frontend-web`
+- #1088 Design notification settings persistence across sessions and devices
+  - labels: `sprint-6`, `frontend-web`
+- #1089 Design alert preview copy that explains why each message was sent
+  - labels: `sprint-6`, `frontend-web`
+- #1090 Design event delivery fallbacks when one notification channel fails
+  - labels: `sprint-6`, `frontend-web`
+- #1091 Design engagement prompts that invite users back without spamming them
+  - labels: `sprint-6`, `frontend-web`
+- #1092 Add the notification preference center for report updates and moderation events
+  - labels: `sprint-6`, `frontend-web`
+- #1093 Add an in-app notification inbox for status changes and civic activity
+  - labels: `sprint-6`, `frontend-web`
+- #1094 Add subscription rules for following reports, categories, and locations
+  - labels: `sprint-6`, `frontend-web`
+- #1095 Add delivery channel controls for email, push, and on-site alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1096 Add quiet hours and digest behavior for low-noise community updates
+  - labels: `sprint-6`, `frontend-web`
+- #1097 Add unread count and badge behavior across web and mobile surfaces
+  - labels: `sprint-6`, `frontend-web`
+- #1098 Add notification grouping for repeated updates on the same case
+  - labels: `sprint-6`, `frontend-web`
+- #1099 Add per-topic subscription management for neighborhoods and issue categories
+  - labels: `sprint-6`, `frontend-web`
+- #1100 Add watch lists for civic cases that need continued follow-up
+  - labels: `sprint-6`, `frontend-web`
+- #1101 Add public activity signals that help users see new progress quickly
+  - labels: `sprint-6`, `frontend-web`
+- #1102 Add notification filters for urgency, category, and proximity
+  - labels: `sprint-6`, `frontend-web`
+- #1103 Add email summary templates for daily and weekly update digests
+  - labels: `sprint-6`, `frontend-web`
+- #1104 Add mobile push registration and opt-out handling for alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1105 Add in-app toast and banner patterns for real-time status changes
+  - labels: `sprint-6`, `frontend-web`
+- #1106 Add community mention notifications for comments and moderator replies
+  - labels: `sprint-6`, `frontend-web`
+- #1107 Add case follow rules tied to report ownership and participation
+  - labels: `sprint-6`, `frontend-web`
+- #1108 Add opt-in reminders for stale reports that need user attention
+  - labels: `sprint-6`, `frontend-web`
+- #1109 Add notification history views for auditing what was sent and when
+  - labels: `sprint-6`, `frontend-web`
+- #1110 Add trigger rules for major lifecycle changes in a report thread
+  - labels: `sprint-6`, `frontend-web`
+- #1111 Add subscription cleanup behavior when reports are closed or merged
+  - labels: `sprint-6`, `frontend-web`
+- #1112 Add respectful notification defaults for new users and anonymous visitors
+  - labels: `sprint-6`, `frontend-web`
+- #1113 Add notification settings persistence across sessions and devices
+  - labels: `sprint-6`, `frontend-web`
+- #1114 Add alert preview copy that explains why each message was sent
+  - labels: `sprint-6`, `frontend-web`
+- #1115 Add event delivery fallbacks when one notification channel fails
+  - labels: `sprint-6`, `frontend-web`
+- #1116 Add engagement prompts that invite users back without spamming them
+  - labels: `sprint-6`, `frontend-web`
+- #1117 Implement the notification preference center for report updates and moderation events
+  - labels: `sprint-6`, `frontend-web`
+- #1118 Implement an in-app notification inbox for status changes and civic activity
+  - labels: `sprint-6`, `frontend-web`
+- #1119 Implement subscription rules for following reports, categories, and locations
+  - labels: `sprint-6`, `frontend-web`
+- #1120 Implement delivery channel controls for email, push, and on-site alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1121 Implement quiet hours and digest behavior for low-noise community updates
+  - labels: `sprint-6`, `frontend-web`
+- #1122 Implement unread count and badge behavior across web and mobile surfaces
+  - labels: `sprint-6`, `frontend-web`
+- #1123 Implement notification grouping for repeated updates on the same case
+  - labels: `sprint-6`, `frontend-web`
+- #1124 Implement per-topic subscription management for neighborhoods and issue categories
+  - labels: `sprint-6`, `frontend-web`
+- #1125 Implement watch lists for civic cases that need continued follow-up
+  - labels: `sprint-6`, `frontend-web`
+- #1126 Implement public activity signals that help users see new progress quickly
+  - labels: `sprint-6`, `frontend-web`
+- #1127 Implement notification filters for urgency, category, and proximity
+  - labels: `sprint-6`, `frontend-web`
+- #1128 Implement email summary templates for daily and weekly update digests
+  - labels: `sprint-6`, `frontend-web`
+- #1129 Implement mobile push registration and opt-out handling for alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1130 Implement in-app toast and banner patterns for real-time status changes
+  - labels: `sprint-6`, `frontend-web`
+- #1131 Implement community mention notifications for comments and moderator replies
+  - labels: `sprint-6`, `frontend-web`
+- #1132 Implement case follow rules tied to report ownership and participation
+  - labels: `sprint-6`, `frontend-web`
+- #1133 Implement opt-in reminders for stale reports that need user attention
+  - labels: `sprint-6`, `frontend-web`
+- #1134 Implement notification history views for auditing what was sent and when
+  - labels: `sprint-6`, `frontend-web`
+- #1135 Implement trigger rules for major lifecycle changes in a report thread
+  - labels: `sprint-6`, `frontend-web`
+- #1136 Implement subscription cleanup behavior when reports are closed or merged
+  - labels: `sprint-6`, `frontend-web`
+- #1137 Implement respectful notification defaults for new users and anonymous visitors
+  - labels: `sprint-6`, `frontend-web`
+- #1138 Implement notification settings persistence across sessions and devices
+  - labels: `sprint-6`, `frontend-web`
+- #1139 Implement alert preview copy that explains why each message was sent
+  - labels: `sprint-6`, `frontend-web`
+- #1140 Implement event delivery fallbacks when one notification channel fails
+  - labels: `sprint-6`, `frontend-web`
+- #1141 Implement engagement prompts that invite users back without spamming them
+  - labels: `sprint-6`, `frontend-web`
+- #1142 Refine the notification preference center for report updates and moderation events
+  - labels: `sprint-6`, `frontend-web`
+- #1143 Refine an in-app notification inbox for status changes and civic activity
+  - labels: `sprint-6`, `frontend-web`
+- #1144 Refine subscription rules for following reports, categories, and locations
+  - labels: `sprint-6`, `frontend-web`
+- #1145 Refine delivery channel controls for email, push, and on-site alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1146 Refine quiet hours and digest behavior for low-noise community updates
+  - labels: `sprint-6`, `frontend-web`
+- #1147 Refine unread count and badge behavior across web and mobile surfaces
+  - labels: `sprint-6`, `frontend-web`
+- #1148 Refine notification grouping for repeated updates on the same case
+  - labels: `sprint-6`, `frontend-web`
+- #1149 Refine per-topic subscription management for neighborhoods and issue categories
+  - labels: `sprint-6`, `frontend-web`
+- #1150 Refine watch lists for civic cases that need continued follow-up
+  - labels: `sprint-6`, `frontend-web`
+- #1151 Refine public activity signals that help users see new progress quickly
+  - labels: `sprint-6`, `frontend-web`
+- #1152 Refine notification filters for urgency, category, and proximity
+  - labels: `sprint-6`, `frontend-web`
+- #1153 Refine email summary templates for daily and weekly update digests
+  - labels: `sprint-6`, `frontend-web`
+- #1154 Refine mobile push registration and opt-out handling for alerts
+  - labels: `sprint-6`, `frontend-web`
+- #1155 Refine in-app toast and banner patterns for real-time status changes
+  - labels: `sprint-6`, `frontend-web`
+- #1156 Refine community mention notifications for comments and moderator replies
+  - labels: `sprint-6`, `frontend-web`
+- #1157 Refine case follow rules tied to report ownership and participation
+  - labels: `sprint-6`, `frontend-web`
+- #1158 Refine opt-in reminders for stale reports that need user attention
+  - labels: `sprint-6`, `frontend-web`
+- #1159 Refine notification history views for auditing what was sent and when
+  - labels: `sprint-6`, `frontend-web`
+- #1160 Refine trigger rules for major lifecycle changes in a report thread
+  - labels: `sprint-6`, `frontend-web`
+- #1161 Refine subscription cleanup behavior when reports are closed or merged
+  - labels: `sprint-6`, `frontend-web`
+- #1162 Refine respectful notification defaults for new users and anonymous visitors
+  - labels: `sprint-6`, `frontend-web`
+- #1163 Refine notification settings persistence across sessions and devices
+  - labels: `sprint-6`, `frontend-web`
+- #1164 Refine alert preview copy that explains why each message was sent
+  - labels: `sprint-6`, `frontend-web`
+- #1165 Refine event delivery fallbacks when one notification channel fails
+  - labels: `sprint-6`, `frontend-web`
+- #1166 Refine engagement prompts that invite users back without spamming them
+  - labels: `sprint-6`, `frontend-web`
+- #1167 Document the notification preference center for report updates and moderation events
+  - labels: `sprint-6`, `documentation`
+- #1168 Document an in-app notification inbox for status changes and civic activity
+  - labels: `sprint-6`, `documentation`
+- #1169 Document subscription rules for following reports, categories, and locations
+  - labels: `sprint-6`, `documentation`
+- #1170 Document delivery channel controls for email, push, and on-site alerts
+  - labels: `sprint-6`, `documentation`
+- #1171 Document quiet hours and digest behavior for low-noise community updates
+  - labels: `sprint-6`, `documentation`
+- #1172 Document unread count and badge behavior across web and mobile surfaces
+  - labels: `sprint-6`, `documentation`
+- #1173 Document notification grouping for repeated updates on the same case
+  - labels: `sprint-6`, `documentation`
+- #1174 Document per-topic subscription management for neighborhoods and issue categories
+  - labels: `sprint-6`, `documentation`
+- #1175 Document watch lists for civic cases that need continued follow-up
+  - labels: `sprint-6`, `documentation`
+- #1176 Document public activity signals that help users see new progress quickly
+  - labels: `sprint-6`, `documentation`
+- #1177 Document notification filters for urgency, category, and proximity
+  - labels: `sprint-6`, `documentation`
+- #1178 Document email summary templates for daily and weekly update digests
+  - labels: `sprint-6`, `documentation`
+- #1179 Document mobile push registration and opt-out handling for alerts
+  - labels: `sprint-6`, `documentation`
+- #1180 Document in-app toast and banner patterns for real-time status changes
+  - labels: `sprint-6`, `documentation`
+- #1181 Document community mention notifications for comments and moderator replies
+  - labels: `sprint-6`, `documentation`
+- #1182 Document case follow rules tied to report ownership and participation
+  - labels: `sprint-6`, `documentation`
+- #1183 Document opt-in reminders for stale reports that need user attention
+  - labels: `sprint-6`, `documentation`
+- #1184 Document notification history views for auditing what was sent and when
+  - labels: `sprint-6`, `documentation`
+- #1185 Document trigger rules for major lifecycle changes in a report thread
+  - labels: `sprint-6`, `documentation`
+- #1186 Document subscription cleanup behavior when reports are closed or merged
+  - labels: `sprint-6`, `documentation`
+- #1187 Document respectful notification defaults for new users and anonymous visitors
+  - labels: `sprint-6`, `documentation`
+- #1188 Document notification settings persistence across sessions and devices
+  - labels: `sprint-6`, `documentation`
+- #1189 Document alert preview copy that explains why each message was sent
+  - labels: `sprint-6`, `documentation`
+- #1190 Document event delivery fallbacks when one notification channel fails
+  - labels: `sprint-6`, `documentation`
+- #1191 Document engagement prompts that invite users back without spamming them
+  - labels: `sprint-6`, `documentation`
