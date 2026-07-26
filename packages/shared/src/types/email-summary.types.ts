@@ -1,20 +1,24 @@
-export interface DigestRecipient {
+export type DigestFrequency = 'daily' | 'weekly';
+
+export interface EmailDigestConfig {
   userId: string;
-  email: string;
-  name: string;
+  frequency: DigestFrequency;
+  enabled: boolean;
+  lastSentAt?: Date;
+  timezone: string;
 }
 
-export interface DigestItem {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
+export interface DigestContent {
+  subject: string;
+  summary: string;
+  reportUpdates: DigestReportUpdate[];
+  topActivity: string[];
+  generatedAt: Date;
 }
 
-export interface EmailDigestTemplate {
-  templateId: string;
-  frequency: 'daily' | 'weekly';
-  recipient: DigestRecipient;
-  items: DigestItem[];
-  generatedAtIso: string;
+export interface DigestReportUpdate {
+  reportId: string;
+  reportTitle: string;
+  updateCount: number;
+  latestUpdate: Date;
 }
