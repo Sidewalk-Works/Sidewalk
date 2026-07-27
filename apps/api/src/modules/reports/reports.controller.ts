@@ -12,6 +12,7 @@ import { ReportModel } from './report.model';
 import { enqueueStellarAnchor } from './reports.anchor.queue';
 import { buildDeterministicSnapshot, hashSnapshot } from './reports.snapshot';
 import { StatusUpdateModel } from './status-update.model';
+import { autoFollow } from './report-follow.service';
 import {
   CreateReportDTO,
   ListReportsQueryDTO,
@@ -140,6 +141,14 @@ export const createReport = async (
       dataHash: contentHash,
     });
 
+    if (reporterId) {
+      await autoFollow({
+        reportId: report._id,
+        userId: new Types.ObjectId(reporterId),
+        reason: 'OWNER',
+      });
+    }
+
     if (mediaUrls.length > 0) {
       await MediaUploadModel.updateMany(
         { url: { $in: mediaUrls } },
@@ -222,6 +231,14 @@ export const updateReportStatus = async (
 
     report.status = status;
     await report.save();
+
+    if (actorId) {
+      await autoFollow({
+        reportId: report._id,
+        userId: actorId,
+        reason: 'STATUS_ACTOR',
+      });
+    }
 
     return res.status(200).json({
       message: 'Status updated and anchored',
@@ -467,6 +484,14 @@ export const addReportComment = async (
       body,
       visibility: req.user?.role === 'AGENCY_ADMIN' ? visibility : 'PUBLIC',
     });
+
+    if (req.user?.id) {
+      await autoFollow({
+        reportId: report._id,
+        userId: new Types.ObjectId(req.user.id),
+        reason: 'COMMENTER',
+      });
+    }
 
     return res.status(201).json({
       id: String(comment._id),

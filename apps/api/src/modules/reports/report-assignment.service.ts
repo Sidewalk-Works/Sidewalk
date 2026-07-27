@@ -3,6 +3,7 @@ import {
   ReportAssignmentModel,
   type AssignmentStatus,
 } from './report-assignment.model.js';
+import { autoFollow } from './report-follow.service.js';
 
 export async function createAssignment(params: {
   reportId: Types.ObjectId;
@@ -16,11 +17,20 @@ export async function createAssignment(params: {
     { status: 'REASSIGNED', releasedAt: new Date() },
   );
 
-  return ReportAssignmentModel.create({
+  const assignment = await ReportAssignmentModel.create({
     ...params,
     status: 'ACTIVE' as AssignmentStatus,
     assignedAt: new Date(),
   });
+
+  // Auto-follow: assignee follows the report
+  await autoFollow({
+    reportId: params.reportId,
+    userId: params.assigneeId,
+    reason: 'ASSIGNEE',
+  });
+
+  return assignment;
 }
 
 export async function getActiveAssignment(reportId: Types.ObjectId) {
