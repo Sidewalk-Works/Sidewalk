@@ -22,8 +22,8 @@ interface QuietHoursSettings {
 function getNextQuietPeriod(activeDays: string[], startTime: string, endTime: string): string {
   const now = new Date();
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const today = dayNames[now.getDay()];
-  const todayIdx = DAYS.indexOf(today as any);
+  const today = dayNames[now.getDay()] as (typeof DAYS)[number];
+  const todayIdx = DAYS.indexOf(today);
   const startHour = parseInt(startTime.split(':')[0], 10);
   const endHour = parseInt(endTime.split(':')[0], 10);
   const currentHour = now.getHours();

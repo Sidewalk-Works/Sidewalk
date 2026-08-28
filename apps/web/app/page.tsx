@@ -12,7 +12,11 @@ export default function LoginPage() {
   if (isLoading) {
     return (
       <div className="card">
-        <p>Loading...</p>
+        {/* #864: role="status" + aria-live="polite" announces the loading
+            state to screen readers; aria-busy signals the region is updating */}
+        <p role="status" aria-live="polite" aria-busy="true">
+          Loading...
+        </p>
       </div>
     );
   }
