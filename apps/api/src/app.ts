@@ -19,7 +19,12 @@ const creationRateLimit = (req: any, res: any, next: any) => {
 
 app.use(helmet());
 app.use(cors({ origin: env.ALLOWED_ORIGIN, credentials: true }));
-app.use(express.json());
+
+// #860: Explicit, conservative body-size limits to prevent large-payload DoS.
+// express.json() default is 100kb which is often undocumented; pin it explicitly.
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+
 app.use(morgan("dev"));
 
 app.get("/health", (_req, res) => {
