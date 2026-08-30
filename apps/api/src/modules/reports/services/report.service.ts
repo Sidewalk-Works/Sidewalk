@@ -40,13 +40,18 @@ export const reportService = {
     return toReport(row);
   },
 
-  async list(filters?: { status?: string; authorId?: string }): Promise<{ reports: Report[]; total: number }> {
+  async list(filters?: { status?: string; authorId?: string; limit?: number; offset?: number }): Promise<{ reports: Report[]; total: number }> {
     const where = {
       ...(filters?.status ? { status: filters.status } : {}),
       ...(filters?.authorId ? { authorId: filters.authorId } : {}),
     };
     const [rows, total] = await Promise.all([
-      prisma.report.findMany({ where, orderBy: { createdAt: "desc" } }),
+      prisma.report.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        ...(filters?.limit ? { take: filters.limit } : {}),
+        ...(filters?.offset ? { skip: filters.offset } : {}),
+      }),
       prisma.report.count({ where }),
     ]);
     return { reports: rows.map(toReport), total };
