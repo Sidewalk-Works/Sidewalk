@@ -13,7 +13,7 @@ export const reportController = {
       throw new ValidationError(parsed.error.issues[0].message);
     }
 
-    const result = await reportService.create(parsed.data, { sub: req.userId!, email: "" } as AuthTokenPayload);
+    const result = await reportService.create(parsed.data, { sub: req.userId!, email: req.userEmail ?? "" } as AuthTokenPayload);
 
     await caseFollowRulesService.autoFollowOnCreation(result.id, req.userId!);
 
@@ -21,10 +21,40 @@ export const reportController = {
   },
 
   async list(req: Request, res: Response): Promise<void> {
-    const status = req.query.status as string | undefined;
-    const authorId = req.query.authorId as string | undefined;
-    const result = await reportService.list({ status, authorId });
-    res.json({ success: true, data: result.reports, total: result.total });
+    const { status, authorId, page, pageSize } = req.query as {
+      status?: string;
+      authorId?: string;
+      page?: string;
+      pageSize?: string;
+    };
+
+    // Validate status against known enum values
+    const validStatuses = ["open", "in_progress", "resolved", "closed", "pending"] as const;
+    if (status && !validStatuses.includes(status as (typeof validStatuses)[number])) {
+      throw new ValidationError(
+        `Invalid status '${status}'. Must be one of: ${validStatuses.join(", ")}`,
+      );
+    }
+
+    // Validate authorId as UUID format
+    if (authorId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(authorId)) {
+      throw new ValidationError("Invalid authorId format. Must be a valid UUID.");
+    }
+
+    // Pagination with sane defaults
+    const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
+    const size = Math.min(100, Math.max(1, parseInt(pageSize ?? "20", 10) || 20));
+    const offset = (pageNum - 1) * size;
+
+    const result = await reportService.list({ status, authorId, limit: size, offset });
+    res.json({
+      success: true,
+      data: result.reports,
+      total: result.total,
+      page: pageNum,
+      pageSize: size,
+      totalPages: Math.ceil(result.total / size),
+    });
   },
 
   async getById(req: Request, res: Response): Promise<void> {
