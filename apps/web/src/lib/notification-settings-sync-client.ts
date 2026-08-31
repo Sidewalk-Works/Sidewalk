@@ -56,30 +56,67 @@ export function resolveConflict(
   return remoteTime >= localTime ? remote : local;
 }
 
+export interface SyncOptions {
+  maxRetries?: number;
+  baseDelayMs?: number;
+}
+
+const DEFAULT_SYNC_OPTIONS: Required<SyncOptions> = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+};
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function syncSettings(
   settings: PersistentUserSettingsInput,
   syncFn: (s: PersistentUserSettingsInput) => Promise<PersistentUserSettingsInput>,
+  options?: SyncOptions,
 ): Promise<PersistentUserSettingsInput> {
+  const opts = { ...DEFAULT_SYNC_OPTIONS, ...options };
   const previousLocal = getLocalNotificationSettings();
   setSyncState({ status: 'syncing', lastSyncedAtIso: null, error: null });
 
-  try {
-    const remoteSettings = await syncFn(settings);
-    const localSettings = getLocalNotificationSettings();
-    const resolved = localSettings ? resolveConflict(localSettings, remoteSettings) : remoteSettings;
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
+    try {
+      const remoteSettings = await syncFn(settings);
+      const localSettings = getLocalNotificationSettings();
+      const resolved = localSettings ? resolveConflict(localSettings, remoteSettings) : remoteSettings;
 
-    saveLocalNotificationSettings(resolved);
-    setSyncState({ status: 'synced', lastSyncedAtIso: new Date().toISOString(), error: null });
+      saveLocalNotificationSettings(resolved);
+      setSyncState({ status: 'synced', lastSyncedAtIso: new Date().toISOString(), error: null });
 
-    return resolved;
-  } catch (err) {
-    if (previousLocal) {
-      saveLocalNotificationSettings(previousLocal);
+      return resolved;
+    } catch (err) {
+      lastError = err;
+      if (attempt < opts.maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s, ...
+        const delay = opts.baseDelayMs * Math.pow(2, attempt);
+        await sleep(delay);
+        setSyncState({ status: 'syncing', lastSyncedAtIso: null, error: null });
+      }
     }
-    const message = err instanceof Error ? err.message : 'Sync failed';
-    setSyncState({ status: 'error', lastSyncedAtIso: null, error: message });
-    throw err;
   }
+
+  // All retries exhausted — restore previous local state and report error
+  if (previousLocal) {
+    saveLocalNotificationSettings(previousLocal);
+  }
+  const message = lastError instanceof Error ? lastError.message : 'Sync failed after retries';
+  setSyncState({ status: 'error', lastSyncedAtIso: null, error: message });
+  throw lastError;
+}
+
+export async function retrySync(
+  syncFn: (s: PersistentUserSettingsInput) => Promise<PersistentUserSettingsInput>,
+  options?: SyncOptions,
+): Promise<PersistentUserSettingsInput | null> {
+  const local = getLocalNotificationSettings();
+  if (!local) return null;
+  return syncSettings(local, syncFn, options);
 }
 
 export function getDeviceList(): DeviceEntry[] {

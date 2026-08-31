@@ -43,6 +43,8 @@ export function MentionNotificationToast({
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       style={{
         padding: '14px 18px',
         background: bgColor,

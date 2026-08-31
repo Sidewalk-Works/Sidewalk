@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import type { InAppNotificationItem } from '@qyou/shared';
 
 interface InAppNotificationInboxDrawerProps {
@@ -7,6 +7,7 @@ interface InAppNotificationInboxDrawerProps {
   onClose?: () => void;
   onMarkAsRead?: (id: string) => void;
   onMarkAllRead?: () => void;
+  triggerRef?: React.RefObject<HTMLElement>;
 }
 
 type CategoryFilter = 'all' | InAppNotificationItem['category'];
@@ -33,8 +34,11 @@ export function InAppNotificationInboxDrawer({
   onClose,
   onMarkAsRead,
   onMarkAllRead,
+  triggerRef,
 }: InAppNotificationInboxDrawerProps) {
   const [activeFilter, setActiveFilter] = useState<CategoryFilter>('all');
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const filteredItems = useMemo(
     () => (activeFilter === 'all' ? items : items.filter((i) => i.category === activeFilter)),
@@ -42,6 +46,63 @@ export function InAppNotificationInboxDrawer({
   );
 
   const unreadCount = useMemo(() => items.filter((i) => !i.isRead).length, [items]);
+
+  // Focus trap and Escape-to-dismiss
+  const handleClose = useCallback(() => {
+    onClose?.();
+    // Return focus to trigger element
+    if (previousFocusRef.current) {
+      previousFocusRef.current.focus();
+      previousFocusRef.current = null;
+    }
+  }, [onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = triggerRef?.current ?? document.activeElement as HTMLElement;
+      // Focus the close button inside the drawer after render
+      requestAnimationFrame(() => {
+        const closeBtn = drawerRef.current?.querySelector('button');
+        closeBtn?.focus();
+      });
+    }
+  }, [isOpen, triggerRef]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleClose();
+        return;
+      }
+
+      // Focus trap: Tab cycling within the drawer
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
@@ -52,7 +113,13 @@ export function InAppNotificationInboxDrawer({
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '380px', background: '#ffffff', borderLeft: '1px solid #cbd5e1', boxShadow: '-4px 0 12px rgba(0,0,0,0.08)', zIndex: 900, display: 'flex', flexDirection: 'column' }}>
+    <div
+      ref={drawerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Notifications"
+      style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '380px', background: '#ffffff', borderLeft: '1px solid #cbd5e1', boxShadow: '-4px 0 12px rgba(0,0,0,0.08)', zIndex: 900, display: 'flex', flexDirection: 'column' }}
+    >
       <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <h3 style={{ margin: 0, fontSize: '16px' }}>Notifications</h3>
@@ -71,7 +138,7 @@ export function InAppNotificationInboxDrawer({
               Mark all read
             </button>
           )}
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+          <button onClick={handleClose} aria-label="Close notifications" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
       </div>
 
