@@ -6,6 +6,11 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1).default("file:./dev.db"),
   JWT_SECRET: z.string().min(8).default("replace-me-with-a-long-random-string"),
   JWT_EXPIRES_IN: z.string().default("1h"),
+  // #823: bcrypt cost factor, validated to a safe range. Lower it in test for
+  // speed, raise it in production for security — without a code change.
+  PASSWORD_SALT_ROUNDS: z.coerce.number().int().min(10).max(14).default(10),
+  // #825: minimum level the logger emits. debug < info < warn < error.
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   // #861: ALLOWED_ORIGIN must be a valid URL. A wildcard ("*") is rejected
   // because the cors() call passes this value as the origin whitelist;
   // an accidental wildcard string would not match any request origin and

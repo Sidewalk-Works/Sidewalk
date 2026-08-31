@@ -9,8 +9,6 @@ import { userRepository } from "../../users/repositories/user.repository.js";
 import { toPublicUser } from "../../users/types/user.types.js";
 import type { LoginInput, RegisterInput } from "../validators/auth.validator.js";
 
-const PASSWORD_SALT_ROUNDS = 10;
-
 function signToken(userId: string, email: string): string {
   const options: jwt.SignOptions = { expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"] };
   return jwt.sign({ sub: userId, email }, env.JWT_SECRET, options);
@@ -23,7 +21,7 @@ export const authService = {
       throw new ConflictError("An account with this email already exists.");
     }
 
-    const passwordHash = await bcrypt.hash(input.password, PASSWORD_SALT_ROUNDS);
+    const passwordHash = await bcrypt.hash(input.password, env.PASSWORD_SALT_ROUNDS);
     const user = await userRepository.create({ email: input.email, passwordHash });
     return toPublicUser(user);
   },
