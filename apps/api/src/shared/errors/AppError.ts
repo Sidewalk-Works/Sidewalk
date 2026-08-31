@@ -27,6 +27,12 @@ export class UnauthorizedError extends AppError {
   }
 }
 
+export class TooManyRequestsError extends AppError {
+  constructor(message: string) {
+    super(429, "TOO_MANY_REQUESTS", message);
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message: string) {
     super(404, "NOT_FOUND", message);

@@ -21,7 +21,7 @@ export const authController = {
       throw new ValidationError(parsed.error.issues[0].message);
     }
 
-    const result = await authService.login(parsed.data);
+    const result = await authService.login(parsed.data, req.ip);
     res.status(200).json(result);
   }
 };

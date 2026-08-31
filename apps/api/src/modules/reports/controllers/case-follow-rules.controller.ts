@@ -11,14 +11,14 @@ export const caseFollowRulesController = {
     const report = await prisma.report.findUnique({ where: { id: caseId } });
     if (!report) throw new NotFoundError(`Report ${caseId} not found`);
 
-    const rule = await caseFollowRulesService.addRule(caseId, req.userId!, "case_created");
+    const rule = await caseFollowRulesService.addRule(caseId, req.userId, "case_created");
     res.status(200).json({ success: true, data: rule });
   },
 
   async unfollow(req: AuthenticatedRequest, res: Response): Promise<void> {
     const caseId = req.params.id as string;
 
-    const removed = await caseFollowRulesService.unfollow(caseId, req.userId!);
+    const removed = await caseFollowRulesService.unfollow(caseId, req.userId);
     if (!removed) {
       throw new NotFoundError("No active follow rule found");
     }
@@ -44,12 +44,12 @@ export const caseFollowRulesController = {
   async getFollowStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
     const caseId = req.params.id as string;
 
-    const following = await caseFollowRulesService.isFollowing(caseId, req.userId!);
+    const following = await caseFollowRulesService.isFollowing(caseId, req.userId);
     res.status(200).json({ success: true, data: { following } });
   },
 
   async getFollowedReports(req: AuthenticatedRequest, res: Response): Promise<void> {
-    const rules = await caseFollowRulesService.getRulesForUser(req.userId!);
+    const rules = await caseFollowRulesService.getRulesForUser(req.userId);
 
     const caseIds = rules.map((r) => r.caseId);
     if (caseIds.length === 0) {
