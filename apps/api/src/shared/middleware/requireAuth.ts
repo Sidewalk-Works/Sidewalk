@@ -4,8 +4,18 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { UnauthorizedError } from "../errors/AppError.js";
 
+/**
+ * A request that has passed through `requireAuth`.
+ *
+ * `userId` is REQUIRED here, not optional: the middleware populates it from a
+ * verified JWT before any controller runs, so a handler typed with
+ * `AuthenticatedRequest` never needs a `!` assertion. A route that skips
+ * `requireAuth` must use the base `Request` type instead — the compiler then
+ * refuses to read `userId`, which is exactly the guarantee the controllers
+ * previously faked with non-null assertions (#821).
+ */
 export interface AuthenticatedRequest extends Request {
-  userId?: string;
+  userId: string;
   userEmail?: string;
 }
 

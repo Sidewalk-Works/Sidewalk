@@ -13,9 +13,9 @@ export const reportController = {
       throw new ValidationError(parsed.error.issues[0].message);
     }
 
-    const result = await reportService.create(parsed.data, { sub: req.userId!, email: req.userEmail ?? "" } as AuthTokenPayload);
+    const result = await reportService.create(parsed.data, { sub: req.userId, email: req.userEmail ?? "" } as AuthTokenPayload);
 
-    await caseFollowRulesService.autoFollowOnCreation(result.id, req.userId!);
+    await caseFollowRulesService.autoFollowOnCreation(result.id, req.userId);
 
     res.status(201).json({ success: true, data: result });
   },
@@ -70,9 +70,9 @@ export const reportController = {
     }
 
     const id = req.params.id as string;
-    const report = await reportService.moderate(id, parsed.data, req.userId!);
+    const report = await reportService.moderate(id, parsed.data, req.userId);
 
-    await caseFollowRulesService.autoFollowOnStatusChange(id, req.userId!);
+    await caseFollowRulesService.autoFollowOnStatusChange(id, req.userId);
 
     res.json({ success: true, data: report });
   },
