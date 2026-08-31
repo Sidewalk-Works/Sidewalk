@@ -42,6 +42,8 @@ export function StatusChangeToast({
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       style={{
         background: style.bg,
         color: style.text,

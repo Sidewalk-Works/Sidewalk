@@ -62,7 +62,7 @@ export function StaleReportReminderBanner({
   });
 
   return (
-    <div style={containerStyle}>
+    <div role="status" aria-live="polite" style={containerStyle}>
       <div style={headerStyle}>
         <span>Stale Report Reminders ({activeReminders.length})</span>
       </div>
