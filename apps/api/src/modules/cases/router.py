@@ -1,9 +1,9 @@
 import uuid
 from fastapi import APIRouter, Depends, Response, status
 from src.core.database import DBSession, get_db
+from src.core.dependencies import CurrentUser
 from src.core.enums import CaseStatus
 from src.core.pagination import PageParams, PaginatedResponse
-from src.modules.auth.dependencies import CurrentUser
 from src.modules.cases import service as cases_service
 from src.modules.cases.schemas import CaseResponse
 

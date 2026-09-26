@@ -1,10 +1,13 @@
 import uuid
+import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.enums import ReportCategory, ReportStatus
 from src.core.exceptions import ForbiddenError, NotFoundError
 from src.modules.auth.models import User
 from src.modules.reports import repository as report_repo
 from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
+
+log = structlog.get_logger(__name__)
 
 
 async def create_report(db: AsyncSession, user_id: uuid.UUID, payload: CreateReportRequest) -> ReportResponse:
@@ -21,6 +24,7 @@ async def create_report(db: AsyncSession, user_id: uuid.UUID, payload: CreateRep
         media_urls=payload.media_urls,
     )
     await db.commit()
+    log.info("create_report", report_id=str(report.id), user_id=str(user_id))
     return ReportResponse.model_validate(report)
 
 
@@ -63,6 +67,7 @@ async def update_report(
         data["status"] = data["status"].value
     updated = await report_repo.update_report(db, report, **data)
     await db.commit()
+    log.info("update_report", report_id=str(report.id))
     return ReportResponse.model_validate(updated)
 
 
@@ -75,3 +80,4 @@ async def delete_report(db: AsyncSession, report_id: uuid.UUID, user: User) -> N
 
     await report_repo.soft_delete_report(db, report)
     await db.commit()
+    log.info("delete_report", report_id=str(report.id))

@@ -12,6 +12,7 @@ from src.core.middleware import (
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from src.core.limiter import limiter
+from src.core.logging import configure_logging
 from src.core.router import router as core_router
 from src.core.schemas import ApiError
 from src.modules.auth.router import router as auth_router
@@ -23,6 +24,7 @@ from src.modules.moderation.router import router as moderation_router
 
 
 def create_app() -> FastAPI:
+    configure_logging()
     settings = get_settings()
     app = FastAPI(
         title="Sidewalk API",

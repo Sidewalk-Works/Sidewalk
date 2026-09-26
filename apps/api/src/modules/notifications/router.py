@@ -1,8 +1,8 @@
 import uuid
 from fastapi import APIRouter, Depends
 from src.core.database import DBSession
+from src.core.dependencies import CurrentUser
 from src.core.pagination import PageParams, PaginatedResponse
-from src.modules.auth.dependencies import CurrentUser
 from src.modules.notifications import service as notifications_service
 from src.modules.notifications.schemas import NotificationResponse, ReadAllResponse
 

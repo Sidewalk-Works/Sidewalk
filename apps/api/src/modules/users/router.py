@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from src.core.database import DBSession
-from src.modules.auth.dependencies import CurrentUser
+from src.core.dependencies import CurrentUser
 from src.modules.users.schemas import UpdateProfileRequest, UserProfileResponse
 from src.modules.users import service as users_service
 
