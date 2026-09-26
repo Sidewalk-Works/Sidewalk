@@ -30,7 +30,12 @@ async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID, raise_if_not_foun
 
 
 async def update_user(db: AsyncSession, user: User, **fields: Any) -> User:
-    for forbidden in ("id", "password_hash", "created_at"):
+    # is_admin isn't reachable through today's UpdateProfileRequest (it only
+    # exposes email), but this generic **fields update is the layer meant to
+    # enforce that a caller can never grant privilege escalation through it -
+    # relying solely on the current schema not exposing the field would break
+    # silently the moment a future schema adds one that does.
+    for forbidden in ("id", "password_hash", "created_at", "is_admin"):
         if forbidden in fields:
             raise ValueError(f"Cannot update protected field: {forbidden}")
     for key, value in fields.items():
