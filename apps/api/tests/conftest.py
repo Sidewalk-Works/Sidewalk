@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 from src.core.database import get_db
 from src.core.models import Base
 from src.main import create_app
@@ -29,7 +30,17 @@ def reset_limiter():
 
 @pytest.fixture(scope="session")
 async def test_engine():
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    # sqlite+aiosqlite:///:memory: gives each new pooled connection its own
+    # separate in-memory database by default, so a connection opened later
+    # (e.g. by a fixture's own AsyncSession) would see none of the tables
+    # created here. StaticPool forces every checkout to reuse the single
+    # connection this engine opened, so they all share the same database.
+    engine = create_async_engine(
+        TEST_DATABASE_URL,
+        echo=False,
+        poolclass=StaticPool,
+        connect_args={"check_same_thread": False},
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
