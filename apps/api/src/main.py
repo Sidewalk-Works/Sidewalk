@@ -1,8 +1,14 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 import src.models  # noqa: F401
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from src.core.config import get_settings
-from src.core.error_handler import app_error_handler, validation_error_handler
+from src.core.error_handler import (
+    app_error_handler,
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_error_handler,
+)
 from src.core.exceptions import AppError
 from src.core.middleware import (
     RequestIdMiddleware,
@@ -49,7 +55,9 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestLoggingMiddleware)
 
     app.add_exception_handler(AppError, app_error_handler)
+    app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
+    app.add_exception_handler(Exception, unhandled_exception_handler)
 
     app.include_router(core_router, prefix="/api")
     app.include_router(auth_router, prefix="/api")
