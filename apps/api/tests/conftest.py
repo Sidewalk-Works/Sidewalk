@@ -18,6 +18,15 @@ def event_loop():
     loop.close()
 
 
+@pytest.fixture(autouse=True)
+def reset_limiter():
+    from src.core.limiter import limiter
+    limiter.reset()
+    yield
+    limiter.reset()
+
+
+
 @pytest.fixture(scope="session")
 async def test_engine():
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
