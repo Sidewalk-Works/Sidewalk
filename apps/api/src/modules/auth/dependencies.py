@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import structlog
 from src.core.database import DBSession
 from src.core.exceptions import InvalidTokenError
 from src.core.security import decode_access_token
@@ -27,6 +28,7 @@ async def get_current_user(
     user = await auth_repo.get_user_by_id(db, user_id)
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="User not found or inactive")
+    structlog.contextvars.bind_contextvars(user_id=str(user.id))
     return user
 
 

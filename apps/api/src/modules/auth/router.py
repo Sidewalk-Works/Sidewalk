@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request
 from src.core.config import get_settings
 from src.core.database import DBSession
+from src.core.dependencies import CurrentUser
 from src.core.limiter import limiter
-from src.modules.auth.dependencies import CurrentUser
 from src.modules.auth.schemas import AuthResponse, LoginRequest, RegisterRequest, UserOut
 from src.modules.auth import service as auth_service
 

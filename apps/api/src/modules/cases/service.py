@@ -1,4 +1,5 @@
 import uuid
+import structlog
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.enums import CaseStatus
@@ -6,6 +7,8 @@ from src.core.exceptions import NotFoundError
 from src.core.pagination import PageParams, PaginatedResponse
 from src.modules.cases.models import Case, CaseFollow
 from src.modules.cases.schemas import CaseResponse
+
+log = structlog.get_logger(__name__)
 
 
 async def get_case_by_id(db: AsyncSession, case_id: uuid.UUID) -> Case:
@@ -60,6 +63,7 @@ async def follow_case(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.UUID) 
         follow = CaseFollow(case_id=case_id, user_id=user_id)
         db.add(follow)
         await db.commit()
+    log.info("follow_case", case_id=str(case_id), user_id=str(user_id))
 
 
 async def unfollow_case(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.UUID) -> None:
@@ -67,6 +71,7 @@ async def unfollow_case(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.UUID
     stmt = delete(CaseFollow).where(CaseFollow.case_id == case_id, CaseFollow.user_id == user_id)
     await db.execute(stmt)
     await db.commit()
+    log.info("unfollow_case", case_id=str(case_id), user_id=str(user_id))
 
 
 async def is_case_followed(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.UUID) -> bool:

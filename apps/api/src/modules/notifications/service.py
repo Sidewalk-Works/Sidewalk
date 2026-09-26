@@ -1,10 +1,13 @@
 import uuid
 from typing import Any
+import structlog
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.enums import NotificationType
 from src.core.exceptions import ForbiddenError, NotFoundError
 from src.modules.notifications.models import Notification
+
+log = structlog.get_logger(__name__)
 
 
 async def create_notification(
@@ -27,6 +30,7 @@ async def create_notification(
     db.add(notification)
     await db.commit()
     await db.refresh(notification)
+    log.info("create_notification", user_id=str(user_id), notification_id=str(notification.id))
     return notification
 
 
@@ -71,6 +75,7 @@ async def mark_read(
     notification.read = True
     await db.commit()
     await db.refresh(notification)
+    log.info("mark_notification_read", notification_id=str(notification_id), user_id=str(user_id))
     return notification
 
 
@@ -82,6 +87,7 @@ async def mark_all_read(db: AsyncSession, user_id: uuid.UUID) -> int:
     )
     result = await db.execute(stmt)
     await db.commit()
+    log.info("mark_all_notifications_read", user_id=str(user_id), count=result.rowcount)
     return result.rowcount
 
 

@@ -1,8 +1,8 @@
 import uuid
 from fastapi import APIRouter, Query, Response, status
 from src.core.database import DBSession
+from src.core.dependencies import CurrentUser
 from src.core.enums import ReportCategory, ReportStatus
-from src.modules.auth.dependencies import CurrentUser
 from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
 from src.modules.reports import service as report_service
 

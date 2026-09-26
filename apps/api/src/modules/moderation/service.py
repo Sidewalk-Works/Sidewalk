@@ -1,10 +1,13 @@
 import uuid
+import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.enums import REPORT_STATUS_TRANSITIONS, NotificationType, ReportStatus
 from src.core.exceptions import InvalidTransitionError, NotFoundError
 from src.modules.notifications.service import create_notification
 from src.modules.reports.models import Report
+
+log = structlog.get_logger(__name__)
 
 
 async def get_report_by_id(db: AsyncSession, report_id: uuid.UUID) -> Report:
@@ -22,6 +25,7 @@ async def flag_report(db: AsyncSession, report_id: uuid.UUID, reason: str) -> Re
     report.flag_reason = reason
     await db.commit()
     await db.refresh(report)
+    log.info("flag_report", report_id=str(report_id))
     return report
 
 
@@ -50,4 +54,5 @@ async def update_report_status(
     )
     await db.commit()
     await db.refresh(report)
+    log.info("update_report_status", report_id=str(report.id), status=status.value)
     return report
