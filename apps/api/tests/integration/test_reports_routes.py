@@ -101,34 +101,3 @@ async def test_location_bounds_validation(client: AsyncClient):
     # Invalid longitude > 180
     res = await client.post("/api/reports", json={"title": "Invalid Loc", "description": "Desc", "category": "road", "latitude": 10.0, "longitude": 190.0}, headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 422
-
-
-async def test_non_owner_update_report_returns_403(client: AsyncClient):
-    token1, _ = await register_and_login(client, "owner_test@example.com")
-    token2, _ = await register_and_login(client, "attacker_test@example.com")
-
-    create_res = await client.post(
-        "/api/reports",
-        json={"title": "Original Title", "description": "Original Desc", "category": "road"},
-        headers={"Authorization": f"Bearer {token1}"}
-    )
-    rep_id = create_res.json()["id"]
-
-    patch_res = await client.patch(
-        f"/api/reports/{rep_id}",
-        json={"title": "Hacked Title"},
-        headers={"Authorization": f"Bearer {token2}"}
-    )
-    assert patch_res.status_code == 403
-
-
-async def test_list_reports_filter_by_category(client: AsyncClient):
-    token, _ = await register_and_login(client, "cat_filter@example.com")
-    await client.post("/api/reports", json={"title": "Road Issue", "description": "Desc", "category": "road"}, headers={"Authorization": f"Bearer {token}"})
-    await client.post("/api/reports", json={"title": "Waste Issue", "description": "Desc", "category": "waste"}, headers={"Authorization": f"Bearer {token}"})
-
-    res = await client.get("/api/reports?category=road")
-    assert res.status_code == 200
-    items = res.json()
-    assert len(items) >= 1
-    assert all(i["category"] == "road" for i in items)

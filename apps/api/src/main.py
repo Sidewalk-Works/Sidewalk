@@ -13,7 +13,6 @@ from src.core.router import router as core_router
 from src.modules.auth.router import router as auth_router
 from src.modules.users.router import router as users_router
 from src.modules.reports.router import router as reports_router
-from src.modules.cases.router import router as cases_router
 
 
 def create_app() -> FastAPI:
@@ -31,7 +30,6 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(users_router, prefix="/api")
     app.include_router(reports_router, prefix="/api")
-    app.include_router(cases_router, prefix="/api")
 
     return app
 
