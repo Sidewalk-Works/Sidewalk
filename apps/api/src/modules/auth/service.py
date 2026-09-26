@@ -1,4 +1,5 @@
 import structlog
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.exceptions import ConflictError, UnauthorizedError
 from src.core.security import create_access_token, hash_password, verify_password
@@ -13,8 +14,18 @@ async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
     if existing:
         raise ConflictError("A user with this email already exists", field="email")
     hashed = hash_password(payload.password)
-    user = await auth_repo.create_user(db, payload.email, hashed)
-    await db.commit()
+    # The get_user_by_email check above is not atomic with the insert below:
+    # two concurrent registrations for the same email can both pass it and
+    # both reach create_user, in which case the users.email unique
+    # constraint raises IntegrityError for whichever commits second. Catch
+    # it here and surface it as the same graceful ConflictError, rather than
+    # letting a raw IntegrityError bubble up as an unhandled 500.
+    try:
+        user = await auth_repo.create_user(db, payload.email, hashed)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise ConflictError("A user with this email already exists", field="email") from None
     log.info("register_user", user_id=str(user.id), email=user.email)
     token = create_access_token({"sub": str(user.id)})
     return AuthResponse(access_token=token, user=UserOut.model_validate(user))
