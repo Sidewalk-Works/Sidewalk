@@ -2,6 +2,40 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.models import Base, TimestampMixin, UUIDPKMixin
+from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
 
 if TYPE_CHECKING:
     from src.modules.reports.models import Report
