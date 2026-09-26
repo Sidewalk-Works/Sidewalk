@@ -46,3 +46,12 @@ target-version = "py312"
 python_version = "3.12"
 strict = true
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["alembic/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+

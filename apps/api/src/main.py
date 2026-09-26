@@ -5,6 +5,7 @@ from src.core.config import get_settings
 from src.core.error_handler import app_error_handler, validation_error_handler
 from src.core.exceptions import AppError
 from src.core.middleware import (
+    RequestIdMiddleware,
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
     setup_cors,
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
 
     setup_cors(app, settings)
     app.add_middleware(SecurityHeadersMiddleware, environment=settings.ENVIRONMENT)
+    app.add_middleware(RequestIdMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
 
     app.add_exception_handler(AppError, app_error_handler)
