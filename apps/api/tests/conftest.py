@@ -65,3 +65,36 @@ async def client(app) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def auth_client(client, db_session):
+    import uuid
+    user_data = {"email": f"auth_{uuid.uuid4().hex[:6]}@test.com", "password": "testpassword123"}
+    await client.post("/api/auth/register", json=user_data)
+    response = await client.post("/api/auth/login", json=user_data)
+    token = response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
+
+
+@pytest.fixture
+async def admin_auth_client(client, db_session):
+    import uuid
+    from sqlalchemy import select
+    from src.modules.auth.models import User
+
+    user_data = {"email": f"admin_{uuid.uuid4().hex[:6]}@test.com", "password": "testpassword123"}
+    reg_res = await client.post("/api/auth/register", json=user_data)
+    user_id = uuid.UUID(reg_res.json()["user"]["id"])
+    stmt = select(User).where(User.id == user_id)
+    res = await db_session.execute(stmt)
+    user = res.scalar_one()
+    user.is_admin = True
+    await db_session.commit()
+
+    response = await client.post("/api/auth/login", json=user_data)
+    token = response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
+
