@@ -37,3 +37,13 @@ class InvalidTokenError(AppError):
 class UserNotFoundError(NotFoundError):
     def __init__(self, message: str = "User not found"):
         super().__init__(message)
+
+
+class ValidationError(AppError):
+    status_code = 422
+
+
+class InvalidTransitionError(ValidationError):
+    def __init__(self, message: str = "Invalid status transition"):
+        super().__init__(message)
+
