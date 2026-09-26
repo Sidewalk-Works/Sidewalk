@@ -37,3 +37,72 @@ jobs:
       - name: Ruff format check
         run: uv run ruff format --check src/ tests/
         working-directory: apps/api
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/api/pyproject.toml"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+        working-directory: apps/api
+
+      - name: Run type check
+        run: uv run mypy src/
+        working-directory: apps/api
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sidewalk
+          POSTGRES_PASSWORD: sidewalk
+          POSTGRES_DB: sidewalk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+asyncpg://sidewalk:sidewalk@localhost:5432/sidewalk_test
+      SECRET_KEY: ci-test-secret-key-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/api/pyproject.toml"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+        working-directory: apps/api
+
+      - name: Run migrations
+        run: uv run alembic upgrade head
+        working-directory: apps/api
+
+      - name: Check migrations
+        run: uv run alembic check
+        working-directory: apps/api
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=src --cov-fail-under=80
+        working-directory: apps/api

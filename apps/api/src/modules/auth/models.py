@@ -43,6 +43,9 @@ if TYPE_CHECKING:
 if TYPE_CHECKING:
     from src.modules.reports.models import Report
 
+if TYPE_CHECKING:
+    from src.modules.reports.models import Report
+
 
 class User(Base, UUIDPKMixin, TimestampMixin):
     __tablename__ = "users"
