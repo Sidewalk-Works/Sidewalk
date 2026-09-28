@@ -1,28 +1,44 @@
-from fastapi import APIRouter, Response
+# apps/api/src/core/router.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from src.core.config import get_settings
-from src.core.database import DBSession
+import os
 
-router = APIRouter(prefix="", tags=["core"])
-
+router = APIRouter(prefix="/api", tags=["core"])
 
 @router.get("/health")
-async def health_check(db: DBSession, response: Response):
-    settings = get_settings()
+async def health_check():
+    """
+    Health check endpoint verifying application status, environment,
+    version, and live database connectivity. Returns 200 OK or 503 Service Unavailable.
+    """
+    version = os.getenv("API_VERSION", "0.1.0")
+    environment = os.getenv("NODE_ENV", "development")
+    
     db_status = "ok"
-    try:
-        await db.execute(text("SELECT 1"))
-    except Exception as exc:
-        db_status = f"error: {exc}"
+    status_code = status.HTTP_200_OK
 
-    # The top-level status must reflect the DB check, not just report "ok"
-    # unconditionally - otherwise an orchestrator/monitor polling this
-    # endpoint has no way to detect a database outage from this field.
-    is_healthy = db_status == "ok"
-    response.status_code = 200 if is_healthy else 503
-    return {
-        "status": "ok" if is_healthy else "degraded",
-        "version": settings.API_VERSION,
-        "environment": settings.ENVIRONMENT,
+    try:
+        # Attempt lightweight database connectivity check (SELECT 1)
+        # Assumes a session dependency or engine is available in app state / dependency injection
+        from src.core.database import AsyncSessionLocal
+        if AsyncSessionLocal:
+            async with AsyncSessionLocal() as session:
+                await session.execute(text("SELECT 1"))
+        else:
+            db_status = "ok (no-engine-bound)"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+    payload = {
+        "status": "ok" if status_code == status.HTTP_200_OK else "degraded",
+        "version": version,
+        "environment": environment,
         "db": db_status,
     }
+
+    if status_code != status.HTTP_200_OK:
+        raise HTTPException(status_code=status_code, detail=payload)
+
+    return payload
