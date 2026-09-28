@@ -82,3 +82,38 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
 
         return response
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware that injects essential HTTP security headers into every response.
+    """
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+        
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = "default-src 'self'"
+
+        environment = os.getenv("ENVIRONMENT", os.getenv("NODE_ENV", "development"))
+        if environment.lower() == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+
+        return response
+
+def setup_cors(app: FastAPI, settings) -> None:
+    """
+    Configures and attaches CORS middleware to the FastAPI application.
+    Defaults to http://localhost:3000 (web) and http://localhost:8081 (Expo).
+    """
+    origins = getattr(settings, "CORS_ORIGINS", ["http://localhost:3000", "http://localhost:8081"])
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
