@@ -1,0 +1,35 @@
+# apps/api/docker-compose.yml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sidewalk_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sidewalk_user
+      POSTGRES_PASSWORD: sidewalk_password
+      POSTGRES_DB: sidewalk_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sidewalk-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: sidewalk_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - sidewalk-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  sidewalk-network:
+    driver: bridge
