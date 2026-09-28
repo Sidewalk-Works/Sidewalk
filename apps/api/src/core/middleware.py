@@ -60,3 +60,25 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             duration_ms=duration_ms,
         )
         return response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware that injects essential HTTP security headers into every response,
+    serving as the FastAPI equivalent of Helmet.js.
+    """
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+        
+        # Set core security headers on every response
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = "default-src 'self'"
+
+        # Strict-Transport-Security (HSTS): applied only in production environments
+        environment = os.getenv("ENVIRONMENT", os.getenv("NODE_ENV", "development"))
+        if environment.lower() == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+
+        return response
