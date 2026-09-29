@@ -37,3 +37,47 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 DBSession = Annotated[AsyncSession, Depends(get_db)]
+
+settings = get_settings()
+
+# Create asynchronous SQLAlchemy engine using asyncpg driver
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True,
+    future=True,
+)
+
+# Configure asynchronous session factory
+async_session_factory = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
+)
+
+class Base(DeclarativeBase):
+    """Base class for all SQLAlchemy ORM models."""
+    pass
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """
+    FastAPI dependency that yields an asynchronous SQLAlchemy session.
+    Ensures session closure after request lifecycle completion.
+    """
+    async with async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
+# Annotated type alias for clean controller dependency injection
+DBSession = Annotated[AsyncSession, Depends(get_db)]

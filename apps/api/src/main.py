@@ -140,3 +140,12 @@ def create_app() -> FastAPI:
 
 # Top-level app instance for uvicorn pickup
 app = create_app()
+
+
+from fastapi import FastAPI
+
+app = FastAPI(title="Sidewalk API", version="0.1.0")
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy"}
