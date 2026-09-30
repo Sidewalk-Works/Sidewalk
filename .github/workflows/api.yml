@@ -24,10 +24,10 @@ jobs:
       - uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          cache-dependency-glob: "apps/api/pyproject.toml"
+          cache-dependency-glob: "apps/api/uv.lock"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --frozen --extra dev
         working-directory: apps/api
 
       - name: Ruff check
@@ -50,10 +50,10 @@ jobs:
       - uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          cache-dependency-glob: "apps/api/pyproject.toml"
+          cache-dependency-glob: "apps/api/uv.lock"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --frozen --extra dev
         working-directory: apps/api
 
       - name: Run type check
@@ -89,10 +89,10 @@ jobs:
       - uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          cache-dependency-glob: "apps/api/pyproject.toml"
+          cache-dependency-glob: "apps/api/uv.lock"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --frozen --extra dev
         working-directory: apps/api
 
       - name: Run migrations

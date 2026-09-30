@@ -1,11 +1,13 @@
 import uuid
+
 import pytest
+
 from src.core.enums import CASE_STATUS_TRANSITIONS, CaseStatus
 from src.core.exceptions import NotFoundError
 from src.modules.auth.repository import create_user
-from src.modules.reports.models import Report
-from src.modules.cases.models import Case
 from src.modules.cases import service as cases_service
+from src.modules.cases.models import Case
+from src.modules.reports.models import Report
 
 
 def test_case_status_transitions():
@@ -16,7 +18,9 @@ def test_case_status_transitions():
 
 async def test_follow_unfollow_case(db_session):
     user = await create_user(db_session, "case_fan@example.com", "hash")
-    report = Report(title="Rep", description="Desc", category="road", user_id=user.id, media_urls=[])
+    report = Report(
+        title="Rep", description="Desc", category="road", user_id=user.id, media_urls=[]
+    )
     db_session.add(report)
     await db_session.flush()
 

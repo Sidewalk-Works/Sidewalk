@@ -46,6 +46,13 @@ filterwarnings = [
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

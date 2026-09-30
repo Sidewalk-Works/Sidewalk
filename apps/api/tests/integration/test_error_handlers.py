@@ -1,5 +1,5 @@
 import uuid
-import pytest
+
 from httpx import ASGITransport, AsyncClient
 
 

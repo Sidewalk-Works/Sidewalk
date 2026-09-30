@@ -1,8 +1,10 @@
 import uuid
 from typing import Any
+
 import structlog
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.enums import NotificationType
 from src.core.exceptions import ForbiddenError, NotFoundError
 from src.modules.notifications.models import Notification
@@ -16,10 +18,7 @@ async def create_notification(
     type: NotificationType | str,
     payload: dict[str, Any] | None = None,
 ) -> Notification:
-    if isinstance(type, str):
-        type_enum = NotificationType(type)
-    else:
-        type_enum = type
+    type_enum = NotificationType(type) if isinstance(type, str) else type
 
     notification = Notification(
         user_id=user_id,
@@ -42,7 +41,9 @@ async def list_notifications(
     unread_only: bool = False,
 ) -> tuple[list[Notification], int]:
     query = select(Notification).where(Notification.user_id == user_id)
-    count_query = select(func.count()).select_from(Notification).where(Notification.user_id == user_id)
+    count_query = (
+        select(func.count()).select_from(Notification).where(Notification.user_id == user_id)
+    )
 
     if unread_only:
         query = query.where(Notification.read == False)  # noqa: E712
@@ -92,9 +93,13 @@ async def mark_all_read(db: AsyncSession, user_id: uuid.UUID) -> int:
 
 
 async def count_unread(db: AsyncSession, user_id: uuid.UUID) -> int:
-    stmt = select(func.count()).select_from(Notification).where(
-        Notification.user_id == user_id,
-        Notification.read == False,  # noqa: E712
+    stmt = (
+        select(func.count())
+        .select_from(Notification)
+        .where(
+            Notification.user_id == user_id,
+            Notification.read == False,  # noqa: E712
+        )
     )
     result = await db.execute(stmt)
     return result.scalar() or 0

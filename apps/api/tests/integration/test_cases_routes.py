@@ -1,8 +1,9 @@
 import uuid
-import pytest
+
 from httpx import AsyncClient
-from src.modules.reports.models import Report
+
 from src.modules.cases.models import Case
+from src.modules.reports.models import Report
 
 
 async def register_and_login(

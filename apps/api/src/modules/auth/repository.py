@@ -1,12 +1,16 @@
 import uuid
 from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.modules.auth.models import User
+
 from src.core.exceptions import UserNotFoundError
+from src.modules.auth.models import User
 
 
-async def create_user(db: AsyncSession, email: str, password_hash: str, is_admin: bool = False) -> User:
+async def create_user(
+    db: AsyncSession, email: str, password_hash: str, is_admin: bool = False
+) -> User:
     user = User(email=email, password_hash=password_hash, is_admin=is_admin)
     db.add(user)
     await db.flush()
@@ -20,7 +24,9 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     return result.scalar_one_or_none()
 
 
-async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID, raise_if_not_found: bool = False) -> User | None:
+async def get_user_by_id(
+    db: AsyncSession, user_id: uuid.UUID, raise_if_not_found: bool = False
+) -> User | None:
     stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()

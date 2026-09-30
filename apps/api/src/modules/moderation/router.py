@@ -1,9 +1,11 @@
 import uuid
+
 from fastapi import APIRouter
+
 from src.core.database import DBSession
+from src.modules.moderation import service as moderation_service
 from src.modules.moderation.dependencies import AdminUser
 from src.modules.moderation.schemas import FlagReport, UpdateReportStatus
-from src.modules.moderation import service as moderation_service
 from src.modules.reports.schemas import ReportResponse
 
 router = APIRouter(prefix="/moderation", tags=["moderation"])

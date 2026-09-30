@@ -1,10 +1,11 @@
 # apps/api/src/core/router.py
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
 import os
 
+from fastapi import APIRouter, HTTPException, status
+from sqlalchemy import text
+
 router = APIRouter(prefix="/api", tags=["core"])
+
 
 @router.get("/health")
 async def health_check():
@@ -14,7 +15,7 @@ async def health_check():
     """
     version = os.getenv("API_VERSION", "0.1.0")
     environment = os.getenv("NODE_ENV", "development")
-    
+
     db_status = "ok"
     status_code = status.HTTP_200_OK
 
@@ -22,13 +23,14 @@ async def health_check():
         # Attempt lightweight database connectivity check (SELECT 1)
         # Assumes a session dependency or engine is available in app state / dependency injection
         from src.core.database import AsyncSessionLocal
+
         if AsyncSessionLocal:
             async with AsyncSessionLocal() as session:
                 await session.execute(text("SELECT 1"))
         else:
             db_status = "ok (no-engine-bound)"
     except Exception as e:
-        db_status = f"error: {str(e)}"
+        db_status = f"error: {e!s}"
         status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
     payload = {

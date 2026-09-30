@@ -1,7 +1,9 @@
 import uuid
+
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.enums import REPORT_STATUS_TRANSITIONS, NotificationType, ReportStatus
 from src.core.exceptions import InvalidTransitionError, NotFoundError
 from src.modules.notifications.service import create_notification

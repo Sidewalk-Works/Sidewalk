@@ -1,10 +1,13 @@
 import time
+import uuid
+
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
-import structlog
+
 from src.core.config import Settings
 
 logger = structlog.get_logger(__name__)
@@ -39,7 +42,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        import uuid
         request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
         structlog.contextvars.bind_contextvars(request_id=request_id)
         response = await call_next(request)
@@ -51,7 +53,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         start_time = time.perf_counter()
         response = await call_next(request)
-        duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        duration_ms = round((time.perf_counter() - start_time) * 1000)
         logger.info(
             "http_request",
             method=request.method,
@@ -60,60 +62,3 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             duration_ms=duration_ms,
         )
         return response
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """
-    Middleware that injects essential HTTP security headers into every response,
-    serving as the FastAPI equivalent of Helmet.js.
-    """
-    async def dispatch(self, request: Request, call_next) -> Response:
-        response = await call_next(request)
-        
-        # Set core security headers on every response
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
-
-        # Strict-Transport-Security (HSTS): applied only in production environments
-        environment = os.getenv("ENVIRONMENT", os.getenv("NODE_ENV", "development"))
-        if environment.lower() == "production":
-            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
-
-        return response
-
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """
-    Middleware that injects essential HTTP security headers into every response.
-    """
-    async def dispatch(self, request: Request, call_next) -> Response:
-        response = await call_next(request)
-        
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
-
-        environment = os.getenv("ENVIRONMENT", os.getenv("NODE_ENV", "development"))
-        if environment.lower() == "production":
-            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
-
-        return response
-
-def setup_cors(app: FastAPI, settings) -> None:
-    """
-    Configures and attaches CORS middleware to the FastAPI application.
-    Defaults to http://localhost:3000 (web) and http://localhost:8081 (Expo).
-    """
-    origins = getattr(settings, "CORS_ORIGINS", ["http://localhost:3000", "http://localhost:8081"])
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )

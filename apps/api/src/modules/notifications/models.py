@@ -1,7 +1,10 @@
 import uuid
 from typing import TYPE_CHECKING, Any
-from sqlalchemy import Boolean, ForeignKey, JSON, Enum as SAEnum
+
+from sqlalchemy import JSON, Boolean, ForeignKey
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.core.enums import NotificationType
 from src.core.models import Base, TimestampMixin, UUIDPKMixin
 

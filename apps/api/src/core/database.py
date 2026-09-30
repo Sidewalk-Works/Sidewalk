@@ -1,11 +1,14 @@
 from collections.abc import AsyncGenerator
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.orm import DeclarativeBase
+
 from src.core.config import get_settings
 
 settings = get_settings()
@@ -18,11 +21,13 @@ elif database_url.startswith("sqlite://") and not database_url.startswith("sqlit
 
 engine_kwargs = {}
 if "sqlite" not in database_url:
-    engine_kwargs.update({
-        "pool_size": settings.DB_POOL_SIZE,
-        "max_overflow": settings.DB_MAX_OVERFLOW,
-        "pool_pre_ping": True,
-    })
+    engine_kwargs.update(
+        {
+            "pool_size": settings.DB_POOL_SIZE,
+            "max_overflow": settings.DB_MAX_OVERFLOW,
+            "pool_pre_ping": True,
+        }
+    )
 
 engine = create_async_engine(database_url, **engine_kwargs)
 async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
@@ -58,8 +63,10 @@ async_session_factory = async_sessionmaker(
     autoflush=False,
 )
 
+
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy ORM models."""
+
     pass
 
 

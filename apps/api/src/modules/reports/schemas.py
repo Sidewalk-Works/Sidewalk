@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 from src.core.enums import ReportCategory, ReportStatus
 
 
@@ -23,7 +25,9 @@ class CreateReportRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_location(self) -> "CreateReportRequest":
-        if (self.latitude is not None and self.longitude is None) or (self.latitude is None and self.longitude is not None):
+        if (self.latitude is not None and self.longitude is None) or (
+            self.latitude is None and self.longitude is not None
+        ):
             raise ValueError("Both latitude and longitude must be provided together, or neither")
         return self
 
@@ -49,7 +53,9 @@ class UpdateReportRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_location(self) -> "UpdateReportRequest":
-        if (self.latitude is not None and self.longitude is None) or (self.latitude is None and self.longitude is not None):
+        if (self.latitude is not None and self.longitude is None) or (
+            self.latitude is None and self.longitude is not None
+        ):
             raise ValueError("Both latitude and longitude must be provided together, or neither")
         return self
 

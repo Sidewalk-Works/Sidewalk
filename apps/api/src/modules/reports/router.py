@@ -1,10 +1,12 @@
 import uuid
+
 from fastapi import APIRouter, Query, Response, status
+
 from src.core.database import DBSession
 from src.core.dependencies import CurrentUser
 from src.core.enums import ReportCategory, ReportStatus
-from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
 from src.modules.reports import service as report_service
+from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -46,8 +48,6 @@ async def update_report(
 
 
 @router.delete("/{report_id}", status_code=204)
-async def delete_report(
-    report_id: uuid.UUID, current_user: CurrentUser, db: DBSession
-) -> Response:
+async def delete_report(report_id: uuid.UUID, current_user: CurrentUser, db: DBSession) -> Response:
     await report_service.delete_report(db, report_id, current_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
