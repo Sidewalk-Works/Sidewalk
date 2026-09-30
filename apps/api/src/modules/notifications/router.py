@@ -1,5 +1,8 @@
 import uuid
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
+
 from src.core.database import DBSession
 from src.core.dependencies import CurrentUser
 from src.core.pagination import PageParams, PaginatedResponse
@@ -13,7 +16,7 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 async def list_notifications(
     current_user: CurrentUser,
     db: DBSession,
-    params: PageParams = Depends(),
+    params: Annotated[PageParams, Depends()],
     unread_only: bool = False,
 ) -> PaginatedResponse[NotificationResponse]:
     items, total = await notifications_service.list_notifications(

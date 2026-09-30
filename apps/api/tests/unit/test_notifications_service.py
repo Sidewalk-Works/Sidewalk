@@ -1,5 +1,7 @@
 import uuid
+
 import pytest
+
 from src.core.enums import NotificationType
 from src.core.exceptions import ForbiddenError
 from src.modules.auth.repository import create_user
@@ -36,8 +38,12 @@ async def test_list_notifications_for_user(db_session):
 
 async def test_list_notifications_unread_only(db_session):
     user = await create_user(db_session, "notif_user3@example.com", "hash")
-    n1 = await notif_service.create_notification(db_session, user.id, NotificationType.report_update)
-    n2 = await notif_service.create_notification(db_session, user.id, NotificationType.case_assigned)
+    n1 = await notif_service.create_notification(
+        db_session, user.id, NotificationType.report_update
+    )
+    n2 = await notif_service.create_notification(
+        db_session, user.id, NotificationType.case_assigned
+    )
 
     await notif_service.mark_read(db_session, n1.id, user.id)
 
@@ -83,8 +89,12 @@ async def test_count_unread(db_session):
     user = await create_user(db_session, "notif_user7@example.com", "hash")
     assert await notif_service.count_unread(db_session, user.id) == 0
 
-    n1 = await notif_service.create_notification(db_session, user.id, NotificationType.report_update)
-    n2 = await notif_service.create_notification(db_session, user.id, NotificationType.status_change)
+    n1 = await notif_service.create_notification(
+        db_session, user.id, NotificationType.report_update
+    )
+    n2 = await notif_service.create_notification(
+        db_session, user.id, NotificationType.status_change
+    )
     assert await notif_service.count_unread(db_session, user.id) == 2
 
     await notif_service.mark_read(db_session, n1.id, user.id)

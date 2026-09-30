@@ -1,6 +1,8 @@
 import uuid
+
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.enums import ReportCategory, ReportStatus
 from src.core.exceptions import ForbiddenError, NotFoundError
 from src.modules.auth.models import User
@@ -10,7 +12,9 @@ from src.modules.reports.schemas import CreateReportRequest, ReportResponse, Upd
 log = structlog.get_logger(__name__)
 
 
-async def create_report(db: AsyncSession, user_id: uuid.UUID, payload: CreateReportRequest) -> ReportResponse:
+async def create_report(
+    db: AsyncSession, user_id: uuid.UUID, payload: CreateReportRequest
+) -> ReportResponse:
     report = await report_repo.create_report(
         db,
         user_id=user_id,

@@ -1,6 +1,7 @@
 import structlog
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.exceptions import ConflictError, UnauthorizedError
 from src.core.security import create_access_token, hash_password, verify_password
 from src.modules.auth import repository as auth_repo

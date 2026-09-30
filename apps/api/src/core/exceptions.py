@@ -46,4 +46,3 @@ class ValidationError(AppError):
 class InvalidTransitionError(ValidationError):
     def __init__(self, message: str = "Invalid status transition"):
         super().__init__(message)
-

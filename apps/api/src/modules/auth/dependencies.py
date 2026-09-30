@@ -1,13 +1,15 @@
 import uuid
 from typing import Annotated
+
+import structlog
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import structlog
+
 from src.core.database import DBSession
 from src.core.exceptions import InvalidTokenError
 from src.core.security import decode_access_token
-from src.modules.auth.models import User
 from src.modules.auth import repository as auth_repo
+from src.modules.auth.models import User
 
 security_scheme = HTTPBearer(auto_error=True)
 

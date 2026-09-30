@@ -1,6 +1,7 @@
 import uuid
-import pytest
+
 from httpx import AsyncClient
+
 from src.core.enums import NotificationType
 from src.modules.notifications import service as notif_service
 
@@ -37,7 +38,9 @@ async def test_list_notifications_unread_filter(client: AsyncClient, db_session)
     token, user = await register_and_login(client, "notif_auth2@example.com")
     user_id = uuid.UUID(user["id"])
     n1 = await notif_service.create_notification(db_session, user_id, NotificationType.mention)
-    n2 = await notif_service.create_notification(db_session, user_id, NotificationType.report_update)
+    n2 = await notif_service.create_notification(
+        db_session, user_id, NotificationType.report_update
+    )
     await notif_service.mark_read(db_session, n1.id, user_id)
 
     res = await client.get(
@@ -70,9 +73,11 @@ async def test_mark_notification_read(client: AsyncClient, db_session):
 
 
 async def test_mark_other_users_notification_403(client: AsyncClient, db_session):
-    token1, user1 = await register_and_login(client, "notif_u1@example.com")
-    token2, user2 = await register_and_login(client, "notif_u2@example.com")
-    n = await notif_service.create_notification(db_session, uuid.UUID(user1["id"]), NotificationType.mention)
+    _token1, user1 = await register_and_login(client, "notif_u1@example.com")
+    token2, _user2 = await register_and_login(client, "notif_u2@example.com")
+    n = await notif_service.create_notification(
+        db_session, uuid.UUID(user1["id"]), NotificationType.mention
+    )
 
     res = await client.patch(
         f"/api/notifications/{n.id}/read",

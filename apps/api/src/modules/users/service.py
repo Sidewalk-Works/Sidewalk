@@ -1,9 +1,10 @@
 import structlog
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.exceptions import ConflictError
-from src.modules.auth.models import User
 from src.modules.auth import repository as user_repository
+from src.modules.auth.models import User
 from src.modules.users.schemas import UpdateProfileRequest, UserProfileResponse
 
 log = structlog.get_logger(__name__)

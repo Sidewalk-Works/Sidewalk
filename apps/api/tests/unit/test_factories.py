@@ -1,5 +1,5 @@
-import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from tests.factories import CaseFactory, NotificationFactory, ReportFactory, UserFactory
 
 

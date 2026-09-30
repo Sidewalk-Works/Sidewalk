@@ -1,9 +1,11 @@
 import uuid
 from datetime import datetime
+
 import pytest
 from pydantic import ValidationError
+
 from src.core.enums import REPORT_STATUS_TRANSITIONS, ReportCategory, ReportStatus
-from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
+from src.modules.reports.schemas import CreateReportRequest, ReportResponse
 
 
 def test_report_enums():

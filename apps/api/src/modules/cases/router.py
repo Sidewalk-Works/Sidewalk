@@ -1,6 +1,9 @@
 import uuid
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Response, status
-from src.core.database import DBSession, get_db
+
+from src.core.database import DBSession
 from src.core.dependencies import CurrentUser
 from src.core.enums import CaseStatus
 from src.core.pagination import PageParams, PaginatedResponse
@@ -13,7 +16,7 @@ router = APIRouter(prefix="/cases", tags=["cases"])
 @router.get("", response_model=PaginatedResponse[CaseResponse])
 async def list_cases(
     db: DBSession,
-    params: PageParams = Depends(),
+    params: Annotated[PageParams, Depends()],
     status: CaseStatus | None = None,
 ) -> PaginatedResponse[CaseResponse]:
     return await cases_service.list_cases(db, params, status)

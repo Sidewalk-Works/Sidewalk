@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
-import jwt
+
 import bcrypt
+import jwt
+
 from src.core.config import get_settings
 from src.core.exceptions import InvalidTokenError
 
@@ -23,7 +25,7 @@ def create_access_token(data: dict[str, Any], expires_minutes: int | None = None
     settings = get_settings()
     minutes = expires_minutes if expires_minutes is not None else settings.JWT_EXPIRES_MINUTES
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+    expire = datetime.now(UTC) + timedelta(minutes=minutes)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 

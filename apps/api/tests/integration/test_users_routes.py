@@ -1,8 +1,9 @@
-import pytest
 from httpx import AsyncClient
 
 
-async def register_and_login(client: AsyncClient, email: str = "test@example.com", password: str = "testpassword123") -> tuple[str, dict]:
+async def register_and_login(
+    client: AsyncClient, email: str = "test@example.com", password: str = "testpassword123"
+) -> tuple[str, dict]:
     reg_res = await client.post("/api/auth/register", json={"email": email, "password": password})
     assert reg_res.status_code == 201, reg_res.text
     login_res = await client.post("/api/auth/login", json={"email": email, "password": password})
@@ -41,7 +42,9 @@ async def test_update_email_success(client: AsyncClient):
 
 
 async def test_update_email_duplicate_conflict(client: AsyncClient):
-    await client.post("/api/auth/register", json={"email": "existing@example.com", "password": "testpassword123"})
+    await client.post(
+        "/api/auth/register", json={"email": "existing@example.com", "password": "testpassword123"}
+    )
     token, _ = await register_and_login(client, "updater@example.com")
     res = await client.patch(
         "/api/users/me",

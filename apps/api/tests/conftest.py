@@ -1,13 +1,15 @@
 import asyncio
 from collections.abc import AsyncGenerator
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
+
+import src.models  # noqa: F401
 from src.core.database import get_db
 from src.core.models import Base
 from src.main import create_app
-import src.models  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -22,10 +24,10 @@ def event_loop():
 @pytest.fixture(autouse=True)
 def reset_limiter():
     from src.core.limiter import limiter
+
     limiter.reset()
     yield
     limiter.reset()
-
 
 
 @pytest.fixture(scope="session")
@@ -81,6 +83,7 @@ async def client(app) -> AsyncGenerator[AsyncClient, None]:
 @pytest.fixture
 async def auth_client(client, db_session):
     import uuid
+
     user_data = {"email": f"auth_{uuid.uuid4().hex[:6]}@test.com", "password": "testpassword123"}
     await client.post("/api/auth/register", json=user_data)
     response = await client.post("/api/auth/login", json=user_data)
@@ -92,7 +95,9 @@ async def auth_client(client, db_session):
 @pytest.fixture
 async def admin_auth_client(client, db_session):
     import uuid
+
     from sqlalchemy import select
+
     from src.modules.auth.models import User
 
     user_data = {"email": f"admin_{uuid.uuid4().hex[:6]}@test.com", "password": "testpassword123"}
@@ -108,4 +113,3 @@ async def admin_auth_client(client, db_session):
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
     return client
-

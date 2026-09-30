@@ -1,7 +1,7 @@
 import enum
 
 
-class ReportStatus(str, enum.Enum):
+class ReportStatus(enum.StrEnum):
     submitted = "submitted"
     under_review = "under_review"
     verified = "verified"
@@ -38,7 +38,7 @@ REPORT_STATUS_TRANSITIONS: dict[ReportStatus, list[ReportStatus]] = {
 }
 
 
-class ReportCategory(str, enum.Enum):
+class ReportCategory(enum.StrEnum):
     road = "road"
     waste = "waste"
     infrastructure = "infrastructure"
@@ -46,7 +46,7 @@ class ReportCategory(str, enum.Enum):
     utility = "utility"
 
 
-class CaseStatus(str, enum.Enum):
+class CaseStatus(enum.StrEnum):
     opened = "opened"
     open = "open"
     in_review = "in_review"
@@ -71,10 +71,9 @@ CASE_STATUS_TRANSITIONS: dict[CaseStatus, list[CaseStatus]] = {
 }
 
 
-class NotificationType(str, enum.Enum):
+class NotificationType(enum.StrEnum):
     report_update = "report_update"
     status_change = "status_change"
     mention = "mention"
     case_assigned = "case_assigned"
     moderation_action = "moderation_action"
-

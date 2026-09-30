@@ -1,5 +1,7 @@
 from typing import Annotated
+
 from fastapi import Depends
+
 from src.core.exceptions import ForbiddenError
 from src.modules.auth.dependencies import CurrentUser, get_current_user
 from src.modules.auth.models import User
@@ -13,4 +15,4 @@ async def require_admin(current_user: CurrentUser) -> User:
 
 AdminUser = Annotated[User, Depends(require_admin)]
 
-__all__ = ["CurrentUser", "get_current_user", "require_admin", "AdminUser"]
+__all__ = ["AdminUser", "CurrentUser", "get_current_user", "require_admin"]

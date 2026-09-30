@@ -1,7 +1,9 @@
 import uuid
 from typing import TYPE_CHECKING
-from sqlalchemy import Boolean, Float, ForeignKey, JSON, String, Text
+
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.core.models import Base, TimestampMixin, UUIDPKMixin
 
 if TYPE_CHECKING:
