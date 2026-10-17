@@ -23,6 +23,17 @@ def setup_cors(app: FastAPI, settings: Settings) -> None:
     )
 
 
+DOCS_PATHS = {"/docs", "/docs/oauth2-redirect", "/redoc"}
+DOCS_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+    "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+    "font-src 'self' data: https://fonts.gstatic.com; "
+    "worker-src 'self' blob:"
+)
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI, environment: str = "development"):
         super().__init__(app)
@@ -32,9 +43,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        if request.url.path in DOCS_PATHS or request.url.path.rstrip("/") in DOCS_PATHS:
+            response.headers["Content-Security-Policy"] = DOCS_CSP
+        else:
+            response.headers["Content-Security-Policy"] = "default-src 'self'"
         if self.environment == "production":
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
         return response

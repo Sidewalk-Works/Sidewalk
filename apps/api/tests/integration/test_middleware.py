@@ -18,9 +18,21 @@ async def test_security_headers_present_on_response(client: AsyncClient):
     assert res.status_code == 200
     assert res.headers.get("x-content-type-options") == "nosniff"
     assert res.headers.get("x-frame-options") == "DENY"
-    assert res.headers.get("x-xss-protection") == "1; mode=block"
+    assert "x-xss-protection" not in res.headers
     assert res.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+    assert res.headers.get("permissions-policy") == "camera=(), microphone=(), geolocation=()"
     assert res.headers.get("content-security-policy") == "default-src 'self'"
+
+
+async def test_docs_and_redoc_routes_relax_csp_and_omit_xss_protection(client: AsyncClient):
+    for path in ("/docs", "/redoc"):
+        res = await client.get(path)
+        assert res.status_code == 200
+        assert "x-xss-protection" not in res.headers
+        csp = res.headers.get("content-security-policy", "")
+        assert "default-src 'self'" in csp
+        assert "https://cdn.jsdelivr.net" in csp
+        assert "'unsafe-inline'" in csp
 
 
 async def test_x_request_id_present_on_response(client: AsyncClient):
