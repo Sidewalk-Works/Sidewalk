@@ -1,21 +1,19 @@
-export interface CommentAuthorInfo {
-  userId: string;
-  username: string;
-  role: 'citizen' | 'moderator' | 'admin';
-}
+export type MentionContext = 'comment' | 'moderator_reply' | 'status_update';
 
-export interface MentionTag {
-  mentionedUsername: string;
-  startIndex: number;
-  endIndex: number;
-}
-
-export interface MentionNotificationPayload {
-  notificationId: string;
-  author: CommentAuthorInfo;
+export interface CommunityMention {
+  id: string;
+  mentionedUserId: string;
+  mentioningUserId: string;
+  mentioningUserName: string;
+  context: MentionContext;
   caseId: string;
-  commentId: string;
-  snippet: string;
-  mentions: MentionTag[];
-  notifiedAtIso: string;
+  caseTitle: string;
+  excerpt: string;
+  createdAt: Date;
+  read: boolean;
+}
+
+export interface MentionNotification {
+  mention: CommunityMention;
+  deliveryChannel: 'in_app' | 'email' | 'push';
 }

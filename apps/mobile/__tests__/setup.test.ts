@@ -1,0 +1,1 @@
+describe('Mobile Jest Setup', () => {\n  it('verifies test environment', () => {\n    expect(true).toBe(true);\n  });\n});\n

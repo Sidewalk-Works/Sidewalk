@@ -1,0 +1,1 @@
+export function syncSettings() {\n  // Safe parse and sync logic\n}\n

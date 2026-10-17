@@ -142,7 +142,7 @@ By anchoring key events to Stellar, Sidewalk can provide stronger guarantees aro
 | ------------------ | -------------------------------- |
 | Web Application    | Next.js + React + TypeScript     |
 | Mobile Application | Expo + React Native + TypeScript |
-| Backend API        | Express.js + TypeScript          |
+| Backend API        | FastAPI + Python                 |
 | Blockchain Layer   | Stellar                          |
 | Package Management | pnpm                             |
 | Architecture       | Monorepo                         |
@@ -155,7 +155,7 @@ By anchoring key events to Stellar, Sidewalk can provide stronger guarantees aro
 sidewalk/
 │
 ├── apps/
-│   ├── api/        # Authentication API (Express modular monolith)
+│   ├── api/        # Backend API (FastAPI modular monolith)
 │   ├── web/        # Web authentication UI (Next.js)
 │   └── mobile/     # Mobile foundation (Expo + React Native)
 │
@@ -167,7 +167,7 @@ sidewalk/
 ```
 
 This is the foundational, hackathon-ready starting point for Sidewalk: a
-modular monolith authentication API, matching web and mobile foundations, and
+modular monolith FastAPI backend, matching web and mobile foundations, and
 the package/CI/docs scaffolding needed to start building the rest of the
 platform described above.
 
@@ -179,19 +179,21 @@ platform described above.
 
 `apps/api`
 
-The API is a **modular monolith** built with Express and TypeScript. It is
-organized by business domain (`src/modules/auth`, `src/modules/users`) rather
-than by technical layer, with cross-cutting concerns in `src/shared`.
+The API is a **modular monolith** built with FastAPI and Python (3.12+). It is
+organized by business domain (`src/modules/auth`, `src/modules/users`, `src/modules/reports`, `src/modules/cases`, `src/modules/notifications`, `src/modules/moderation`), with cross-cutting infrastructure and middleware in `src/core`.
 
 Currently implemented:
 
-* account registration,
-* login and access-token issuance,
-* an authenticated "current user" endpoint,
-* a health check endpoint.
+* account registration, login, and JWT access-token issuance,
+* user profiles and authenticated current user dependencies,
+* civic issue reporting (creation, retrieval, status management, location, and metadata),
+* public case tracking, pagination, and follow/unfollow capabilities,
+* in-app notifications with read-state tracking and unread counts,
+* report moderation workflows (flagging, review transitions, and status updates),
+* structured logging with correlation IDs, slowapi rate limiting, security headers, and CORS,
+* health check and system information endpoints.
 
-User data is persisted via Prisma to a local SQLite database by default
-(swap `DATABASE_URL` for a managed Postgres database in production).
+Data persistence is managed via SQLAlchemy 2.0 (asyncio) and Alembic migrations, supporting SQLite for local testing and PostgreSQL for development and production.
 
 ---
 
@@ -256,19 +258,37 @@ Each phase builds upon the previous one to create a complete civic engagement ec
 
 ## Requirements
 
+* Python 3.12+ with [uv](https://github.com/astral-sh/uv)
 * Node.js 20+
 * pnpm 10+
+* Docker & Docker Compose (optional, for local PostgreSQL)
 
-Install dependencies:
+### Backend API Setup
+
+```bash
+cd apps/api
+uv sync --extra dev
+cp .env.example .env   # fill in values
+docker-compose up -d   # optional: start local PostgreSQL
+uv run alembic upgrade head
+uv run uvicorn src.main:app --reload
+```
+
+The interactive OpenAPI docs are available at `http://localhost:8000/docs`.
+
+### Frontend & Mobile Setup
+
+From the repository root:
+
+Install web/mobile dependencies:
 
 ```bash
 pnpm install
 ```
 
-Run the primary applications:
+Run frontend applications:
 
 ```bash
-pnpm dev:api
 pnpm dev:web
 pnpm dev:mobile
 ```
@@ -280,7 +300,22 @@ an account and log in.
 
 # Quality Checks
 
-Run validation and development checks:
+### Backend (Python / FastAPI)
+
+Run code quality and test checks from `apps/api`:
+
+```bash
+cd apps/api
+uv run ruff check src/ tests/
+uv run ruff format --check src/ tests/
+uv run mypy src/
+uv run alembic check
+uv run pytest --cov=src --cov-fail-under=80
+```
+
+### Frontend & Shared Packages
+
+Run validation checks from the repository root:
 
 ```bash
 pnpm lint
