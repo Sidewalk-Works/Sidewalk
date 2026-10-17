@@ -1,0 +1,1 @@
+import { Platform } from 'react-native';\nexport const isIOS = Platform.OS === 'ios';\n

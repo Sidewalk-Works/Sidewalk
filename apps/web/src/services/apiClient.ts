@@ -1,0 +1,1 @@
+export async function apiClient(url: string) {\n  // FastAPI response error handling\n}\n

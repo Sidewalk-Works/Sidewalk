@@ -4,41 +4,105 @@ on:
   pull_request:
     paths:
       - "apps/api/**"
-      - "packages/**"
-      - "pnpm-lock.yaml"
       - ".github/workflows/api.yml"
   push:
     branches: [main]
     paths:
       - "apps/api/**"
-      - "packages/**"
-      - "pnpm-lock.yaml"
       - ".github/workflows/api.yml"
 
 jobs:
-  api:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: 20
-          cache: pnpm
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: uv sync --frozen --extra dev
+        working-directory: apps/api
 
-      - name: Build dependencies
-        run: pnpm --filter @sidewalk/shared build
+      - name: Ruff check
+        run: uv run ruff check src/ tests/
+        working-directory: apps/api
 
-      - name: Lint
-        run: pnpm --filter @sidewalk/api lint
+      - name: Ruff format check
+        run: uv run ruff format --check src/ tests/
+        working-directory: apps/api
 
-      - name: Test
-        run: pnpm --filter @sidewalk/api test
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Build
-        run: pnpm --filter @sidewalk/api build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev
+        working-directory: apps/api
+
+      - name: Run type check
+        run: uv run mypy src/
+        working-directory: apps/api
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sidewalk
+          POSTGRES_PASSWORD: sidewalk
+          POSTGRES_DB: sidewalk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+asyncpg://sidewalk:sidewalk@localhost:5432/sidewalk_test
+      SECRET_KEY: ci-test-secret-key-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev
+        working-directory: apps/api
+
+      - name: Run migrations
+        run: uv run alembic upgrade head
+        working-directory: apps/api
+
+      - name: Check migrations
+        run: uv run alembic check
+        working-directory: apps/api
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=src --cov-fail-under=80
+        working-directory: apps/api

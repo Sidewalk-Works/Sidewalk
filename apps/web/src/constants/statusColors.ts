@@ -1,0 +1,1 @@
+export const STATUS_COLORS = { pending: 'yellow', resolved: 'green' };\n
