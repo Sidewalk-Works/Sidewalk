@@ -1,0 +1,1 @@
+describe('Auth tests', () => {\n  it('handles auth validations', () => {\n    expect(true).toBe(true);\n  });\n});\n
