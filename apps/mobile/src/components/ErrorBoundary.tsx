@@ -1,0 +1,1 @@
+export function ErrorBoundary({ children }: { children: any }) {\n  return children;\n}\n
