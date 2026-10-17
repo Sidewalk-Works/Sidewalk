@@ -1,0 +1,1 @@
+export function AccessibleSwitch() {\n  return null;\n}\n
