@@ -1,0 +1,1 @@
+export function registerUser() {\n  // handle token receipt\n}\n
