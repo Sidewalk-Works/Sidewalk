@@ -1,0 +1,1281 @@
+# Sidewalk Local Backlog
+
+This file is intentionally local-only and is generated from the current repository shape plus the current GitHub issue state.
+
+Configured start number: 442
+
+## sprint-1 - Foundation hardening and domain scaffolding
+
+Tighten the auth-first starter into a stable base for report creation, identity, and shared data contracts.
+
+- #442 Define the report domain module boundary for the future citizen issue pipeline
+  - labels: `sprint-1`, `backend`
+- #443 Define the auth module seams so user identity can be reused by report features
+  - labels: `sprint-1`, `backend`
+- #444 Define a public API contract for the next civic resource endpoints
+  - labels: `sprint-1`, `backend`
+- #445 Define consistent request validation and error shapes across API modules
+  - labels: `sprint-1`, `backend`
+- #446 Define the first report lifecycle model without coupling it to the web client
+  - labels: `sprint-1`, `backend`
+- #447 Implement the report domain module boundary for the future citizen issue pipeline
+  - labels: `sprint-1`, `backend`
+- #448 Implement the auth module seams so user identity can be reused by report features
+  - labels: `sprint-1`, `backend`
+- #449 Implement a public API contract for the next civic resource endpoints
+  - labels: `sprint-1`, `backend`
+- #450 Implement consistent request validation and error shapes across API modules
+  - labels: `sprint-1`, `backend`
+- #451 Implement the first report lifecycle model without coupling it to the web client
+  - labels: `sprint-1`, `backend`
+- #452 Harden the report domain module boundary for the future citizen issue pipeline
+  - labels: `sprint-1`, `backend`
+- #453 Harden the auth module seams so user identity can be reused by report features
+  - labels: `sprint-1`, `backend`
+- #454 Harden a public API contract for the next civic resource endpoints
+  - labels: `sprint-1`, `backend`
+- #455 Harden consistent request validation and error shapes across API modules
+  - labels: `sprint-1`, `backend`
+- #456 Harden the first report lifecycle model without coupling it to the web client
+  - labels: `sprint-1`, `backend`
+- #457 Document the report domain module boundary for the future citizen issue pipeline
+  - labels: `sprint-1`, `backend`
+- #458 Document the auth module seams so user identity can be reused by report features
+  - labels: `sprint-1`, `backend`
+- #459 Document a public API contract for the next civic resource endpoints
+  - labels: `sprint-1`, `backend`
+- #460 Document consistent request validation and error shapes across API modules
+  - labels: `sprint-1`, `backend`
+- #461 Document the first report lifecycle model without coupling it to the web client
+  - labels: `sprint-1`, `backend`
+- #462 Verify the report domain module boundary for the future citizen issue pipeline
+  - labels: `sprint-1`, `backend`
+- #463 Verify the auth module seams so user identity can be reused by report features
+  - labels: `sprint-1`, `backend`
+- #464 Verify a public API contract for the next civic resource endpoints
+  - labels: `sprint-1`, `backend`
+- #465 Verify consistent request validation and error shapes across API modules
+  - labels: `sprint-1`, `backend`
+- #466 Verify the first report lifecycle model without coupling it to the web client
+  - labels: `sprint-1`, `backend`
+- #467 Model the initial civic resource DTOs for reports, statuses, and user summaries
+  - labels: `sprint-1`, `backend`
+- #468 Model reusable zod schemas for report submission and profile updates
+  - labels: `sprint-1`, `backend`
+- #469 Model shared pagination and filter types for list-heavy civic workflows
+  - labels: `sprint-1`, `backend`
+- #470 Model typed response envelopes for success and domain error payloads
+  - labels: `sprint-1`, `backend`
+- #471 Model shared enums for report states, visibility, and moderation outcomes
+  - labels: `sprint-1`, `backend`
+- #472 Extract the initial civic resource DTOs for reports, statuses, and user summaries
+  - labels: `sprint-1`, `backend`
+- #473 Extract reusable zod schemas for report submission and profile updates
+  - labels: `sprint-1`, `backend`
+- #474 Extract shared pagination and filter types for list-heavy civic workflows
+  - labels: `sprint-1`, `backend`
+- #475 Extract typed response envelopes for success and domain error payloads
+  - labels: `sprint-1`, `backend`
+- #476 Extract shared enums for report states, visibility, and moderation outcomes
+  - labels: `sprint-1`, `backend`
+- #477 Define the initial civic resource DTOs for reports, statuses, and user summaries
+  - labels: `sprint-1`, `backend`
+- #478 Define reusable zod schemas for report submission and profile updates
+  - labels: `sprint-1`, `backend`
+- #479 Define shared pagination and filter types for list-heavy civic workflows
+  - labels: `sprint-1`, `backend`
+- #480 Define typed response envelopes for success and domain error payloads
+  - labels: `sprint-1`, `backend`
+- #481 Define shared enums for report states, visibility, and moderation outcomes
+  - labels: `sprint-1`, `backend`
+- #482 Add the initial civic resource DTOs for reports, statuses, and user summaries
+  - labels: `sprint-1`, `backend`
+- #483 Add reusable zod schemas for report submission and profile updates
+  - labels: `sprint-1`, `backend`
+- #484 Add shared pagination and filter types for list-heavy civic workflows
+  - labels: `sprint-1`, `backend`
+- #485 Add typed response envelopes for success and domain error payloads
+  - labels: `sprint-1`, `backend`
+- #486 Add shared enums for report states, visibility, and moderation outcomes
+  - labels: `sprint-1`, `backend`
+- #487 Create the initial civic resource DTOs for reports, statuses, and user summaries
+  - labels: `sprint-1`, `backend`
+- #488 Create reusable zod schemas for report submission and profile updates
+  - labels: `sprint-1`, `backend`
+- #489 Create shared pagination and filter types for list-heavy civic workflows
+  - labels: `sprint-1`, `backend`
+- #490 Create typed response envelopes for success and domain error payloads
+  - labels: `sprint-1`, `backend`
+- #491 Create shared enums for report states, visibility, and moderation outcomes
+  - labels: `sprint-1`, `backend`
+- #492 Design the first relational schema additions for report drafts and submissions
+  - labels: `sprint-1`, `backend`
+- #493 Design migration-safe fields for future assignment, moderation, and audit records
+  - labels: `sprint-1`, `backend`
+- #494 Design media metadata so attachments can be introduced without a schema rewrite
+  - labels: `sprint-1`, `backend`
+- #495 Design seed and reset helpers for a richer local development dataset
+  - labels: `sprint-1`, `backend`
+- #496 Design indexing strategy notes for report lookup and timeline queries
+  - labels: `sprint-1`, `backend`
+- #497 Add the first relational schema additions for report drafts and submissions
+  - labels: `sprint-1`, `backend`
+- #498 Add migration-safe fields for future assignment, moderation, and audit records
+  - labels: `sprint-1`, `backend`
+- #499 Add media metadata so attachments can be introduced without a schema rewrite
+  - labels: `sprint-1`, `backend`
+- #500 Add seed and reset helpers for a richer local development dataset
+  - labels: `sprint-1`, `backend`
+- #501 Add indexing strategy notes for report lookup and timeline queries
+  - labels: `sprint-1`, `backend`
+- #502 Model the first relational schema additions for report drafts and submissions
+  - labels: `sprint-1`, `backend`
+- #503 Model migration-safe fields for future assignment, moderation, and audit records
+  - labels: `sprint-1`, `backend`
+- #504 Model media metadata so attachments can be introduced without a schema rewrite
+  - labels: `sprint-1`, `backend`
+- #505 Model seed and reset helpers for a richer local development dataset
+  - labels: `sprint-1`, `backend`
+- #506 Model indexing strategy notes for report lookup and timeline queries
+  - labels: `sprint-1`, `backend`
+- #507 Prepare the first relational schema additions for report drafts and submissions
+  - labels: `sprint-1`, `backend`
+- #508 Prepare migration-safe fields for future assignment, moderation, and audit records
+  - labels: `sprint-1`, `backend`
+- #509 Prepare media metadata so attachments can be introduced without a schema rewrite
+  - labels: `sprint-1`, `backend`
+- #510 Prepare seed and reset helpers for a richer local development dataset
+  - labels: `sprint-1`, `backend`
+- #511 Prepare indexing strategy notes for report lookup and timeline queries
+  - labels: `sprint-1`, `backend`
+- #512 Verify the first relational schema additions for report drafts and submissions
+  - labels: `sprint-1`, `backend`
+- #513 Verify migration-safe fields for future assignment, moderation, and audit records
+  - labels: `sprint-1`, `backend`
+- #514 Verify media metadata so attachments can be introduced without a schema rewrite
+  - labels: `sprint-1`, `backend`
+- #515 Verify seed and reset helpers for a richer local development dataset
+  - labels: `sprint-1`, `backend`
+- #516 Verify indexing strategy notes for report lookup and timeline queries
+  - labels: `sprint-1`, `backend`
+- #517 Document the repo bootstrap path for contributors who start from the auth starter
+  - labels: `sprint-1`, `documentation`
+- #518 Document a clear local reset workflow for SQLite, Prisma, and generated clients
+  - labels: `sprint-1`, `documentation`
+- #519 Document how new modules should be added under the modular monolith pattern
+  - labels: `sprint-1`, `documentation`
+- #520 Document the package boundary rules for shared, stellar, web, api, and mobile
+  - labels: `sprint-1`, `documentation`
+- #521 Document a contributor checklist for reviewing cross-package changes
+  - labels: `sprint-1`, `documentation`
+- #522 Add the repo bootstrap path for contributors who start from the auth starter
+  - labels: `sprint-1`, `documentation`
+- #523 Add a clear local reset workflow for SQLite, Prisma, and generated clients
+  - labels: `sprint-1`, `documentation`
+- #524 Add how new modules should be added under the modular monolith pattern
+  - labels: `sprint-1`, `documentation`
+- #525 Add the package boundary rules for shared, stellar, web, api, and mobile
+  - labels: `sprint-1`, `documentation`
+- #526 Add a contributor checklist for reviewing cross-package changes
+  - labels: `sprint-1`, `documentation`
+- #527 Describe the repo bootstrap path for contributors who start from the auth starter
+  - labels: `sprint-1`, `documentation`
+- #528 Describe a clear local reset workflow for SQLite, Prisma, and generated clients
+  - labels: `sprint-1`, `documentation`
+- #529 Describe how new modules should be added under the modular monolith pattern
+  - labels: `sprint-1`, `documentation`
+- #530 Describe the package boundary rules for shared, stellar, web, api, and mobile
+  - labels: `sprint-1`, `documentation`
+- #531 Describe a contributor checklist for reviewing cross-package changes
+  - labels: `sprint-1`, `documentation`
+- #532 Clarify the repo bootstrap path for contributors who start from the auth starter
+  - labels: `sprint-1`, `documentation`
+- #533 Clarify a clear local reset workflow for SQLite, Prisma, and generated clients
+  - labels: `sprint-1`, `documentation`
+- #534 Clarify how new modules should be added under the modular monolith pattern
+  - labels: `sprint-1`, `documentation`
+- #535 Clarify the package boundary rules for shared, stellar, web, api, and mobile
+  - labels: `sprint-1`, `documentation`
+- #536 Clarify a contributor checklist for reviewing cross-package changes
+  - labels: `sprint-1`, `documentation`
+- #537 Write the repo bootstrap path for contributors who start from the auth starter
+  - labels: `sprint-1`, `documentation`
+- #538 Write a clear local reset workflow for SQLite, Prisma, and generated clients
+  - labels: `sprint-1`, `documentation`
+- #539 Write how new modules should be added under the modular monolith pattern
+  - labels: `sprint-1`, `documentation`
+- #540 Write the package boundary rules for shared, stellar, web, api, and mobile
+  - labels: `sprint-1`, `documentation`
+- #541 Write a contributor checklist for reviewing cross-package changes
+  - labels: `sprint-1`, `documentation`
+- #542 Extend integration test helpers so new civic modules can be covered quickly
+  - labels: `sprint-1`, `backend`
+- #543 Extend contract tests for the shared auth and public user payloads
+  - labels: `sprint-1`, `backend`
+- #544 Extend baseline API tests for future report creation flows
+  - labels: `sprint-1`, `backend`
+- #545 Extend web test scaffolding for authenticated and unauthenticated states
+  - labels: `sprint-1`, `backend`
+- #546 Extend the test reset flow so new domain models do not leak state across runs
+  - labels: `sprint-1`, `backend`
+- #547 Add integration test helpers so new civic modules can be covered quickly
+  - labels: `sprint-1`, `backend`
+- #548 Add contract tests for the shared auth and public user payloads
+  - labels: `sprint-1`, `backend`
+- #549 Add baseline API tests for future report creation flows
+  - labels: `sprint-1`, `backend`
+- #550 Add web test scaffolding for authenticated and unauthenticated states
+  - labels: `sprint-1`, `backend`
+- #551 Add the test reset flow so new domain models do not leak state across runs
+  - labels: `sprint-1`, `backend`
+- #552 Create integration test helpers so new civic modules can be covered quickly
+  - labels: `sprint-1`, `backend`
+- #553 Create contract tests for the shared auth and public user payloads
+  - labels: `sprint-1`, `backend`
+- #554 Create baseline API tests for future report creation flows
+  - labels: `sprint-1`, `backend`
+- #555 Create web test scaffolding for authenticated and unauthenticated states
+  - labels: `sprint-1`, `backend`
+- #556 Create the test reset flow so new domain models do not leak state across runs
+  - labels: `sprint-1`, `backend`
+- #557 Harden integration test helpers so new civic modules can be covered quickly
+  - labels: `sprint-1`, `backend`
+- #558 Harden contract tests for the shared auth and public user payloads
+  - labels: `sprint-1`, `backend`
+- #559 Harden baseline API tests for future report creation flows
+  - labels: `sprint-1`, `backend`
+- #560 Harden web test scaffolding for authenticated and unauthenticated states
+  - labels: `sprint-1`, `backend`
+- #561 Harden the test reset flow so new domain models do not leak state across runs
+  - labels: `sprint-1`, `backend`
+- #562 Refine integration test helpers so new civic modules can be covered quickly
+  - labels: `sprint-1`, `backend`
+- #563 Refine contract tests for the shared auth and public user payloads
+  - labels: `sprint-1`, `backend`
+- #564 Refine baseline API tests for future report creation flows
+  - labels: `sprint-1`, `backend`
+- #565 Refine web test scaffolding for authenticated and unauthenticated states
+  - labels: `sprint-1`, `backend`
+- #566 Refine the test reset flow so new domain models do not leak state across runs
+  - labels: `sprint-1`, `backend`
+
+## sprint-2 - Citizen reporting experience
+
+Build the user-facing report submission and viewing workflow across web and mobile while keeping the API contract explicit.
+
+- #567 Design the first report submission entry point in the Next.js app router
+  - labels: `sprint-2`, `frontend-web`
+- #568 Design a multi-step form shell for location, category, and description capture
+  - labels: `sprint-2`, `frontend-web`
+- #569 Design draft autosave behavior for long-form report entry
+  - labels: `sprint-2`, `frontend-web`
+- #570 Design attachment upload state and retry handling in the submission flow
+  - labels: `sprint-2`, `frontend-web`
+- #571 Design a post-submit confirmation path that links into report tracking
+  - labels: `sprint-2`, `frontend-web`
+- #572 Add the first report submission entry point in the Next.js app router
+  - labels: `sprint-2`, `frontend-web`
+- #573 Add a multi-step form shell for location, category, and description capture
+  - labels: `sprint-2`, `frontend-web`
+- #574 Add draft autosave behavior for long-form report entry
+  - labels: `sprint-2`, `frontend-web`
+- #575 Add attachment upload state and retry handling in the submission flow
+  - labels: `sprint-2`, `frontend-web`
+- #576 Add a post-submit confirmation path that links into report tracking
+  - labels: `sprint-2`, `frontend-web`
+- #577 Implement the first report submission entry point in the Next.js app router
+  - labels: `sprint-2`, `frontend-web`
+- #578 Implement a multi-step form shell for location, category, and description capture
+  - labels: `sprint-2`, `frontend-web`
+- #579 Implement draft autosave behavior for long-form report entry
+  - labels: `sprint-2`, `frontend-web`
+- #580 Implement attachment upload state and retry handling in the submission flow
+  - labels: `sprint-2`, `frontend-web`
+- #581 Implement a post-submit confirmation path that links into report tracking
+  - labels: `sprint-2`, `frontend-web`
+- #582 Surface the first report submission entry point in the Next.js app router
+  - labels: `sprint-2`, `frontend-web`
+- #583 Surface a multi-step form shell for location, category, and description capture
+  - labels: `sprint-2`, `frontend-web`
+- #584 Surface draft autosave behavior for long-form report entry
+  - labels: `sprint-2`, `frontend-web`
+- #585 Surface attachment upload state and retry handling in the submission flow
+  - labels: `sprint-2`, `frontend-web`
+- #586 Surface a post-submit confirmation path that links into report tracking
+  - labels: `sprint-2`, `frontend-web`
+- #587 Create the first report submission entry point in the Next.js app router
+  - labels: `sprint-2`, `frontend-web`
+- #588 Create a multi-step form shell for location, category, and description capture
+  - labels: `sprint-2`, `frontend-web`
+- #589 Create draft autosave behavior for long-form report entry
+  - labels: `sprint-2`, `frontend-web`
+- #590 Create attachment upload state and retry handling in the submission flow
+  - labels: `sprint-2`, `frontend-web`
+- #591 Create a post-submit confirmation path that links into report tracking
+  - labels: `sprint-2`, `frontend-web`
+- #592 Lay out the native report compose experience around the current Expo scaffold
+  - labels: `sprint-2`, `frontend-mobile`
+- #593 Lay out camera and gallery attachment selection flows with safe fallbacks
+  - labels: `sprint-2`, `frontend-mobile`
+- #594 Lay out offline-friendly draft persistence for interrupted submissions
+  - labels: `sprint-2`, `frontend-mobile`
+- #595 Lay out a mobile-friendly location capture flow for report context
+  - labels: `sprint-2`, `frontend-mobile`
+- #596 Lay out a lightweight report preview screen before final submission
+  - labels: `sprint-2`, `frontend-mobile`
+- #597 Build the native report compose experience around the current Expo scaffold
+  - labels: `sprint-2`, `frontend-mobile`
+- #598 Build camera and gallery attachment selection flows with safe fallbacks
+  - labels: `sprint-2`, `frontend-mobile`
+- #599 Build offline-friendly draft persistence for interrupted submissions
+  - labels: `sprint-2`, `frontend-mobile`
+- #600 Build a mobile-friendly location capture flow for report context
+  - labels: `sprint-2`, `frontend-mobile`
+- #601 Build a lightweight report preview screen before final submission
+  - labels: `sprint-2`, `frontend-mobile`
+- #602 Add the native report compose experience around the current Expo scaffold
+  - labels: `sprint-2`, `frontend-mobile`
+- #603 Add camera and gallery attachment selection flows with safe fallbacks
+  - labels: `sprint-2`, `frontend-mobile`
+- #604 Add offline-friendly draft persistence for interrupted submissions
+  - labels: `sprint-2`, `frontend-mobile`
+- #605 Add a mobile-friendly location capture flow for report context
+  - labels: `sprint-2`, `frontend-mobile`
+- #606 Add a lightweight report preview screen before final submission
+  - labels: `sprint-2`, `frontend-mobile`
+- #607 Create the native report compose experience around the current Expo scaffold
+  - labels: `sprint-2`, `frontend-mobile`
+- #608 Create camera and gallery attachment selection flows with safe fallbacks
+  - labels: `sprint-2`, `frontend-mobile`
+- #609 Create offline-friendly draft persistence for interrupted submissions
+  - labels: `sprint-2`, `frontend-mobile`
+- #610 Create a mobile-friendly location capture flow for report context
+  - labels: `sprint-2`, `frontend-mobile`
+- #611 Create a lightweight report preview screen before final submission
+  - labels: `sprint-2`, `frontend-mobile`
+- #612 Wire in the native report compose experience around the current Expo scaffold
+  - labels: `sprint-2`, `frontend-mobile`
+- #613 Wire in camera and gallery attachment selection flows with safe fallbacks
+  - labels: `sprint-2`, `frontend-mobile`
+- #614 Wire in offline-friendly draft persistence for interrupted submissions
+  - labels: `sprint-2`, `frontend-mobile`
+- #615 Wire in a mobile-friendly location capture flow for report context
+  - labels: `sprint-2`, `frontend-mobile`
+- #616 Wire in a lightweight report preview screen before final submission
+  - labels: `sprint-2`, `frontend-mobile`
+- #617 Add create, draft, and retrieve endpoints for citizen reports
+  - labels: `sprint-2`, `backend`
+- #618 Add ownership-aware access control for draft and submitted report records
+  - labels: `sprint-2`, `backend`
+- #619 Add geolocation, category, and body length constraints at the API edge
+  - labels: `sprint-2`, `backend`
+- #620 Add normalized report timelines for both web and mobile clients
+  - labels: `sprint-2`, `backend`
+- #621 Add idempotent submission handling so retries do not duplicate records
+  - labels: `sprint-2`, `backend`
+- #622 Implement create, draft, and retrieve endpoints for citizen reports
+  - labels: `sprint-2`, `backend`
+- #623 Implement ownership-aware access control for draft and submitted report records
+  - labels: `sprint-2`, `backend`
+- #624 Implement geolocation, category, and body length constraints at the API edge
+  - labels: `sprint-2`, `backend`
+- #625 Implement normalized report timelines for both web and mobile clients
+  - labels: `sprint-2`, `backend`
+- #626 Implement idempotent submission handling so retries do not duplicate records
+  - labels: `sprint-2`, `backend`
+- #627 Validate create, draft, and retrieve endpoints for citizen reports
+  - labels: `sprint-2`, `backend`
+- #628 Validate ownership-aware access control for draft and submitted report records
+  - labels: `sprint-2`, `backend`
+- #629 Validate geolocation, category, and body length constraints at the API edge
+  - labels: `sprint-2`, `backend`
+- #630 Validate normalized report timelines for both web and mobile clients
+  - labels: `sprint-2`, `backend`
+- #631 Validate idempotent submission handling so retries do not duplicate records
+  - labels: `sprint-2`, `backend`
+- #632 Return create, draft, and retrieve endpoints for citizen reports
+  - labels: `sprint-2`, `backend`
+- #633 Return ownership-aware access control for draft and submitted report records
+  - labels: `sprint-2`, `backend`
+- #634 Return geolocation, category, and body length constraints at the API edge
+  - labels: `sprint-2`, `backend`
+- #635 Return normalized report timelines for both web and mobile clients
+  - labels: `sprint-2`, `backend`
+- #636 Return idempotent submission handling so retries do not duplicate records
+  - labels: `sprint-2`, `backend`
+- #637 Harden create, draft, and retrieve endpoints for citizen reports
+  - labels: `sprint-2`, `backend`
+- #638 Harden ownership-aware access control for draft and submitted report records
+  - labels: `sprint-2`, `backend`
+- #639 Harden geolocation, category, and body length constraints at the API edge
+  - labels: `sprint-2`, `backend`
+- #640 Harden normalized report timelines for both web and mobile clients
+  - labels: `sprint-2`, `backend`
+- #641 Harden idempotent submission handling so retries do not duplicate records
+  - labels: `sprint-2`, `backend`
+- #642 Define attachment metadata and upload intent handling for report media
+  - labels: `sprint-2`, `backend`
+- #643 Define server-side validation for image types, size limits, and count limits
+  - labels: `sprint-2`, `backend`
+- #644 Define preview-safe signed access for newly attached media
+  - labels: `sprint-2`, `backend`
+- #645 Define upload progress and failure recovery hooks for flaky networks
+  - labels: `sprint-2`, `backend`
+- #646 Define removing and replacing attachments before final publish
+  - labels: `sprint-2`, `backend`
+- #647 Add attachment metadata and upload intent handling for report media
+  - labels: `sprint-2`, `backend`
+- #648 Add server-side validation for image types, size limits, and count limits
+  - labels: `sprint-2`, `backend`
+- #649 Add preview-safe signed access for newly attached media
+  - labels: `sprint-2`, `backend`
+- #650 Add upload progress and failure recovery hooks for flaky networks
+  - labels: `sprint-2`, `backend`
+- #651 Add removing and replacing attachments before final publish
+  - labels: `sprint-2`, `backend`
+- #652 Implement attachment metadata and upload intent handling for report media
+  - labels: `sprint-2`, `backend`
+- #653 Implement server-side validation for image types, size limits, and count limits
+  - labels: `sprint-2`, `backend`
+- #654 Implement preview-safe signed access for newly attached media
+  - labels: `sprint-2`, `backend`
+- #655 Implement upload progress and failure recovery hooks for flaky networks
+  - labels: `sprint-2`, `backend`
+- #656 Implement removing and replacing attachments before final publish
+  - labels: `sprint-2`, `backend`
+- #657 Support attachment metadata and upload intent handling for report media
+  - labels: `sprint-2`, `backend`
+- #658 Support server-side validation for image types, size limits, and count limits
+  - labels: `sprint-2`, `backend`
+- #659 Support preview-safe signed access for newly attached media
+  - labels: `sprint-2`, `backend`
+- #660 Support upload progress and failure recovery hooks for flaky networks
+  - labels: `sprint-2`, `backend`
+- #661 Support removing and replacing attachments before final publish
+  - labels: `sprint-2`, `backend`
+- #662 Harden attachment metadata and upload intent handling for report media
+  - labels: `sprint-2`, `backend`
+- #663 Harden server-side validation for image types, size limits, and count limits
+  - labels: `sprint-2`, `backend`
+- #664 Harden preview-safe signed access for newly attached media
+  - labels: `sprint-2`, `backend`
+- #665 Harden upload progress and failure recovery hooks for flaky networks
+  - labels: `sprint-2`, `backend`
+- #666 Harden removing and replacing attachments before final publish
+  - labels: `sprint-2`, `backend`
+- #667 Write form copy guidelines for civic reporting language and tone
+  - labels: `sprint-2`, `documentation`
+- #668 Write shared validation messages that match the reporting UX copy
+  - labels: `sprint-2`, `documentation`
+- #669 Write how accessibility should be preserved in long-form inputs
+  - labels: `sprint-2`, `documentation`
+- #670 Write empty-state guidance for first-time reporters
+  - labels: `sprint-2`, `documentation`
+- #671 Write the review criteria for a production-ready submission flow
+  - labels: `sprint-2`, `documentation`
+- #672 Add form copy guidelines for civic reporting language and tone
+  - labels: `sprint-2`, `documentation`
+- #673 Add shared validation messages that match the reporting UX copy
+  - labels: `sprint-2`, `documentation`
+- #674 Add how accessibility should be preserved in long-form inputs
+  - labels: `sprint-2`, `documentation`
+- #675 Add empty-state guidance for first-time reporters
+  - labels: `sprint-2`, `documentation`
+- #676 Add the review criteria for a production-ready submission flow
+  - labels: `sprint-2`, `documentation`
+- #677 Document form copy guidelines for civic reporting language and tone
+  - labels: `sprint-2`, `documentation`
+- #678 Document shared validation messages that match the reporting UX copy
+  - labels: `sprint-2`, `documentation`
+- #679 Document how accessibility should be preserved in long-form inputs
+  - labels: `sprint-2`, `documentation`
+- #680 Document empty-state guidance for first-time reporters
+  - labels: `sprint-2`, `documentation`
+- #681 Document the review criteria for a production-ready submission flow
+  - labels: `sprint-2`, `documentation`
+- #682 Create form copy guidelines for civic reporting language and tone
+  - labels: `sprint-2`, `documentation`
+- #683 Create shared validation messages that match the reporting UX copy
+  - labels: `sprint-2`, `documentation`
+- #684 Create how accessibility should be preserved in long-form inputs
+  - labels: `sprint-2`, `documentation`
+- #685 Create empty-state guidance for first-time reporters
+  - labels: `sprint-2`, `documentation`
+- #686 Create the review criteria for a production-ready submission flow
+  - labels: `sprint-2`, `documentation`
+- #687 Define form copy guidelines for civic reporting language and tone
+  - labels: `sprint-2`, `documentation`
+- #688 Define shared validation messages that match the reporting UX copy
+  - labels: `sprint-2`, `documentation`
+- #689 Define how accessibility should be preserved in long-form inputs
+  - labels: `sprint-2`, `documentation`
+- #690 Define empty-state guidance for first-time reporters
+  - labels: `sprint-2`, `documentation`
+- #691 Define the review criteria for a production-ready submission flow
+  - labels: `sprint-2`, `documentation`
+
+## sprint-3 - Public case tracking and discovery
+
+Expose report status, maps, search, and lifecycle views so citizens can follow issues after submission.
+
+- #692 Build a public case list page for recent reports and updates
+  - labels: `sprint-3`, `frontend-web`
+- #693 Build a map discovery layout for geographic browsing of local issues
+  - labels: `sprint-3`, `frontend-web`
+- #694 Build status and category filters that can be combined without page reloads
+  - labels: `sprint-3`, `frontend-web`
+- #695 Build a report detail page that prioritizes timeline clarity over admin controls
+  - labels: `sprint-3`, `frontend-web`
+- #696 Build deep-link friendly share URLs for public report views
+  - labels: `sprint-3`, `frontend-web`
+- #697 Create a public case list page for recent reports and updates
+  - labels: `sprint-3`, `frontend-web`
+- #698 Create a map discovery layout for geographic browsing of local issues
+  - labels: `sprint-3`, `frontend-web`
+- #699 Create status and category filters that can be combined without page reloads
+  - labels: `sprint-3`, `frontend-web`
+- #700 Create a report detail page that prioritizes timeline clarity over admin controls
+  - labels: `sprint-3`, `frontend-web`
+- #701 Create deep-link friendly share URLs for public report views
+  - labels: `sprint-3`, `frontend-web`
+- #702 Add a public case list page for recent reports and updates
+  - labels: `sprint-3`, `frontend-web`
+- #703 Add a map discovery layout for geographic browsing of local issues
+  - labels: `sprint-3`, `frontend-web`
+- #704 Add status and category filters that can be combined without page reloads
+  - labels: `sprint-3`, `frontend-web`
+- #705 Add a report detail page that prioritizes timeline clarity over admin controls
+  - labels: `sprint-3`, `frontend-web`
+- #706 Add deep-link friendly share URLs for public report views
+  - labels: `sprint-3`, `frontend-web`
+- #707 Refine a public case list page for recent reports and updates
+  - labels: `sprint-3`, `frontend-web`
+- #708 Refine a map discovery layout for geographic browsing of local issues
+  - labels: `sprint-3`, `frontend-web`
+- #709 Refine status and category filters that can be combined without page reloads
+  - labels: `sprint-3`, `frontend-web`
+- #710 Refine a report detail page that prioritizes timeline clarity over admin controls
+  - labels: `sprint-3`, `frontend-web`
+- #711 Refine deep-link friendly share URLs for public report views
+  - labels: `sprint-3`, `frontend-web`
+- #712 Expose a public case list page for recent reports and updates
+  - labels: `sprint-3`, `frontend-web`
+- #713 Expose a map discovery layout for geographic browsing of local issues
+  - labels: `sprint-3`, `frontend-web`
+- #714 Expose status and category filters that can be combined without page reloads
+  - labels: `sprint-3`, `frontend-web`
+- #715 Expose a report detail page that prioritizes timeline clarity over admin controls
+  - labels: `sprint-3`, `frontend-web`
+- #716 Expose deep-link friendly share URLs for public report views
+  - labels: `sprint-3`, `frontend-web`
+- #717 Implement list and search endpoints for public report discovery
+  - labels: `sprint-3`, `backend`
+- #718 Implement pagination, sorting, and filter semantics for case browsing
+  - labels: `sprint-3`, `backend`
+- #719 Implement report summaries optimized for map markers and list cards
+  - labels: `sprint-3`, `backend`
+- #720 Implement public identifiers that can be shared without leaking private data
+  - labels: `sprint-3`, `backend`
+- #721 Implement timeline events in a stable order for status pages
+  - labels: `sprint-3`, `backend`
+- #722 Add list and search endpoints for public report discovery
+  - labels: `sprint-3`, `backend`
+- #723 Add pagination, sorting, and filter semantics for case browsing
+  - labels: `sprint-3`, `backend`
+- #724 Add report summaries optimized for map markers and list cards
+  - labels: `sprint-3`, `backend`
+- #725 Add public identifiers that can be shared without leaking private data
+  - labels: `sprint-3`, `backend`
+- #726 Add timeline events in a stable order for status pages
+  - labels: `sprint-3`, `backend`
+- #727 Expose list and search endpoints for public report discovery
+  - labels: `sprint-3`, `backend`
+- #728 Expose pagination, sorting, and filter semantics for case browsing
+  - labels: `sprint-3`, `backend`
+- #729 Expose report summaries optimized for map markers and list cards
+  - labels: `sprint-3`, `backend`
+- #730 Expose public identifiers that can be shared without leaking private data
+  - labels: `sprint-3`, `backend`
+- #731 Expose timeline events in a stable order for status pages
+  - labels: `sprint-3`, `backend`
+- #732 Support list and search endpoints for public report discovery
+  - labels: `sprint-3`, `backend`
+- #733 Support pagination, sorting, and filter semantics for case browsing
+  - labels: `sprint-3`, `backend`
+- #734 Support report summaries optimized for map markers and list cards
+  - labels: `sprint-3`, `backend`
+- #735 Support public identifiers that can be shared without leaking private data
+  - labels: `sprint-3`, `backend`
+- #736 Support timeline events in a stable order for status pages
+  - labels: `sprint-3`, `backend`
+- #737 Return list and search endpoints for public report discovery
+  - labels: `sprint-3`, `backend`
+- #738 Return pagination, sorting, and filter semantics for case browsing
+  - labels: `sprint-3`, `backend`
+- #739 Return report summaries optimized for map markers and list cards
+  - labels: `sprint-3`, `backend`
+- #740 Return public identifiers that can be shared without leaking private data
+  - labels: `sprint-3`, `backend`
+- #741 Return timeline events in a stable order for status pages
+  - labels: `sprint-3`, `backend`
+- #742 Define the report lifecycle state machine and transition guards
+  - labels: `sprint-3`, `backend`
+- #743 Define shared status labels for submitted, verified, assigned, and resolved cases
+  - labels: `sprint-3`, `backend`
+- #744 Define transition validation so invalid workflow jumps are rejected
+  - labels: `sprint-3`, `backend`
+- #745 Define event records for each state change and important metadata update
+  - labels: `sprint-3`, `backend`
+- #746 Define which transitions remain citizen-visible versus internal-only
+  - labels: `sprint-3`, `backend`
+- #747 Add the report lifecycle state machine and transition guards
+  - labels: `sprint-3`, `backend`
+- #748 Add shared status labels for submitted, verified, assigned, and resolved cases
+  - labels: `sprint-3`, `backend`
+- #749 Add transition validation so invalid workflow jumps are rejected
+  - labels: `sprint-3`, `backend`
+- #750 Add event records for each state change and important metadata update
+  - labels: `sprint-3`, `backend`
+- #751 Add which transitions remain citizen-visible versus internal-only
+  - labels: `sprint-3`, `backend`
+- #752 Implement the report lifecycle state machine and transition guards
+  - labels: `sprint-3`, `backend`
+- #753 Implement shared status labels for submitted, verified, assigned, and resolved cases
+  - labels: `sprint-3`, `backend`
+- #754 Implement transition validation so invalid workflow jumps are rejected
+  - labels: `sprint-3`, `backend`
+- #755 Implement event records for each state change and important metadata update
+  - labels: `sprint-3`, `backend`
+- #756 Implement which transitions remain citizen-visible versus internal-only
+  - labels: `sprint-3`, `backend`
+- #757 Create the report lifecycle state machine and transition guards
+  - labels: `sprint-3`, `backend`
+- #758 Create shared status labels for submitted, verified, assigned, and resolved cases
+  - labels: `sprint-3`, `backend`
+- #759 Create transition validation so invalid workflow jumps are rejected
+  - labels: `sprint-3`, `backend`
+- #760 Create event records for each state change and important metadata update
+  - labels: `sprint-3`, `backend`
+- #761 Create which transitions remain citizen-visible versus internal-only
+  - labels: `sprint-3`, `backend`
+- #762 Document the report lifecycle state machine and transition guards
+  - labels: `sprint-3`, `backend`
+- #763 Document shared status labels for submitted, verified, assigned, and resolved cases
+  - labels: `sprint-3`, `backend`
+- #764 Document transition validation so invalid workflow jumps are rejected
+  - labels: `sprint-3`, `backend`
+- #765 Document event records for each state change and important metadata update
+  - labels: `sprint-3`, `backend`
+- #766 Document which transitions remain citizen-visible versus internal-only
+  - labels: `sprint-3`, `backend`
+- #767 Create a mobile list view for the user’s submitted reports
+  - labels: `sprint-3`, `frontend-mobile`
+- #768 Create public case detail screens with compact timeline presentation
+  - labels: `sprint-3`, `frontend-mobile`
+- #769 Create location-aware search shortcuts for nearby issues
+  - labels: `sprint-3`, `frontend-mobile`
+- #770 Create pull-to-refresh and cached recent views for the discovery feed
+  - labels: `sprint-3`, `frontend-mobile`
+- #771 Create the detail page resilient to partial data while still feeling useful
+  - labels: `sprint-3`, `frontend-mobile`
+- #772 Add a mobile list view for the user’s submitted reports
+  - labels: `sprint-3`, `frontend-mobile`
+- #773 Add public case detail screens with compact timeline presentation
+  - labels: `sprint-3`, `frontend-mobile`
+- #774 Add location-aware search shortcuts for nearby issues
+  - labels: `sprint-3`, `frontend-mobile`
+- #775 Add pull-to-refresh and cached recent views for the discovery feed
+  - labels: `sprint-3`, `frontend-mobile`
+- #776 Add the detail page resilient to partial data while still feeling useful
+  - labels: `sprint-3`, `frontend-mobile`
+- #777 Implement a mobile list view for the user’s submitted reports
+  - labels: `sprint-3`, `frontend-mobile`
+- #778 Implement public case detail screens with compact timeline presentation
+  - labels: `sprint-3`, `frontend-mobile`
+- #779 Implement location-aware search shortcuts for nearby issues
+  - labels: `sprint-3`, `frontend-mobile`
+- #780 Implement pull-to-refresh and cached recent views for the discovery feed
+  - labels: `sprint-3`, `frontend-mobile`
+- #781 Implement the detail page resilient to partial data while still feeling useful
+  - labels: `sprint-3`, `frontend-mobile`
+- #782 Refine a mobile list view for the user’s submitted reports
+  - labels: `sprint-3`, `frontend-mobile`
+- #783 Refine public case detail screens with compact timeline presentation
+  - labels: `sprint-3`, `frontend-mobile`
+- #784 Refine location-aware search shortcuts for nearby issues
+  - labels: `sprint-3`, `frontend-mobile`
+- #785 Refine pull-to-refresh and cached recent views for the discovery feed
+  - labels: `sprint-3`, `frontend-mobile`
+- #786 Refine the detail page resilient to partial data while still feeling useful
+  - labels: `sprint-3`, `frontend-mobile`
+- #787 Make a mobile list view for the user’s submitted reports
+  - labels: `sprint-3`, `frontend-mobile`
+- #788 Make public case detail screens with compact timeline presentation
+  - labels: `sprint-3`, `frontend-mobile`
+- #789 Make location-aware search shortcuts for nearby issues
+  - labels: `sprint-3`, `frontend-mobile`
+- #790 Make pull-to-refresh and cached recent views for the discovery feed
+  - labels: `sprint-3`, `frontend-mobile`
+- #791 Make the detail page resilient to partial data while still feeling useful
+  - labels: `sprint-3`, `frontend-mobile`
+- #792 Document ranking expectations for public case search and filtering
+  - labels: `sprint-3`, `documentation`
+- #793 Document which fields are searchable at launch and which remain internal
+  - labels: `sprint-3`, `documentation`
+- #794 Document shared test fixtures for common discovery states
+  - labels: `sprint-3`, `documentation`
+- #795 Document guidance for deduping nearly identical report titles
+  - labels: `sprint-3`, `documentation`
+- #796 Document acceptance criteria for map, list, and direct-link discovery
+  - labels: `sprint-3`, `documentation`
+- #797 Define ranking expectations for public case search and filtering
+  - labels: `sprint-3`, `documentation`
+- #798 Define which fields are searchable at launch and which remain internal
+  - labels: `sprint-3`, `documentation`
+- #799 Define shared test fixtures for common discovery states
+  - labels: `sprint-3`, `documentation`
+- #800 Define guidance for deduping nearly identical report titles
+  - labels: `sprint-3`, `documentation`
+- #801 Define acceptance criteria for map, list, and direct-link discovery
+  - labels: `sprint-3`, `documentation`
+- #802 Add ranking expectations for public case search and filtering
+  - labels: `sprint-3`, `documentation`
+- #803 Add which fields are searchable at launch and which remain internal
+  - labels: `sprint-3`, `documentation`
+- #804 Add shared test fixtures for common discovery states
+  - labels: `sprint-3`, `documentation`
+- #805 Add guidance for deduping nearly identical report titles
+  - labels: `sprint-3`, `documentation`
+- #806 Add acceptance criteria for map, list, and direct-link discovery
+  - labels: `sprint-3`, `documentation`
+- #807 Write ranking expectations for public case search and filtering
+  - labels: `sprint-3`, `documentation`
+- #808 Write which fields are searchable at launch and which remain internal
+  - labels: `sprint-3`, `documentation`
+- #809 Write shared test fixtures for common discovery states
+  - labels: `sprint-3`, `documentation`
+- #810 Write guidance for deduping nearly identical report titles
+  - labels: `sprint-3`, `documentation`
+- #811 Write acceptance criteria for map, list, and direct-link discovery
+  - labels: `sprint-3`, `documentation`
+- #812 Capture ranking expectations for public case search and filtering
+  - labels: `sprint-3`, `documentation`
+- #813 Capture which fields are searchable at launch and which remain internal
+  - labels: `sprint-3`, `documentation`
+- #814 Capture shared test fixtures for common discovery states
+  - labels: `sprint-3`, `documentation`
+- #815 Capture guidance for deduping nearly identical report titles
+  - labels: `sprint-3`, `documentation`
+- #816 Capture acceptance criteria for map, list, and direct-link discovery
+  - labels: `sprint-3`, `documentation`
+
+## sprint-4 - Moderation and operations
+
+Give operators queue, review, assignment, and analytics tooling that can be worked on independently across surfaces.
+
+- #817 Build a queue view for suspicious, duplicate, and priority reports
+  - labels: `sprint-4`, `frontend-web`
+- #818 Build one-click moderation actions with confirmation states
+  - labels: `sprint-4`, `frontend-web`
+- #819 Build a report triage sidebar that keeps the primary case context visible
+  - labels: `sprint-4`, `frontend-web`
+- #820 Build batch selection for repetitive moderation decisions
+  - labels: `sprint-4`, `frontend-web`
+- #821 Build reviewer notes and history without exposing internal-only actions publicly
+  - labels: `sprint-4`, `frontend-web`
+- #822 Add a queue view for suspicious, duplicate, and priority reports
+  - labels: `sprint-4`, `frontend-web`
+- #823 Add one-click moderation actions with confirmation states
+  - labels: `sprint-4`, `frontend-web`
+- #824 Add a report triage sidebar that keeps the primary case context visible
+  - labels: `sprint-4`, `frontend-web`
+- #825 Add batch selection for repetitive moderation decisions
+  - labels: `sprint-4`, `frontend-web`
+- #826 Add reviewer notes and history without exposing internal-only actions publicly
+  - labels: `sprint-4`, `frontend-web`
+- #827 Create a queue view for suspicious, duplicate, and priority reports
+  - labels: `sprint-4`, `frontend-web`
+- #828 Create one-click moderation actions with confirmation states
+  - labels: `sprint-4`, `frontend-web`
+- #829 Create a report triage sidebar that keeps the primary case context visible
+  - labels: `sprint-4`, `frontend-web`
+- #830 Create batch selection for repetitive moderation decisions
+  - labels: `sprint-4`, `frontend-web`
+- #831 Create reviewer notes and history without exposing internal-only actions publicly
+  - labels: `sprint-4`, `frontend-web`
+- #832 Implement a queue view for suspicious, duplicate, and priority reports
+  - labels: `sprint-4`, `frontend-web`
+- #833 Implement one-click moderation actions with confirmation states
+  - labels: `sprint-4`, `frontend-web`
+- #834 Implement a report triage sidebar that keeps the primary case context visible
+  - labels: `sprint-4`, `frontend-web`
+- #835 Implement batch selection for repetitive moderation decisions
+  - labels: `sprint-4`, `frontend-web`
+- #836 Implement reviewer notes and history without exposing internal-only actions publicly
+  - labels: `sprint-4`, `frontend-web`
+- #837 Surface a queue view for suspicious, duplicate, and priority reports
+  - labels: `sprint-4`, `frontend-web`
+- #838 Surface one-click moderation actions with confirmation states
+  - labels: `sprint-4`, `frontend-web`
+- #839 Surface a report triage sidebar that keeps the primary case context visible
+  - labels: `sprint-4`, `frontend-web`
+- #840 Surface batch selection for repetitive moderation decisions
+  - labels: `sprint-4`, `frontend-web`
+- #841 Surface reviewer notes and history without exposing internal-only actions publicly
+  - labels: `sprint-4`, `frontend-web`
+- #842 Create moderation decision endpoints with explicit audit records
+  - labels: `sprint-4`, `backend`
+- #843 Create assignment and ownership transfer operations for internal users
+  - labels: `sprint-4`, `backend`
+- #844 Create internal search filters for queue triage and escalation
+  - labels: `sprint-4`, `backend`
+- #845 Create rate-limit and abuse-prevention hooks around moderator actions
+  - labels: `sprint-4`, `backend`
+- #846 Create operator-facing metrics for queue depth and aging
+  - labels: `sprint-4`, `backend`
+- #847 Add moderation decision endpoints with explicit audit records
+  - labels: `sprint-4`, `backend`
+- #848 Add assignment and ownership transfer operations for internal users
+  - labels: `sprint-4`, `backend`
+- #849 Add internal search filters for queue triage and escalation
+  - labels: `sprint-4`, `backend`
+- #850 Add rate-limit and abuse-prevention hooks around moderator actions
+  - labels: `sprint-4`, `backend`
+- #851 Add operator-facing metrics for queue depth and aging
+  - labels: `sprint-4`, `backend`
+- #852 Implement moderation decision endpoints with explicit audit records
+  - labels: `sprint-4`, `backend`
+- #853 Implement assignment and ownership transfer operations for internal users
+  - labels: `sprint-4`, `backend`
+- #854 Implement internal search filters for queue triage and escalation
+  - labels: `sprint-4`, `backend`
+- #855 Implement rate-limit and abuse-prevention hooks around moderator actions
+  - labels: `sprint-4`, `backend`
+- #856 Implement operator-facing metrics for queue depth and aging
+  - labels: `sprint-4`, `backend`
+- #857 Harden moderation decision endpoints with explicit audit records
+  - labels: `sprint-4`, `backend`
+- #858 Harden assignment and ownership transfer operations for internal users
+  - labels: `sprint-4`, `backend`
+- #859 Harden internal search filters for queue triage and escalation
+  - labels: `sprint-4`, `backend`
+- #860 Harden rate-limit and abuse-prevention hooks around moderator actions
+  - labels: `sprint-4`, `backend`
+- #861 Harden operator-facing metrics for queue depth and aging
+  - labels: `sprint-4`, `backend`
+- #862 Return moderation decision endpoints with explicit audit records
+  - labels: `sprint-4`, `backend`
+- #863 Return assignment and ownership transfer operations for internal users
+  - labels: `sprint-4`, `backend`
+- #864 Return internal search filters for queue triage and escalation
+  - labels: `sprint-4`, `backend`
+- #865 Return rate-limit and abuse-prevention hooks around moderator actions
+  - labels: `sprint-4`, `backend`
+- #866 Return operator-facing metrics for queue depth and aging
+  - labels: `sprint-4`, `backend`
+- #867 Build a lightweight operations dashboard for status and category trends
+  - labels: `sprint-4`, `backend`
+- #868 Build SLA and aging summaries for unresolved civic cases
+  - labels: `sprint-4`, `backend`
+- #869 Build exportable analytics payloads for CSV or dashboard rendering
+  - labels: `sprint-4`, `backend`
+- #870 Build assignment and resolution throughput by period
+  - labels: `sprint-4`, `backend`
+- #871 Build trend views that compare report volume across neighborhoods
+  - labels: `sprint-4`, `backend`
+- #872 Add a lightweight operations dashboard for status and category trends
+  - labels: `sprint-4`, `backend`
+- #873 Add SLA and aging summaries for unresolved civic cases
+  - labels: `sprint-4`, `backend`
+- #874 Add exportable analytics payloads for CSV or dashboard rendering
+  - labels: `sprint-4`, `backend`
+- #875 Add assignment and resolution throughput by period
+  - labels: `sprint-4`, `backend`
+- #876 Add trend views that compare report volume across neighborhoods
+  - labels: `sprint-4`, `backend`
+- #877 Create a lightweight operations dashboard for status and category trends
+  - labels: `sprint-4`, `backend`
+- #878 Create SLA and aging summaries for unresolved civic cases
+  - labels: `sprint-4`, `backend`
+- #879 Create exportable analytics payloads for CSV or dashboard rendering
+  - labels: `sprint-4`, `backend`
+- #880 Create assignment and resolution throughput by period
+  - labels: `sprint-4`, `backend`
+- #881 Create trend views that compare report volume across neighborhoods
+  - labels: `sprint-4`, `backend`
+- #882 Show a lightweight operations dashboard for status and category trends
+  - labels: `sprint-4`, `backend`
+- #883 Show SLA and aging summaries for unresolved civic cases
+  - labels: `sprint-4`, `backend`
+- #884 Show exportable analytics payloads for CSV or dashboard rendering
+  - labels: `sprint-4`, `backend`
+- #885 Show assignment and resolution throughput by period
+  - labels: `sprint-4`, `backend`
+- #886 Show trend views that compare report volume across neighborhoods
+  - labels: `sprint-4`, `backend`
+- #887 Add a lightweight operations dashboard for status and category trends
+  - labels: `sprint-4`, `backend`
+- #888 Add SLA and aging summaries for unresolved civic cases
+  - labels: `sprint-4`, `backend`
+- #889 Add exportable analytics payloads for CSV or dashboard rendering
+  - labels: `sprint-4`, `backend`
+- #890 Add assignment and resolution throughput by period
+  - labels: `sprint-4`, `backend`
+- #891 Add trend views that compare report volume across neighborhoods
+  - labels: `sprint-4`, `backend`
+- #892 Document moderation permission boundaries and escalation rules
+  - labels: `sprint-4`, `documentation`
+- #893 Document safe text handling expectations for public reports and notes
+  - labels: `sprint-4`, `documentation`
+- #894 Document abuse-case test fixtures for spam, duplicate, and hostile submissions
+  - labels: `sprint-4`, `documentation`
+- #895 Document guidance for auditability and operator accountability
+  - labels: `sprint-4`, `documentation`
+- #896 Document a reviewer checklist for queue and moderation changes
+  - labels: `sprint-4`, `documentation`
+- #897 Define moderation permission boundaries and escalation rules
+  - labels: `sprint-4`, `documentation`
+- #898 Define safe text handling expectations for public reports and notes
+  - labels: `sprint-4`, `documentation`
+- #899 Define abuse-case test fixtures for spam, duplicate, and hostile submissions
+  - labels: `sprint-4`, `documentation`
+- #900 Define guidance for auditability and operator accountability
+  - labels: `sprint-4`, `documentation`
+- #901 Define a reviewer checklist for queue and moderation changes
+  - labels: `sprint-4`, `documentation`
+- #902 Add moderation permission boundaries and escalation rules
+  - labels: `sprint-4`, `documentation`
+- #903 Add safe text handling expectations for public reports and notes
+  - labels: `sprint-4`, `documentation`
+- #904 Add abuse-case test fixtures for spam, duplicate, and hostile submissions
+  - labels: `sprint-4`, `documentation`
+- #905 Add guidance for auditability and operator accountability
+  - labels: `sprint-4`, `documentation`
+- #906 Add a reviewer checklist for queue and moderation changes
+  - labels: `sprint-4`, `documentation`
+- #907 Write moderation permission boundaries and escalation rules
+  - labels: `sprint-4`, `documentation`
+- #908 Write safe text handling expectations for public reports and notes
+  - labels: `sprint-4`, `documentation`
+- #909 Write abuse-case test fixtures for spam, duplicate, and hostile submissions
+  - labels: `sprint-4`, `documentation`
+- #910 Write guidance for auditability and operator accountability
+  - labels: `sprint-4`, `documentation`
+- #911 Write a reviewer checklist for queue and moderation changes
+  - labels: `sprint-4`, `documentation`
+- #912 Create moderation permission boundaries and escalation rules
+  - labels: `sprint-4`, `documentation`
+- #913 Create safe text handling expectations for public reports and notes
+  - labels: `sprint-4`, `documentation`
+- #914 Create abuse-case test fixtures for spam, duplicate, and hostile submissions
+  - labels: `sprint-4`, `documentation`
+- #915 Create guidance for auditability and operator accountability
+  - labels: `sprint-4`, `documentation`
+- #916 Create a reviewer checklist for queue and moderation changes
+  - labels: `sprint-4`, `documentation`
+- #917 Add a compact status-review surface for internal mobile users
+  - labels: `sprint-4`, `frontend-mobile`
+- #918 Add mobile-safe queue summaries for on-the-go operators
+  - labels: `sprint-4`, `frontend-mobile`
+- #919 Add notifications for major moderation actions
+  - labels: `sprint-4`, `frontend-mobile`
+- #920 Add quick assignment or handoff actions from a native view
+  - labels: `sprint-4`, `frontend-mobile`
+- #921 Add internal tooling separate from the citizen-facing mobile flow
+  - labels: `sprint-4`, `frontend-mobile`
+- #922 Create a compact status-review surface for internal mobile users
+  - labels: `sprint-4`, `frontend-mobile`
+- #923 Create mobile-safe queue summaries for on-the-go operators
+  - labels: `sprint-4`, `frontend-mobile`
+- #924 Create notifications for major moderation actions
+  - labels: `sprint-4`, `frontend-mobile`
+- #925 Create quick assignment or handoff actions from a native view
+  - labels: `sprint-4`, `frontend-mobile`
+- #926 Create internal tooling separate from the citizen-facing mobile flow
+  - labels: `sprint-4`, `frontend-mobile`
+- #927 Implement a compact status-review surface for internal mobile users
+  - labels: `sprint-4`, `frontend-mobile`
+- #928 Implement mobile-safe queue summaries for on-the-go operators
+  - labels: `sprint-4`, `frontend-mobile`
+- #929 Implement notifications for major moderation actions
+  - labels: `sprint-4`, `frontend-mobile`
+- #930 Implement quick assignment or handoff actions from a native view
+  - labels: `sprint-4`, `frontend-mobile`
+- #931 Implement internal tooling separate from the citizen-facing mobile flow
+  - labels: `sprint-4`, `frontend-mobile`
+- #932 Support a compact status-review surface for internal mobile users
+  - labels: `sprint-4`, `frontend-mobile`
+- #933 Support mobile-safe queue summaries for on-the-go operators
+  - labels: `sprint-4`, `frontend-mobile`
+- #934 Support notifications for major moderation actions
+  - labels: `sprint-4`, `frontend-mobile`
+- #935 Support quick assignment or handoff actions from a native view
+  - labels: `sprint-4`, `frontend-mobile`
+- #936 Support internal tooling separate from the citizen-facing mobile flow
+  - labels: `sprint-4`, `frontend-mobile`
+- #937 Keep a compact status-review surface for internal mobile users
+  - labels: `sprint-4`, `frontend-mobile`
+- #938 Keep mobile-safe queue summaries for on-the-go operators
+  - labels: `sprint-4`, `frontend-mobile`
+- #939 Keep notifications for major moderation actions
+  - labels: `sprint-4`, `frontend-mobile`
+- #940 Keep quick assignment or handoff actions from a native view
+  - labels: `sprint-4`, `frontend-mobile`
+- #941 Keep internal tooling separate from the citizen-facing mobile flow
+  - labels: `sprint-4`, `frontend-mobile`
+
+## sprint-5 - Stellar verification and trust systems
+
+Use Stellar as a verification and audit layer for civic events without turning the app into a payments product.
+
+- #942 Define the verification event interface for the stellar integration package
+  - labels: `sprint-5`, `stellar`
+- #943 Define transaction mapping helpers for report submission and status proof records
+  - labels: `sprint-5`, `stellar`
+- #944 Define a minimal service wrapper for signing and verification primitives
+  - labels: `sprint-5`, `stellar`
+- #945 Define typed interfaces for receipt lookups and proof generation
+  - labels: `sprint-5`, `stellar`
+- #946 Define the exact responsibilities that remain outside the blockchain layer
+  - labels: `sprint-5`, `stellar`
+- #947 Add the verification event interface for the stellar integration package
+  - labels: `sprint-5`, `stellar`
+- #948 Add transaction mapping helpers for report submission and status proof records
+  - labels: `sprint-5`, `stellar`
+- #949 Add a minimal service wrapper for signing and verification primitives
+  - labels: `sprint-5`, `stellar`
+- #950 Add typed interfaces for receipt lookups and proof generation
+  - labels: `sprint-5`, `stellar`
+- #951 Add the exact responsibilities that remain outside the blockchain layer
+  - labels: `sprint-5`, `stellar`
+- #952 Implement the verification event interface for the stellar integration package
+  - labels: `sprint-5`, `stellar`
+- #953 Implement transaction mapping helpers for report submission and status proof records
+  - labels: `sprint-5`, `stellar`
+- #954 Implement a minimal service wrapper for signing and verification primitives
+  - labels: `sprint-5`, `stellar`
+- #955 Implement typed interfaces for receipt lookups and proof generation
+  - labels: `sprint-5`, `stellar`
+- #956 Implement the exact responsibilities that remain outside the blockchain layer
+  - labels: `sprint-5`, `stellar`
+- #957 Create the verification event interface for the stellar integration package
+  - labels: `sprint-5`, `stellar`
+- #958 Create transaction mapping helpers for report submission and status proof records
+  - labels: `sprint-5`, `stellar`
+- #959 Create a minimal service wrapper for signing and verification primitives
+  - labels: `sprint-5`, `stellar`
+- #960 Create typed interfaces for receipt lookups and proof generation
+  - labels: `sprint-5`, `stellar`
+- #961 Create the exact responsibilities that remain outside the blockchain layer
+  - labels: `sprint-5`, `stellar`
+- #962 Document the verification event interface for the stellar integration package
+  - labels: `sprint-5`, `stellar`
+- #963 Document transaction mapping helpers for report submission and status proof records
+  - labels: `sprint-5`, `stellar`
+- #964 Document a minimal service wrapper for signing and verification primitives
+  - labels: `sprint-5`, `stellar`
+- #965 Document typed interfaces for receipt lookups and proof generation
+  - labels: `sprint-5`, `stellar`
+- #966 Document the exact responsibilities that remain outside the blockchain layer
+  - labels: `sprint-5`, `stellar`
+- #967 Add endpoints that mint verification receipts for report lifecycle events
+  - labels: `sprint-5`, `backend`
+- #968 Add immutable proof references alongside civic state transitions
+  - labels: `sprint-5`, `backend`
+- #969 Add verification payloads for public lookup
+  - labels: `sprint-5`, `backend`
+- #970 Add internal verification actions from citizen-visible proof access
+  - labels: `sprint-5`, `backend`
+- #971 Add audit-safe responses for proof creation and retrieval
+  - labels: `sprint-5`, `backend`
+- #972 Store endpoints that mint verification receipts for report lifecycle events
+  - labels: `sprint-5`, `backend`
+- #973 Store immutable proof references alongside civic state transitions
+  - labels: `sprint-5`, `backend`
+- #974 Store verification payloads for public lookup
+  - labels: `sprint-5`, `backend`
+- #975 Store internal verification actions from citizen-visible proof access
+  - labels: `sprint-5`, `backend`
+- #976 Store audit-safe responses for proof creation and retrieval
+  - labels: `sprint-5`, `backend`
+- #977 Validate endpoints that mint verification receipts for report lifecycle events
+  - labels: `sprint-5`, `backend`
+- #978 Validate immutable proof references alongside civic state transitions
+  - labels: `sprint-5`, `backend`
+- #979 Validate verification payloads for public lookup
+  - labels: `sprint-5`, `backend`
+- #980 Validate internal verification actions from citizen-visible proof access
+  - labels: `sprint-5`, `backend`
+- #981 Validate audit-safe responses for proof creation and retrieval
+  - labels: `sprint-5`, `backend`
+- #982 Separate endpoints that mint verification receipts for report lifecycle events
+  - labels: `sprint-5`, `backend`
+- #983 Separate immutable proof references alongside civic state transitions
+  - labels: `sprint-5`, `backend`
+- #984 Separate verification payloads for public lookup
+  - labels: `sprint-5`, `backend`
+- #985 Separate internal verification actions from citizen-visible proof access
+  - labels: `sprint-5`, `backend`
+- #986 Separate audit-safe responses for proof creation and retrieval
+  - labels: `sprint-5`, `backend`
+- #987 Return endpoints that mint verification receipts for report lifecycle events
+  - labels: `sprint-5`, `backend`
+- #988 Return immutable proof references alongside civic state transitions
+  - labels: `sprint-5`, `backend`
+- #989 Return verification payloads for public lookup
+  - labels: `sprint-5`, `backend`
+- #990 Return internal verification actions from citizen-visible proof access
+  - labels: `sprint-5`, `backend`
+- #991 Return audit-safe responses for proof creation and retrieval
+  - labels: `sprint-5`, `backend`
+- #992 Build a public proof lookup page tied to report identifiers
+  - labels: `sprint-5`, `frontend-web`
+- #993 Build trust badges or verification receipts to report detail views
+  - labels: `sprint-5`, `frontend-web`
+- #994 Build verification history in a way that is understandable to citizens
+  - labels: `sprint-5`, `frontend-web`
+- #995 Build receipt sharing and copy-to-clipboard flows explicit and clear
+  - labels: `sprint-5`, `frontend-web`
+- #996 Build trust indicators lightweight so they do not overwhelm core reporting
+  - labels: `sprint-5`, `frontend-web`
+- #997 Add a public proof lookup page tied to report identifiers
+  - labels: `sprint-5`, `frontend-web`
+- #998 Add trust badges or verification receipts to report detail views
+  - labels: `sprint-5`, `frontend-web`
+- #999 Add verification history in a way that is understandable to citizens
+  - labels: `sprint-5`, `frontend-web`
+- #1000 Add receipt sharing and copy-to-clipboard flows explicit and clear
+  - labels: `sprint-5`, `frontend-web`
+- #1001 Add trust indicators lightweight so they do not overwhelm core reporting
+  - labels: `sprint-5`, `frontend-web`
+- #1002 Present a public proof lookup page tied to report identifiers
+  - labels: `sprint-5`, `frontend-web`
+- #1003 Present trust badges or verification receipts to report detail views
+  - labels: `sprint-5`, `frontend-web`
+- #1004 Present verification history in a way that is understandable to citizens
+  - labels: `sprint-5`, `frontend-web`
+- #1005 Present receipt sharing and copy-to-clipboard flows explicit and clear
+  - labels: `sprint-5`, `frontend-web`
+- #1006 Present trust indicators lightweight so they do not overwhelm core reporting
+  - labels: `sprint-5`, `frontend-web`
+- #1007 Make a public proof lookup page tied to report identifiers
+  - labels: `sprint-5`, `frontend-web`
+- #1008 Make trust badges or verification receipts to report detail views
+  - labels: `sprint-5`, `frontend-web`
+- #1009 Make verification history in a way that is understandable to citizens
+  - labels: `sprint-5`, `frontend-web`
+- #1010 Make receipt sharing and copy-to-clipboard flows explicit and clear
+  - labels: `sprint-5`, `frontend-web`
+- #1011 Make trust indicators lightweight so they do not overwhelm core reporting
+  - labels: `sprint-5`, `frontend-web`
+- #1012 Keep a public proof lookup page tied to report identifiers
+  - labels: `sprint-5`, `frontend-web`
+- #1013 Keep trust badges or verification receipts to report detail views
+  - labels: `sprint-5`, `frontend-web`
+- #1014 Keep verification history in a way that is understandable to citizens
+  - labels: `sprint-5`, `frontend-web`
+- #1015 Keep receipt sharing and copy-to-clipboard flows explicit and clear
+  - labels: `sprint-5`, `frontend-web`
+- #1016 Keep trust indicators lightweight so they do not overwhelm core reporting
+  - labels: `sprint-5`, `frontend-web`
+- #1017 Define the audit payloads that must be preserved for verification actions
+  - labels: `sprint-5`, `documentation`
+- #1018 Define shared types for proof status, source, and verification metadata
+  - labels: `sprint-5`, `documentation`
+- #1019 Define the trust model in plain language for contributors
+  - labels: `sprint-5`, `documentation`
+- #1020 Define tests around tamper detection and proof regeneration
+  - labels: `sprint-5`, `documentation`
+- #1021 Define the difference between public proof and internal reconciliation
+  - labels: `sprint-5`, `documentation`
+- #1022 Add the audit payloads that must be preserved for verification actions
+  - labels: `sprint-5`, `documentation`
+- #1023 Add shared types for proof status, source, and verification metadata
+  - labels: `sprint-5`, `documentation`
+- #1024 Add the trust model in plain language for contributors
+  - labels: `sprint-5`, `documentation`
+- #1025 Add tests around tamper detection and proof regeneration
+  - labels: `sprint-5`, `documentation`
+- #1026 Add the difference between public proof and internal reconciliation
+  - labels: `sprint-5`, `documentation`
+- #1027 Document the audit payloads that must be preserved for verification actions
+  - labels: `sprint-5`, `documentation`
+- #1028 Document shared types for proof status, source, and verification metadata
+  - labels: `sprint-5`, `documentation`
+- #1029 Document the trust model in plain language for contributors
+  - labels: `sprint-5`, `documentation`
+- #1030 Document tests around tamper detection and proof regeneration
+  - labels: `sprint-5`, `documentation`
+- #1031 Document the difference between public proof and internal reconciliation
+  - labels: `sprint-5`, `documentation`
+- #1032 Create the audit payloads that must be preserved for verification actions
+  - labels: `sprint-5`, `documentation`
+- #1033 Create shared types for proof status, source, and verification metadata
+  - labels: `sprint-5`, `documentation`
+- #1034 Create the trust model in plain language for contributors
+  - labels: `sprint-5`, `documentation`
+- #1035 Create tests around tamper detection and proof regeneration
+  - labels: `sprint-5`, `documentation`
+- #1036 Create the difference between public proof and internal reconciliation
+  - labels: `sprint-5`, `documentation`
+- #1037 Spell out the audit payloads that must be preserved for verification actions
+  - labels: `sprint-5`, `documentation`
+- #1038 Spell out shared types for proof status, source, and verification metadata
+  - labels: `sprint-5`, `documentation`
+- #1039 Spell out the trust model in plain language for contributors
+  - labels: `sprint-5`, `documentation`
+- #1040 Spell out tests around tamper detection and proof regeneration
+  - labels: `sprint-5`, `documentation`
+- #1041 Spell out the difference between public proof and internal reconciliation
+  - labels: `sprint-5`, `documentation`
+- #1042 Write a launch checklist for enabling verification features by environment
+  - labels: `sprint-5`, `documentation`
+- #1043 Write environment variable documentation for Stellar-related configuration
+  - labels: `sprint-5`, `documentation`
+- #1044 Write fallback behavior when verification services are unavailable
+  - labels: `sprint-5`, `documentation`
+- #1045 Write a demo script for the first verification milestone
+  - labels: `sprint-5`, `documentation`
+- #1046 Write the operational runbook for proof errors and retries
+  - labels: `sprint-5`, `documentation`
+- #1047 Add a launch checklist for enabling verification features by environment
+  - labels: `sprint-5`, `documentation`
+- #1048 Add environment variable documentation for Stellar-related configuration
+  - labels: `sprint-5`, `documentation`
+- #1049 Add fallback behavior when verification services are unavailable
+  - labels: `sprint-5`, `documentation`
+- #1050 Add a demo script for the first verification milestone
+  - labels: `sprint-5`, `documentation`
+- #1051 Add the operational runbook for proof errors and retries
+  - labels: `sprint-5`, `documentation`
+- #1052 Document a launch checklist for enabling verification features by environment
+  - labels: `sprint-5`, `documentation`
+- #1053 Document environment variable documentation for Stellar-related configuration
+  - labels: `sprint-5`, `documentation`
+- #1054 Document fallback behavior when verification services are unavailable
+  - labels: `sprint-5`, `documentation`
+- #1055 Document a demo script for the first verification milestone
+  - labels: `sprint-5`, `documentation`
+- #1056 Document the operational runbook for proof errors and retries
+  - labels: `sprint-5`, `documentation`
+- #1057 Create a launch checklist for enabling verification features by environment
+  - labels: `sprint-5`, `documentation`
+- #1058 Create environment variable documentation for Stellar-related configuration
+  - labels: `sprint-5`, `documentation`
+- #1059 Create fallback behavior when verification services are unavailable
+  - labels: `sprint-5`, `documentation`
+- #1060 Create a demo script for the first verification milestone
+  - labels: `sprint-5`, `documentation`
+- #1061 Create the operational runbook for proof errors and retries
+  - labels: `sprint-5`, `documentation`
+- #1062 Capture a launch checklist for enabling verification features by environment
+  - labels: `sprint-5`, `documentation`
+- #1063 Capture environment variable documentation for Stellar-related configuration
+  - labels: `sprint-5`, `documentation`
+- #1064 Capture fallback behavior when verification services are unavailable
+  - labels: `sprint-5`, `documentation`
+- #1065 Capture a demo script for the first verification milestone
+  - labels: `sprint-5`, `documentation`
+- #1066 Capture the operational runbook for proof errors and retries
+  - labels: `sprint-5`, `documentation`
+

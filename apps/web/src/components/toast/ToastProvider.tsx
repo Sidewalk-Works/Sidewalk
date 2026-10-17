@@ -1,0 +1,1 @@
+'use client';\nexport function ToastProvider({ children }: { children: any }) {\n  return children;\n}\n

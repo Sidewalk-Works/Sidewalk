@@ -1,17 +1,1 @@
-{
-  "expo": {
-    "name": "sidewalk",
-    "slug": "sidewalk",
-    "version": "0.1.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {},
-    "web": {
-      "bundler": "metro"
-    }
-  }
-}
+{\n  "expo": {\n    "name": "Sidewalk",\n    "slug": "sidewalk"\n  }\n}\n

@@ -15,11 +15,11 @@ const STAGE_ICONS: Record<ReportLifecycleStage, string> = {
 };
 
 const STAGE_COLORS: Record<ReportLifecycleStage, { bg: string; text: string }> = {
-  submitted: { bg: '#f1f5f9', text: '#475569' },
-  under_investigation: { bg: '#fef3c7', text: '#b45309' },
-  work_scheduled: { bg: '#e0f2fe', text: '#0369a1' },
-  resolved: { bg: '#dcfce7', text: '#15803d' },
-  archived: { bg: '#f3e8ff', text: '#7c3aed' },
+  submitted: { bg: '#f1f5f9', text: '#334155' },
+  under_investigation: { bg: '#fffbeb', text: '#92400e' },
+  work_scheduled: { bg: '#f0f9ff', text: '#0369a1' },
+  resolved: { bg: '#f0fdf4', text: '#166534' },
+  archived: { bg: '#faf5ff', text: '#6b21a8' },
 };
 
 const URGENT_STAGES: ReportLifecycleStage[] = ['under_investigation', 'work_scheduled'];

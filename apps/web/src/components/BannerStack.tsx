@@ -18,6 +18,9 @@ export function BannerStack({ position = 'top', maxVisible = 3 }: BannerStackPro
 
   return (
     <div
+      aria-live="polite"
+      aria-label="Banners"
+      role="status"
       style={{
         position: 'fixed',
         [position]: '16px',

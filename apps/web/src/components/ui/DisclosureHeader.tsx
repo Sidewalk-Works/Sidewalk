@@ -1,0 +1,1 @@
+export function DisclosureHeader() {\n  return <button type='button' />;\n}\n

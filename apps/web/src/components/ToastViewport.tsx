@@ -17,6 +17,9 @@ export function ToastViewport() {
 
   return (
     <div
+      aria-live="polite"
+      aria-label="Notifications"
+      role="status"
       style={{
         position: 'fixed',
         bottom: '24px',

@@ -42,7 +42,16 @@ export function AuthForm({ mode, submitLabel, onSubmit }: AuthFormProps) {
     try {
       await onSubmit(parsed.data.email, parsed.data.password);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Something went wrong.");
+      // #863: Map known server error codes to the relevant field so users see
+      // an inline message next to the field rather than a generic banner.
+      const message = error instanceof Error ? error.message : "Something went wrong.";
+      if (mode === "register" && /email.*taken|already.*exists|duplicate.*email|EMAIL_TAKEN/i.test(message)) {
+        setFieldErrors({ email: "An account with this email already exists." });
+      } else if (/password/i.test(message)) {
+        setFieldErrors({ password: message });
+      } else {
+        setFormError(message);
+      }
     } finally {
       setIsSubmitting(false);
     }

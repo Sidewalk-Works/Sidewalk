@@ -33,3 +33,15 @@ scripts/local/
 # temporary files
 tmp/
 temp/
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/

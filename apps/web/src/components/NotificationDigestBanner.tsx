@@ -7,7 +7,7 @@ interface NotificationDigestBannerProps {
 
 export function NotificationDigestBanner({ onEnableDigest, onDismiss }: NotificationDigestBannerProps) {
   return (
-    <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+    <div role="status" aria-live="polite" style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
       <div>
         <h4 style={{ margin: '0 0 4px 0', color: '#92400e', fontSize: '15px' }}>Too many alerts?</h4>
         <p style={{ margin: 0, color: '#b45309', fontSize: '13px' }}>
