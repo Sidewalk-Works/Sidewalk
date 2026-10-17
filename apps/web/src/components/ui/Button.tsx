@@ -1,0 +1,1 @@
+export function Button(props: any) {\n  return <button {...props} />;\n}\n
