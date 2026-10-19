@@ -64,7 +64,7 @@ async def follow_case(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.UUID) 
     if not existing:
         follow = CaseFollow(case_id=case_id, user_id=user_id)
         db.add(follow)
-        await db.commit()
+        await db.flush()
     log.info("follow_case", case_id=str(case_id), user_id=str(user_id))
 
 
@@ -72,7 +72,7 @@ async def unfollow_case(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.UUID
     await get_case_by_id(db, case_id)
     stmt = delete(CaseFollow).where(CaseFollow.case_id == case_id, CaseFollow.user_id == user_id)
     await db.execute(stmt)
-    await db.commit()
+    await db.flush()
     log.info("unfollow_case", case_id=str(case_id), user_id=str(user_id))
 
 

@@ -1,11 +1,16 @@
 import structlog
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import ConflictError
 from src.modules.auth import repository as user_repository
+from src.modules.auth import service as auth_service
 from src.modules.auth.models import User
-from src.modules.users.schemas import UpdateProfileRequest, UserProfileResponse
+from src.modules.auth.schemas import AuthResponse
+from src.modules.users.schemas import (
+    ChangePasswordRequest,
+    UpdateProfileRequest,
+    UserProfileResponse,
+)
 
 log = structlog.get_logger(__name__)
 
@@ -13,10 +18,15 @@ log = structlog.get_logger(__name__)
 async def update_profile(
     db: AsyncSession, user: User, payload: UpdateProfileRequest
 ) -> UserProfileResponse:
+    """
+    Email changes are never applied directly: the caller must prove knowledge of the current
+    password, and the new address stays in ``pending_email`` until its owner follows the
+    confirmation link (``POST /auth/confirm-email-change``).
+    """
     if payload.email is not None and payload.email != user.email:
         existing = await user_repository.get_user_by_email(db, payload.email)
         if existing and existing.id != user.id:
-            raise ConflictError("A user with this email already exists", field="email")
+            raise ConflictError("A user with this email already exists", field="email", code="email_taken")
     update_data = payload.model_dump(exclude_none=True)
     # The existing-email check above isn't atomic with the update below:
     # two concurrent PATCH /users/me calls changing different accounts to
@@ -27,9 +37,9 @@ async def update_profile(
     # the equivalent fix in auth/service.py's register()).
     try:
         updated_user = await user_repository.update_user(db, user, **update_data)
-        await db.commit()
+        await db.flush()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError("A user with this email already exists", field="email") from None
+        raise ConflictError("A user with this email already exists", field="email", code="email_taken") from None
     log.info("update_profile", user_id=str(user.id))
     return UserProfileResponse.model_validate(updated_user)
