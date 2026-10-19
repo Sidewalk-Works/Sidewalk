@@ -1,90 +1,91 @@
 from collections.abc import AsyncGenerator
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import DeclarativeBase
 
 from src.core.config import get_settings
 
-settings = get_settings()
 
-database_url = settings.DATABASE_URL
-if database_url.startswith("postgresql://"):
-    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif database_url.startswith("sqlite://") and not database_url.startswith("sqlite+aiosqlite://"):
-    database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
-
-engine_kwargs = {}
-if "sqlite" not in database_url:
-    engine_kwargs.update(
-        {
-            "pool_size": settings.DB_POOL_SIZE,
-            "max_overflow": settings.DB_MAX_OVERFLOW,
-            "pool_pre_ping": True,
-        }
-    )
-
-engine = create_async_engine(database_url, **engine_kwargs)
-async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+def normalize_database_url(url: str) -> str:
+    """Select the async driver for plain ``postgresql://`` and ``sqlite://`` URLs."""
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("sqlite://"):
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+    return url
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_factory() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
+    """Turn on FK enforcement for every SQLite connection (SQLite ignores FKs by default)."""
+
+    def _set_pragma(dbapi_connection, _record) -> None:  # type: ignore[no-untyped-def]
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    event.listen(engine.sync_engine, "connect", _set_pragma)
 
 
-DBSession = Annotated[AsyncSession, Depends(get_db)]
-
-settings = get_settings()
-
-# Create asynchronous SQLAlchemy engine using asyncpg driver
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-    future=True,
-)
-
-# Configure asynchronous session factory
-async_session_factory = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
-)
+def build_engine(database_url: str) -> AsyncEngine:
+    """Create an engine for ``database_url`` using the pool settings from configuration."""
+    settings = get_settings()
+    url = normalize_database_url(database_url)
+    kwargs: dict[str, object] = {}
+    if not url.startswith("sqlite"):
+        kwargs.update(
+            pool_size=settings.DB_POOL_SIZE,
+            max_overflow=settings.DB_MAX_OVERFLOW,
+            pool_timeout=settings.DB_POOL_TIMEOUT,
+            pool_recycle=settings.DB_POOL_RECYCLE_SECONDS,
+            pool_pre_ping=True,
+        )
+    engine = create_async_engine(url, **kwargs)
+    if url.startswith("sqlite"):
+        enable_sqlite_foreign_keys(engine)
+    return engine
 
 
-class Base(DeclarativeBase):
-    """Base class for all SQLAlchemy ORM models."""
+@lru_cache
+def get_engine() -> AsyncEngine:
+    """The application engine, created on first use rather than at import time."""
+    return build_engine(get_settings().DATABASE_URL)
 
-    pass
+
+@lru_cache
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    return async_sessionmaker(get_engine(), expire_on_commit=False, class_=AsyncSession)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
-    FastAPI dependency that yields an asynchronous SQLAlchemy session.
-    Ensures session closure after request lifecycle completion.
+    One transaction per request: commit when the request succeeds, roll back on any
+    error. Repositories and services only ``flush``; this is the single commit point.
     """
-    async with async_session_factory() as session:
+    async with get_session_factory()() as session:
         try:
             yield session
             await session.commit()
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
 
 
-# Annotated type alias for clean controller dependency injection
 DBSession = Annotated[AsyncSession, Depends(get_db)]
+
+__all__ = [
+    "DBSession",
+    "build_engine",
+    "enable_sqlite_foreign_keys",
+    "get_db",
+    "get_engine",
+    "get_session_factory",
+    "normalize_database_url",
+]
