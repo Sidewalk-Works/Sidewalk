@@ -28,16 +28,38 @@ async def test_get_profile_unauthenticated_returns_401(client: AsyncClient):
     assert response.status_code == 401
 
 
-async def test_update_email_success(client: AsyncClient):
-    token, user = await register_and_login(client, "update_test@example.com")
+async def test_update_email_requires_the_current_password(client: AsyncClient):
+    token, _ = await register_and_login(client, "update_test@example.com")
     res = await client.patch(
         "/api/users/me",
         json={"email": "updated@example.com"},
         headers={"Authorization": f"Bearer {token}"},
     )
+    assert res.status_code == 403
+
+    wrong = await client.patch(
+        "/api/users/me",
+        json={"email": "updated@example.com", "current_password": "not-the-password"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert wrong.status_code == 403
+
+    me = await client.get("/api/users/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.json()["email"] == "update_test@example.com"
+    assert me.json()["pending_email"] is None
+
+
+async def test_update_email_stays_pending_until_confirmed(client: AsyncClient):
+    token, user = await register_and_login(client, "pending_test@example.com")
+    res = await client.patch(
+        "/api/users/me",
+        json={"email": "pending_new@example.com", "current_password": "testpassword123"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert res.status_code == 200
     data = res.json()
-    assert data["email"] == "updated@example.com"
+    assert data["email"] == "pending_test@example.com"
+    assert data["pending_email"] == "pending_new@example.com"
     assert data["id"] == user["id"]
 
 
@@ -48,7 +70,7 @@ async def test_update_email_duplicate_conflict(client: AsyncClient):
     token, _ = await register_and_login(client, "updater@example.com")
     res = await client.patch(
         "/api/users/me",
-        json={"email": "existing@example.com"},
+        json={"email": "existing@example.com", "current_password": "testpassword123"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert res.status_code == 409

@@ -1,11 +1,12 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import UserNotFoundError
-from src.modules.auth.models import User
+from src.modules.auth.models import AuthToken, User
 
 
 async def create_user(
@@ -49,3 +50,40 @@ async def update_user(db: AsyncSession, user: User, **fields: Any) -> User:
     await db.flush()
     await db.refresh(user)
     return user
+
+
+async def bump_token_version(db: AsyncSession, user: User) -> None:
+    """Invalidate every access token issued to ``user`` so far."""
+    user.token_version += 1
+    await db.flush()
+
+
+async def create_auth_token(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    kind: str,
+    token_hash: str,
+    expires_at: datetime,
+    extra: str | None = None,
+) -> AuthToken:
+    token = AuthToken(
+        user_id=user_id, kind=kind, token_hash=token_hash, expires_at=expires_at, extra=extra
+    )
+    db.add(token)
+    await db.flush()
+    return token
+
+
+async def get_auth_token(db: AsyncSession, kind: str, token_hash: str) -> AuthToken | None:
+    stmt = select(AuthToken).where(AuthToken.kind == kind, AuthToken.token_hash == token_hash)
+    return (await db.execute(stmt)).scalar_one_or_none()
+
+
+async def revoke_user_tokens(db: AsyncSession, user_id: uuid.UUID, kind: str) -> None:
+    """Mark every unused token of ``kind`` for ``user_id`` as used."""
+    stmt = (
+        update(AuthToken)
+        .where(AuthToken.user_id == user_id, AuthToken.kind == kind, AuthToken.used_at.is_(None))
+        .values(used_at=datetime.now(UTC))
+    )
+    await db.execute(stmt)

@@ -22,7 +22,15 @@ class Settings(BaseSettings):
     # Accepts a JSON array or a comma-separated list of origins.
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000", "http://localhost:8081"]
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRES_MINUTES: int = 1440  # 24 hours
+    JWT_EXPIRES_MINUTES: int = 15  # short-lived; clients renew with a refresh token
+    REFRESH_TOKEN_EXPIRES_DAYS: int = 30
+    RESET_TOKEN_EXPIRES_MINUTES: int = 30
+    EMAIL_TOKEN_EXPIRES_HOURS: int = 48
+    # Base URL of the web app; links in verification/reset emails point here.
+    APP_BASE_URL: str = "http://localhost:3000"
+    MAIL_BACKEND: str = "console"  # console | memory
+    # When true, accounts with an unverified email cannot create reports.
+    REQUIRE_VERIFIED_EMAIL: bool = False
     LOGIN_MAX_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 15
     # Database connection pool (PostgreSQL only; SQLite ignores these)

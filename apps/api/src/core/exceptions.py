@@ -62,3 +62,15 @@ class InvalidTransitionError(ValidationError):
 
     def __init__(self, message: str = "Invalid status transition"):
         super().__init__(message)
+
+
+class TokenExpiredError(InvalidTokenError):
+    """The token was valid but its lifetime is over; the client should refresh or sign in again."""
+
+    code = "token_expired"
+
+
+class TokenInvalidError(InvalidTokenError):
+    """The token is malformed, forged or has been revoked; the client should sign in again."""
+
+    code = "token_invalid"

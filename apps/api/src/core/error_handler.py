@@ -32,7 +32,8 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     content: dict[str, object] = {"code": exc.code, "message": exc.message}
     if isinstance(exc, ConflictError) and exc.field:
         content["field"] = exc.field
-    return JSONResponse(status_code=exc.status_code, content=content)
+    headers = {"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None
+    return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
 
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
