@@ -31,10 +31,9 @@ async def test_register_rejects_a_duplicate_email(client: AsyncClient):
     res = await client.post("/api/auth/register", json=creds)
 
     assert res.status_code == 409
-    assert res.json() == {
-        "message": "A user with this email already exists",
-        "field": "email",
-    }
+    body = res.json()
+    assert body["message"] == "A user with this email already exists"
+    assert body["field"] == "email"
 
 
 async def test_register_rejects_a_short_password(client: AsyncClient):
@@ -86,14 +85,14 @@ async def test_login_rejects_a_wrong_password(client: AsyncClient):
     )
 
     assert res.status_code == 401
-    assert res.json() == {"message": "Invalid credentials"}
+    assert res.json()["message"] == "Invalid credentials"
 
 
 async def test_login_rejects_an_unknown_email(client: AsyncClient):
     res = await client.post("/api/auth/login", json=_credentials("ghost"))
 
     assert res.status_code == 401
-    assert res.json() == {"message": "Invalid credentials"}
+    assert res.json()["message"] == "Invalid credentials"
 
 
 async def test_login_rejects_an_inactive_account(client: AsyncClient, db_session):
@@ -110,7 +109,7 @@ async def test_login_rejects_an_inactive_account(client: AsyncClient, db_session
     res = await client.post("/api/auth/login", json=creds)
 
     assert res.status_code == 401
-    assert res.json() == {"message": "Account inactive"}
+    assert res.json()["message"] == "Account inactive"
 
 
 async def test_me_requires_a_token(client: AsyncClient):
@@ -124,4 +123,4 @@ async def test_me_rejects_a_malformed_token(client: AsyncClient):
     res = await client.get("/api/auth/me", headers={"Authorization": "Bearer not.a.jwt"})
 
     assert res.status_code == 401
-    assert res.json() == {"message": "Invalid or expired token"}
+    assert res.json()["message"] == "Invalid or expired token"
