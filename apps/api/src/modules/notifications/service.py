@@ -27,7 +27,7 @@ async def create_notification(
         read=False,
     )
     db.add(notification)
-    await db.commit()
+    await db.flush()
     await db.refresh(notification)
     log.info("create_notification", user_id=str(user_id), notification_id=str(notification.id))
     return notification
@@ -74,7 +74,7 @@ async def mark_read(
         raise ForbiddenError("Not authorized to access this notification")
 
     notification.read = True
-    await db.commit()
+    await db.flush()
     await db.refresh(notification)
     log.info("mark_notification_read", notification_id=str(notification_id), user_id=str(user_id))
     return notification
@@ -87,7 +87,7 @@ async def mark_all_read(db: AsyncSession, user_id: uuid.UUID) -> int:
         .values(read=True)
     )
     result = await db.execute(stmt)
-    await db.commit()
+    await db.flush()
     log.info("mark_all_notifications_read", user_id=str(user_id), count=result.rowcount)
     return result.rowcount
 

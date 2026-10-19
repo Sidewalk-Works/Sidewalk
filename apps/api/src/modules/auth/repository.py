@@ -1,17 +1,18 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import UserNotFoundError
-from src.modules.auth.models import User
+from src.modules.auth.models import AuthToken, User
 
 
 async def create_user(
     db: AsyncSession, email: str, password_hash: str, is_admin: bool = False
 ) -> User:
-    user = User(email=email, password_hash=password_hash, is_admin=is_admin)
+    user = User(email=normalize_email(email), password_hash=password_hash, is_admin=is_admin)
     db.add(user)
     await db.flush()
     await db.refresh(user)
@@ -19,9 +20,16 @@ async def create_user(
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
-    stmt = select(User).where(User.email == email)
+    # Compare case-insensitively so accounts created before addresses were normalized
+    # are still found; new rows are always stored lower-cased.
+    stmt = (
+        select(User)
+        .where(func.lower(User.email) == normalize_email(email))
+        .order_by(User.created_at)
+        .limit(1)
+    )
     result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    return result.scalars().first()
 
 
 async def get_user_by_id(
@@ -44,8 +52,47 @@ async def update_user(db: AsyncSession, user: User, **fields: Any) -> User:
     for forbidden in ("id", "password_hash", "created_at", "is_admin"):
         if forbidden in fields:
             raise ValueError(f"Cannot update protected field: {forbidden}")
+    if isinstance(fields.get("email"), str):
+        fields["email"] = normalize_email(fields["email"])
     for key, value in fields.items():
         setattr(user, key, value)
     await db.flush()
     await db.refresh(user)
     return user
+
+
+async def bump_token_version(db: AsyncSession, user: User) -> None:
+    """Invalidate every access token issued to ``user`` so far."""
+    user.token_version += 1
+    await db.flush()
+
+
+async def create_auth_token(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    kind: str,
+    token_hash: str,
+    expires_at: datetime,
+    extra: str | None = None,
+) -> AuthToken:
+    token = AuthToken(
+        user_id=user_id, kind=kind, token_hash=token_hash, expires_at=expires_at, extra=extra
+    )
+    db.add(token)
+    await db.flush()
+    return token
+
+
+async def get_auth_token(db: AsyncSession, kind: str, token_hash: str) -> AuthToken | None:
+    stmt = select(AuthToken).where(AuthToken.kind == kind, AuthToken.token_hash == token_hash)
+    return (await db.execute(stmt)).scalar_one_or_none()
+
+
+async def revoke_user_tokens(db: AsyncSession, user_id: uuid.UUID, kind: str) -> None:
+    """Mark every unused token of ``kind`` for ``user_id`` as used."""
+    stmt = (
+        update(AuthToken)
+        .where(AuthToken.user_id == user_id, AuthToken.kind == kind, AuthToken.used_at.is_(None))
+        .values(used_at=datetime.now(UTC))
+    )
+    await db.execute(stmt)

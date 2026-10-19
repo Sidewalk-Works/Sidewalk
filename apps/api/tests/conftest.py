@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 import src.models  # noqa: F401
-from src.core.database import get_db
+from src.core.database import enable_sqlite_foreign_keys, get_db
 from src.core.models import Base
 from src.main import create_app
 
@@ -43,6 +43,7 @@ async def test_engine():
         poolclass=StaticPool,
         connect_args={"check_same_thread": False},
     )
+    enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
@@ -63,11 +64,14 @@ def app(test_engine):
     async_session = async_sessionmaker(test_engine, expire_on_commit=False, class_=AsyncSession)
 
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        # Mirrors get_db: one transaction per request.
         async with async_session() as session:
             try:
                 yield session
-            finally:
-                await session.close()
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
 
     application.dependency_overrides[get_db] = override_get_db
     return application

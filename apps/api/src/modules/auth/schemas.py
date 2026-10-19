@@ -3,10 +3,17 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
+from src.core.security import normalize_email
+
 
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def normalize(cls, v: str) -> str:
+        return normalize_email(v)
 
     @field_validator("password")
     @classmethod
@@ -26,13 +33,44 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-    @field_validator("password")
+    @field_validator("email")
     @classmethod
-    def validate_password_bytes(cls, v: str) -> str:
-        # Same limit as registration: bcrypt cannot have stored anything longer.
-        if len(v.encode("utf-8")) > 72:
-            raise ValueError("Password must not exceed 72 bytes")
-        return v
+    def normalize(cls, v: str) -> str:
+        return normalize_email(v)
+
+
+def validate_new_password(v: str) -> str:
+    if len(v) < 8:
+        raise ValueError("Password must be at least 8 characters long")
+    if len(v.encode("utf-8")) > 72:
+        raise ValueError("Password must not exceed 72 bytes")
+    return v
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def check_password(cls, v: str) -> str:
+        return validate_new_password(v)
+
+
+class TokenRequest(BaseModel):
+    token: str
+
+
+class MessageResponse(BaseModel):
+    message: str
 
 
 class UserOut(BaseModel):
@@ -40,6 +78,7 @@ class UserOut(BaseModel):
     email: str
     is_active: bool
     is_admin: bool
+    email_verified: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -48,6 +87,7 @@ class UserOut(BaseModel):
 
 class AuthResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     user: UserOut
 

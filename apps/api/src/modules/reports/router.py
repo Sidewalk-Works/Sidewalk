@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Query, Response, status
 
 from src.core.database import DBSession
-from src.core.dependencies import CurrentUser
+from src.core.dependencies import CurrentUser, VerifiedUser
 from src.core.enums import ReportCategory, ReportStatus
 from src.modules.reports import service as report_service
 from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 
 @router.post("", response_model=ReportResponse, status_code=201)
 async def create_report(
-    payload: CreateReportRequest, current_user: CurrentUser, db: DBSession
+    payload: CreateReportRequest, current_user: VerifiedUser, db: DBSession
 ) -> ReportResponse:
     return await report_service.create_report(db, current_user.id, payload)
 
