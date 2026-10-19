@@ -3,13 +3,16 @@ import os
 
 import structlog
 
+UVICORN_LOGGERS = ("uvicorn", "uvicorn.error", "uvicorn.access")
+
 
 def configure_logging(log_level: str = "INFO", environment: str | None = None) -> None:
     """
-    Configure structlog for the application.
+    Configure structlog and route the standard library (and uvicorn) loggers through it.
 
-    Uses JSON output in production and colored console output in development.
-    The log level is controlled by ``log_level`` (typically ``settings.LOG_LEVEL``).
+    The verbosity comes from ``log_level`` (``settings.LOG_LEVEL``). Output is colored
+    console text in development and one JSON object per line everywhere else, with UTC
+    ISO-8601 timestamps.
     """
     if environment is None:
         environment = os.getenv("ENVIRONMENT", "development")
@@ -19,18 +22,35 @@ def configure_logging(log_level: str = "INFO", environment: str | None = None) -
     shared_processors: list[structlog.typing.Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
-        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.TimeStamper(fmt="iso", utc=True),
     ]
 
-    if environment == "production":
-        renderer: structlog.typing.Processor = structlog.processors.JSONRenderer()
-    else:
+    renderer: structlog.typing.Processor
+    if environment == "development":
         renderer = structlog.dev.ConsoleRenderer(colors=True)
+    else:
+        renderer = structlog.processors.JSONRenderer()
 
     structlog.configure(
         processors=[*shared_processors, renderer],
         wrapper_class=structlog.make_filtering_bound_logger(level),
         context_class=dict,
         logger_factory=structlog.PrintLoggerFactory(),
-        cache_logger_on_first_use=True,
+        cache_logger_on_first_use=False,
     )
+
+    # Standard-library records (uvicorn, SQLAlchemy, ...) get the same processors/renderer.
+    handler = logging.StreamHandler()
+    handler.setFormatter(
+        structlog.stdlib.ProcessorFormatter(
+            foreign_pre_chain=shared_processors,
+            processors=[structlog.stdlib.ProcessorFormatter.remove_processors_meta, renderer],
+        )
+    )
+    root = logging.getLogger()
+    root.handlers = [handler]
+    root.setLevel(level)
+    for name in UVICORN_LOGGERS:
+        uvicorn_logger = logging.getLogger(name)
+        uvicorn_logger.handlers = []
+        uvicorn_logger.propagate = True

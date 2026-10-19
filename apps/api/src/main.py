@@ -53,8 +53,9 @@ def create_app() -> FastAPI:
 
     setup_cors(app, settings)
     app.add_middleware(SecurityHeadersMiddleware, environment=settings.ENVIRONMENT)
-    app.add_middleware(RequestIdMiddleware)
+    # Added last = outermost: the request id is bound first, then the access log wraps the rest.
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(RequestIdMiddleware)
 
     app.add_exception_handler(AppError, app_error_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
