@@ -27,7 +27,7 @@ async def create_report(
         address=payload.address,
         media_urls=payload.media_urls,
     )
-    await db.commit()
+    await db.flush()
     log.info("create_report", report_id=str(report.id), user_id=str(user_id))
     return ReportResponse.model_validate(report)
 
@@ -70,7 +70,7 @@ async def update_report(
     if "status" in data and isinstance(data["status"], ReportStatus):
         data["status"] = data["status"].value
     updated = await report_repo.update_report(db, report, **data)
-    await db.commit()
+    await db.flush()
     log.info("update_report", report_id=str(report.id))
     return ReportResponse.model_validate(updated)
 
@@ -83,5 +83,5 @@ async def delete_report(db: AsyncSession, report_id: uuid.UUID, user: User) -> N
         raise ForbiddenError("You are not authorized to modify this report")
 
     await report_repo.soft_delete_report(db, report)
-    await db.commit()
+    await db.flush()
     log.info("delete_report", report_id=str(report.id))

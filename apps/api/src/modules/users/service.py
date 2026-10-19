@@ -27,7 +27,7 @@ async def update_profile(
     # the equivalent fix in auth/service.py's register()).
     try:
         updated_user = await user_repository.update_user(db, user, **update_data)
-        await db.commit()
+        await db.flush()
     except IntegrityError:
         await db.rollback()
         raise ConflictError("A user with this email already exists", field="email") from None

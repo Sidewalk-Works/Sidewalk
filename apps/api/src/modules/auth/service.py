@@ -23,7 +23,7 @@ async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
     # letting a raw IntegrityError bubble up as an unhandled 500.
     try:
         user = await auth_repo.create_user(db, payload.email, hashed)
-        await db.commit()
+        await db.flush()
     except IntegrityError:
         await db.rollback()
         raise ConflictError("A user with this email already exists", field="email") from None

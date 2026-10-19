@@ -25,7 +25,7 @@ async def flag_report(db: AsyncSession, report_id: uuid.UUID, reason: str) -> Re
     report = await get_report_by_id(db, report_id)
     report.flagged = True
     report.flag_reason = reason
-    await db.commit()
+    await db.flush()
     await db.refresh(report)
     log.info("flag_report", report_id=str(report_id))
     return report
@@ -54,7 +54,7 @@ async def update_report_status(
         type=NotificationType.status_change,
         payload={"report_id": str(report.id), "status": status.value, "notes": notes},
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(report)
     log.info("update_report_status", report_id=str(report.id), status=status.value)
     return report
