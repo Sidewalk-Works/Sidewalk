@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import ConflictError, UnauthorizedError
-from src.core.security import create_access_token, hash_password, verify_password
+from src.core.security import create_access_token, hash_password_async, verify_password_async
 from src.modules.auth import repository as auth_repo
 from src.modules.auth.schemas import AuthResponse, LoginRequest, RegisterRequest, UserOut
 
@@ -14,7 +14,7 @@ async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
     existing = await auth_repo.get_user_by_email(db, payload.email)
     if existing:
         raise ConflictError("A user with this email already exists", field="email")
-    hashed = hash_password(payload.password)
+    hashed = await hash_password_async(payload.password)
     # The get_user_by_email check above is not atomic with the insert below:
     # two concurrent registrations for the same email can both pass it and
     # both reach create_user, in which case the users.email unique
@@ -36,7 +36,7 @@ async def login(db: AsyncSession, payload: LoginRequest) -> AuthResponse:
     user = await auth_repo.get_user_by_email(db, payload.email)
     if not user:
         raise UnauthorizedError("Invalid credentials")
-    if not verify_password(payload.password, user.password_hash):
+    if not await verify_password_async(payload.password, user.password_hash):
         raise UnauthorizedError("Invalid credentials")
     if not user.is_active:
         raise UnauthorizedError("Account inactive")

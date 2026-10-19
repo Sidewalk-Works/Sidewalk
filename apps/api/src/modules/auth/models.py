@@ -17,4 +17,4 @@ class User(Base, UUIDPKMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    reports: Mapped[list["Report"]] = relationship("Report", back_populates="user", lazy="selectin")
+    reports: Mapped[list["Report"]] = relationship("Report", back_populates="user", lazy="raise")

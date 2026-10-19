@@ -1,7 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, Boolean, Float, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.models import Base, TimestampMixin, UUIDPKMixin
@@ -12,6 +12,11 @@ if TYPE_CHECKING:
 
 class Report(Base, UUIDPKMixin, TimestampMixin):
     __tablename__ = "reports"
+    __table_args__ = (
+        # list_reports: WHERE is_deleted = false [AND status/category = ?] ORDER BY created_at DESC
+        Index("ix_reports_deleted_status_created", "is_deleted", "status", "created_at"),
+        Index("ix_reports_deleted_category_created", "is_deleted", "category", "created_at"),
+    )
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)

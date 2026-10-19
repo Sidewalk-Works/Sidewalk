@@ -26,6 +26,14 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, v: str) -> str:
+        # Same limit as registration: bcrypt cannot have stored anything longer.
+        if len(v.encode("utf-8")) > 72:
+            raise ValueError("Password must not exceed 72 bytes")
+        return v
+
 
 class UserOut(BaseModel):
     id: uuid.UUID
