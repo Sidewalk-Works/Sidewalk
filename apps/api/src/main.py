@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -9,6 +8,7 @@ from src.core.config import get_settings
 from src.core.error_handler import (
     app_error_handler,
     http_exception_handler,
+    rate_limit_handler,
     unhandled_exception_handler,
     validation_error_handler,
 )
@@ -45,11 +45,12 @@ def create_app() -> FastAPI:
             404: {"model": ApiError, "description": "Not Found"},
             409: {"model": ApiError, "description": "Conflict"},
             422: {"model": ApiError, "description": "Validation Error"},
+            429: {"model": ApiError, "description": "Too Many Requests (see Retry-After)"},
         },
     )
 
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
     setup_cors(app, settings)
     app.add_middleware(SecurityHeadersMiddleware, environment=settings.ENVIRONMENT)

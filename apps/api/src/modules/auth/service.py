@@ -13,7 +13,7 @@ log = structlog.get_logger(__name__)
 async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
     existing = await auth_repo.get_user_by_email(db, payload.email)
     if existing:
-        raise ConflictError("A user with this email already exists", field="email")
+        raise ConflictError("A user with this email already exists", field="email", code="email_taken")
     hashed = hash_password(payload.password)
     # The get_user_by_email check above is not atomic with the insert below:
     # two concurrent registrations for the same email can both pass it and
@@ -26,7 +26,9 @@ async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError("A user with this email already exists", field="email") from None
+        raise ConflictError(
+            "A user with this email already exists", field="email", code="email_taken"
+        ) from None
     log.info("register_user", user_id=str(user.id), email=user.email)
     token = create_access_token({"sub": str(user.id)})
     return AuthResponse(access_token=token, user=UserOut.model_validate(user))
@@ -35,10 +37,10 @@ async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
 async def login(db: AsyncSession, payload: LoginRequest) -> AuthResponse:
     user = await auth_repo.get_user_by_email(db, payload.email)
     if not user:
-        raise UnauthorizedError("Invalid credentials")
+        raise UnauthorizedError("Invalid credentials", code="invalid_credentials")
     if not verify_password(payload.password, user.password_hash):
-        raise UnauthorizedError("Invalid credentials")
+        raise UnauthorizedError("Invalid credentials", code="invalid_credentials")
     if not user.is_active:
-        raise UnauthorizedError("Account inactive")
+        raise UnauthorizedError("Account inactive", code="account_inactive")
     token = create_access_token({"sub": str(user.id)})
     return AuthResponse(access_token=token, user=UserOut.model_validate(user))

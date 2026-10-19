@@ -16,7 +16,7 @@ async def update_profile(
     if payload.email is not None and payload.email != user.email:
         existing = await user_repository.get_user_by_email(db, payload.email)
         if existing and existing.id != user.id:
-            raise ConflictError("A user with this email already exists", field="email")
+            raise ConflictError("A user with this email already exists", field="email", code="email_taken")
     update_data = payload.model_dump(exclude_none=True)
     # The existing-email check above isn't atomic with the update below:
     # two concurrent PATCH /users/me calls changing different accounts to
@@ -30,6 +30,6 @@ async def update_profile(
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError("A user with this email already exists", field="email") from None
+        raise ConflictError("A user with this email already exists", field="email", code="email_taken") from None
     log.info("update_profile", user_id=str(user.id))
     return UserProfileResponse.model_validate(updated_user)
