@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 import structlog
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.core.database import DBSession
@@ -15,6 +15,7 @@ security_scheme = HTTPBearer(auto_error=True)
 
 
 async def get_current_user(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security_scheme)],
     db: DBSession,
 ) -> User:
@@ -31,6 +32,8 @@ async def get_current_user(
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="User not found or inactive")
     structlog.contextvars.bind_contextvars(user_id=str(user.id))
+    # The access log runs outside this task; it reads the id from the shared ASGI scope.
+    request.state.user_id = str(user.id)
     return user
 
 

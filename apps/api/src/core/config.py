@@ -1,7 +1,10 @@
 # apps/api/src/core/config.py
+import json
 from functools import lru_cache
+from typing import Annotated, Any
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -16,12 +19,23 @@ class Settings(BaseSettings):
     # Fields with sensible defaults
     ENVIRONMENT: str = "development"
     API_VERSION: str = "0.1.0"
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8081"]
+    # Accepts a JSON array or a comma-separated list of origins.
+    CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000", "http://localhost:8081"]
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRES_MINUTES: int = 1440  # 24 hours
     LOGIN_MAX_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 15
     LOG_LEVEL: str = "INFO"
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            text = value.strip()
+            if text.startswith("["):
+                return json.loads(text)
+            return [origin.strip() for origin in text.split(",") if origin.strip()]
+        return value
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
