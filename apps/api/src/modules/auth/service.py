@@ -3,7 +3,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import ConflictError, UnauthorizedError
-from src.core.security import create_access_token, hash_password, verify_password
+from src.core.security import (
+    burn_password_check,
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from src.modules.auth import repository as auth_repo
 from src.modules.auth.schemas import AuthResponse, LoginRequest, RegisterRequest, UserOut
 
@@ -27,7 +32,8 @@ async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
     except IntegrityError:
         await db.rollback()
         raise ConflictError("A user with this email already exists", field="email") from None
-    log.info("register_user", user_id=str(user.id), email=user.email)
+    # No address in the log line: user_id is enough to correlate, and emails are personal data.
+    log.info("register_user", user_id=str(user.id))
     token = create_access_token({"sub": str(user.id)})
     return AuthResponse(access_token=token, user=UserOut.model_validate(user))
 
@@ -35,6 +41,8 @@ async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
 async def login(db: AsyncSession, payload: LoginRequest) -> AuthResponse:
     user = await auth_repo.get_user_by_email(db, payload.email)
     if not user:
+        # Same work as a real check, so response time does not reveal whether the email exists.
+        burn_password_check(payload.password)
         raise UnauthorizedError("Invalid credentials")
     if not verify_password(payload.password, user.password_hash):
         raise UnauthorizedError("Invalid credentials")

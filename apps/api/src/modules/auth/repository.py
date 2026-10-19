@@ -1,17 +1,18 @@
 import uuid
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import UserNotFoundError
+from src.core.security import normalize_email
 from src.modules.auth.models import User
 
 
 async def create_user(
     db: AsyncSession, email: str, password_hash: str, is_admin: bool = False
 ) -> User:
-    user = User(email=email, password_hash=password_hash, is_admin=is_admin)
+    user = User(email=normalize_email(email), password_hash=password_hash, is_admin=is_admin)
     db.add(user)
     await db.flush()
     await db.refresh(user)
@@ -19,9 +20,16 @@ async def create_user(
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
-    stmt = select(User).where(User.email == email)
+    # Compare case-insensitively so accounts created before addresses were normalized
+    # are still found; new rows are always stored lower-cased.
+    stmt = (
+        select(User)
+        .where(func.lower(User.email) == normalize_email(email))
+        .order_by(User.created_at)
+        .limit(1)
+    )
     result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    return result.scalars().first()
 
 
 async def get_user_by_id(
@@ -44,6 +52,8 @@ async def update_user(db: AsyncSession, user: User, **fields: Any) -> User:
     for forbidden in ("id", "password_hash", "created_at", "is_admin"):
         if forbidden in fields:
             raise ValueError(f"Cannot update protected field: {forbidden}")
+    if isinstance(fields.get("email"), str):
+        fields["email"] = normalize_email(fields["email"])
     for key, value in fields.items():
         setattr(user, key, value)
     await db.flush()

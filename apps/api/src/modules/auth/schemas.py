@@ -3,10 +3,17 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
+from src.core.security import normalize_email
+
 
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def normalize(cls, v: str) -> str:
+        return normalize_email(v)
 
     @field_validator("password")
     @classmethod
@@ -25,6 +32,11 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def normalize(cls, v: str) -> str:
+        return normalize_email(v)
 
 
 class UserOut(BaseModel):

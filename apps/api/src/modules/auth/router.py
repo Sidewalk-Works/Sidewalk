@@ -12,7 +12,8 @@ settings = get_settings()
 
 
 @router.post("/register", response_model=AuthResponse, status_code=201)
-async def register(payload: RegisterRequest, db: DBSession) -> AuthResponse:
+@limiter.limit(settings.RATE_LIMIT_REGISTER)
+async def register(request: Request, payload: RegisterRequest, db: DBSession) -> AuthResponse:
     return await auth_service.register(db, payload)
 
 

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from functools import lru_cache
 from typing import Any
 
 import bcrypt
@@ -37,3 +38,18 @@ def decode_access_token(token: str) -> dict[str, Any]:
         return payload
     except jwt.PyJWTError as exc:
         raise InvalidTokenError(f"Invalid or expired token: {exc}") from exc
+
+
+def normalize_email(email: str) -> str:
+    """Canonical form used for every stored and looked-up address: trimmed and lower-cased."""
+    return email.strip().lower()
+
+
+@lru_cache
+def _dummy_password_hash() -> str:
+    return hash_password("sidewalk-timing-equalizer")
+
+
+def burn_password_check(plain: str) -> None:
+    """Spend the same time as a real verification, for logins that name no existing account."""
+    verify_password(plain, _dummy_password_hash())

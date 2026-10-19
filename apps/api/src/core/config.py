@@ -21,6 +21,15 @@ class Settings(BaseSettings):
     JWT_EXPIRES_MINUTES: int = 1440  # 24 hours
     LOGIN_MAX_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 15
+    # Database connection pool (PostgreSQL only; SQLite ignores these)
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
+
+    # Rate limiting (slowapi)
+    RATE_LIMIT_DEFAULT: str = "200/minute"
+    RATE_LIMIT_LOGIN: str = "10/minute"
+    RATE_LIMIT_REGISTER: str = "10/hour"
+
     LOG_LEVEL: str = "INFO"
 
     model_config = SettingsConfigDict(
