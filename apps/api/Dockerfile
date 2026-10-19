@@ -13,8 +13,8 @@ WORKDIR /app
 
 # Install dependencies (no dev group) into an isolated virtualenv.
 # Copied first so the layer is cached until dependencies change.
-COPY pyproject.toml README.md ./
-RUN uv sync --no-dev --no-install-project
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-dev --no-install-project
 
 # ---- Stage 2: runtime ----
 FROM python:3.12-slim AS runtime
@@ -39,4 +39,8 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# /openapi.json is served by every build and needs no database or authentication.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=4)" || exit 1
+
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

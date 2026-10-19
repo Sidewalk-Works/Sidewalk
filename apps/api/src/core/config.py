@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     LOGIN_LOCKOUT_MINUTES: int = 15
     LOG_LEVEL: str = "INFO"
 
+    # Comma-separated hosts report media may be served from (e.g. "cdn.example.com").
+    # Empty means any https host is accepted.
+    MEDIA_ALLOWED_HOSTS: str = ""
+
+    @property
+    def media_allowed_hosts(self) -> frozenset[str]:
+        return frozenset(h.strip().lower() for h in self.MEDIA_ALLOWED_HOSTS.split(",") if h.strip())
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
     )
