@@ -23,6 +23,11 @@ class UpdateProfileRequest(BaseModel):
     # the account's recovery address.
     current_password: str | None = None
 
+    @field_validator("email")
+    @classmethod
+    def normalize(cls, v: str | None) -> str | None:
+        return normalize_email(v) if v is not None else v
+
     @model_validator(mode="after")
     def check_not_empty(self) -> "UpdateProfileRequest":
         if self.email is None:
