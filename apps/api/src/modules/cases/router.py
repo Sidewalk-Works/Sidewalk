@@ -4,11 +4,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response, status
 
 from src.core.database import DBSession
-from src.core.dependencies import CurrentUser
+from src.core.dependencies import CurrentUser, OptionalUser
 from src.core.enums import CaseStatus
 from src.core.pagination import PageParams, PaginatedResponse
 from src.modules.cases import service as cases_service
-from src.modules.cases.schemas import CaseResponse
+from src.modules.cases.schemas import CaseDetailResponse, CaseResponse
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
@@ -20,6 +20,15 @@ async def list_cases(
     status: CaseStatus | None = None,
 ) -> PaginatedResponse[CaseResponse]:
     return await cases_service.list_cases(db, params, status)
+
+
+@router.get("/{case_id}", response_model=CaseDetailResponse)
+async def get_case(
+    case_id: uuid.UUID,
+    db: DBSession,
+    current_user: OptionalUser = None,
+) -> CaseDetailResponse:
+    return await cases_service.get_case_detail(db, case_id, current_user)
 
 
 @router.post("/{case_id}/follow", status_code=204)

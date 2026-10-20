@@ -80,3 +80,21 @@ async def is_case_followed(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.U
     stmt = select(CaseFollow).where(CaseFollow.case_id == case_id, CaseFollow.user_id == user_id)
     result = await db.execute(stmt)
     return result.scalar_one_or_none() is not None
+
+
+async def get_case_detail(db: AsyncSession, case_id: uuid.UUID, user) -> "CaseDetailResponse":
+    from src.modules.cases.schemas import CaseDetailResponse
+
+    case = await get_case_by_id(db, case_id)
+    follower_count_stmt = select(func.count()).select_from(CaseFollow).where(
+        CaseFollow.case_id == case_id
+    )
+    follower_count_res = await db.execute(follower_count_stmt)
+    follower_count = follower_count_res.scalar() or 0
+    is_following = False
+    if user is not None and getattr(user, "id", None) is not None:
+        is_following = await is_case_followed(db, case_id, user.id)
+    data = CaseDetailResponse.model_validate(case)
+    data.follower_count = follower_count
+    data.is_following = is_following
+    return data

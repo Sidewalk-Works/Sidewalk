@@ -15,3 +15,8 @@ class CaseResponse(BaseModel):
     assigned_to_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class CaseDetailResponse(CaseResponse):
+    follower_count: int = 0
+    is_following: bool = False
