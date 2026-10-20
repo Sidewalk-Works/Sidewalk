@@ -64,7 +64,7 @@ async def update_report(
     if report.user_id != user.id and not user.is_admin:
         raise ForbiddenError("You are not authorized to modify this report")
 
-    data = payload.model_dump(exclude_none=True)
+    data = payload.model_dump(exclude_unset=True)
     if "category" in data and isinstance(data["category"], ReportCategory):
         data["category"] = data["category"].value
     if "status" in data and isinstance(data["status"], ReportStatus):
