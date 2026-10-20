@@ -19,7 +19,7 @@ class Case(Base, UUIDPKMixin, TimestampMixin):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    status: Mapped[str] = mapped_column(String(50), default="opened", nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), default="open", nullable=False, index=True)
     assigned_to_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id"), nullable=True, index=True
     )

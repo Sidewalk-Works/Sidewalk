@@ -32,9 +32,11 @@ async def list_cases(
 
     if status:
         status_val = status.value if hasattr(status, "value") else str(status)
-        if status_val in ("open", "opened"):
-            query = query.where(Case.status.in_(["open", "opened"]))
-            count_query = count_query.where(Case.status.in_(["open", "opened"]))
+        # Accept legacy 'opened' as an alias for the canonical 'open' status
+        # for backward compatibility for one release.
+        if status_val == "open" or status_val == "opened":
+            query = query.where(Case.status == "open")
+            count_query = count_query.where(Case.status == "open")
         else:
             query = query.where(Case.status == status_val)
             count_query = count_query.where(Case.status == status_val)

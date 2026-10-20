@@ -24,7 +24,7 @@ async def create_test_case(
     db_session,
     user_id: uuid.UUID,
     title: str = "Test Case",
-    status: str = "opened",
+    status: str = "open",
 ) -> Case:
     report = Report(
         title="Test Report",
