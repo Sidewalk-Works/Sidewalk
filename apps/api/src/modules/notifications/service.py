@@ -6,7 +6,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.enums import NotificationType
-from src.core.exceptions import ForbiddenError, NotFoundError
+from src.core.exceptions import NotFoundError
 from src.modules.notifications.models import Notification
 
 log = structlog.get_logger(__name__)
@@ -64,14 +64,19 @@ async def mark_read(
     notification_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> Notification:
-    stmt = select(Notification).where(Notification.id == notification_id)
+    # Scope the lookup by owner in the same statement. Filtering on
+    # ``user_id`` means a notification belonging to somebody else is
+    # indistinguishable from one that does not exist, so the response cannot be
+    # used to probe which ids are real (see #1149).
+    stmt = select(Notification).where(
+        Notification.id == notification_id,
+        Notification.user_id == user_id,
+    )
     result = await db.execute(stmt)
     notification = result.scalar_one_or_none()
 
     if not notification:
         raise NotFoundError("Notification not found")
-    if notification.user_id != user_id:
-        raise ForbiddenError("Not authorized to access this notification")
 
     notification.read = True
     await db.flush()

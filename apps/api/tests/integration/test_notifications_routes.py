@@ -72,7 +72,12 @@ async def test_mark_notification_read(client: AsyncClient, db_session):
     assert data["read"] is True
 
 
-async def test_mark_other_users_notification_403(client: AsyncClient, db_session):
+async def test_mark_other_users_notification_404(client: AsyncClient, db_session):
+    """#1149: another user's notification returns 404, not 403.
+
+    A 403 would confirm the id exists; 404 makes it indistinguishable from a
+    notification that was never created.
+    """
     _token1, user1 = await register_and_login(client, "notif_u1@example.com")
     token2, _user2 = await register_and_login(client, "notif_u2@example.com")
     n = await notif_service.create_notification(
@@ -83,7 +88,23 @@ async def test_mark_other_users_notification_403(client: AsyncClient, db_session
         f"/api/notifications/{n.id}/read",
         headers={"Authorization": f"Bearer {token2}"},
     )
-    assert res.status_code == 403
+    assert res.status_code == 404
+
+
+async def test_mark_missing_notification_404(client: AsyncClient):
+    """#1149: a missing id returns the same 404 as another user's notification."""
+    token, _user = await register_and_login(client, "notif_u3@example.com")
+
+    res = await client.patch(
+        f"/api/notifications/{uuid.uuid4()}/read",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 404
+
+
+async def test_mark_read_unauthenticated_401(client: AsyncClient):
+    res = await client.patch(f"/api/notifications/{uuid.uuid4()}/read")
+    assert res.status_code == 401
 
 
 async def test_mark_all_read(client: AsyncClient, db_session):
