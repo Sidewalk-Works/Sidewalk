@@ -69,6 +69,13 @@ Authenticated routes expect `Authorization: Bearer <token>`. Errors share one sh
 `{"message": "...", "field": "..."}` for conflicts and `{"message": "Validation error", "errors": [...]}`
 for invalid input.
 
+### Notification read state
+
+`PATCH /notifications/{id}/read` is scoped to the caller. Marking a notification that
+belongs to somebody else returns the same `404` as a notification that does not exist,
+so the response cannot be used to discover which ids are real. Callers should treat any
+`404` here as "nothing to mark read".
+
 ## Database migrations
 
 Alembic is configured with an async engine and reads `DATABASE_URL` from the settings.

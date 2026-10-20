@@ -3,7 +3,7 @@ import uuid
 import pytest
 
 from src.core.enums import NotificationType
-from src.core.exceptions import ForbiddenError
+from src.core.exceptions import NotFoundError
 from src.modules.auth.repository import create_user
 from src.modules.notifications import service as notif_service
 
@@ -62,13 +62,51 @@ async def test_mark_notification_read(db_session):
     assert updated.read is True
 
 
-async def test_mark_other_users_notification_raises_forbidden(db_session):
+async def test_mark_other_users_notification_raises_not_found(db_session):
+    """#1149: another user's notification must be indistinguishable from a missing one.
+
+    A 403 here would confirm that the id exists, letting a caller probe UUIDs.
+    """
     user1 = await create_user(db_session, "notif_user5_1@example.com", "hash")
     user2 = await create_user(db_session, "notif_user5_2@example.com", "hash")
     notif = await notif_service.create_notification(db_session, user1.id, NotificationType.mention)
 
-    with pytest.raises(ForbiddenError):
+    with pytest.raises(NotFoundError):
         await notif_service.mark_read(db_session, notif.id, user2.id)
+
+
+async def test_mark_read_missing_id_raises_not_found(db_session):
+    user = await create_user(db_session, "notif_user5_3@example.com", "hash")
+
+    with pytest.raises(NotFoundError):
+        await notif_service.mark_read(db_session, uuid.uuid4(), user.id)
+
+
+async def test_mark_read_other_user_leaves_notification_unread(db_session):
+    """The owner's notification must not be mutated by another user's attempt."""
+    owner = await create_user(db_session, "notif_user5_4@example.com", "hash")
+    intruder = await create_user(db_session, "notif_user5_5@example.com", "hash")
+    notif = await notif_service.create_notification(db_session, owner.id, NotificationType.mention)
+
+    with pytest.raises(NotFoundError):
+        await notif_service.mark_read(db_session, notif.id, intruder.id)
+
+    items, _ = await notif_service.list_notifications(db_session, owner.id)
+    assert items[0].read is False
+
+
+async def test_mark_read_is_scoped_to_the_owner(db_session):
+    """Two users holding notifications: each id is only readable by its owner."""
+    user1 = await create_user(db_session, "notif_user5_6@example.com", "hash")
+    user2 = await create_user(db_session, "notif_user5_7@example.com", "hash")
+    notif1 = await notif_service.create_notification(db_session, user1.id, NotificationType.mention)
+    notif2 = await notif_service.create_notification(db_session, user2.id, NotificationType.mention)
+
+    assert (await notif_service.mark_read(db_session, notif1.id, user1.id)).read is True
+    assert (await notif_service.mark_read(db_session, notif2.id, user2.id)).read is True
+
+    with pytest.raises(NotFoundError):
+        await notif_service.mark_read(db_session, notif1.id, user2.id)
 
 
 async def test_mark_all_read_returns_count(db_session):
