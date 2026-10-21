@@ -11,7 +11,9 @@ from src.modules.reports.models import Report
 
 
 def test_case_status_transitions():
-    assert CaseStatus.opened.value == "opened"
+    assert CaseStatus.open.value == "open"
+    assert CaseStatus.opened.value == "open"
+    assert CaseStatus.closed in CASE_STATUS_TRANSITIONS[CaseStatus.open]
     assert CaseStatus.closed in CASE_STATUS_TRANSITIONS[CaseStatus.opened]
     assert len(CASE_STATUS_TRANSITIONS[CaseStatus.closed]) == 0
 

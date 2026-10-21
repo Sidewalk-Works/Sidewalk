@@ -47,8 +47,9 @@ class ReportCategory(enum.StrEnum):
 
 
 class CaseStatus(enum.StrEnum):
-    opened = "opened"
     open = "open"
+    # Backward-compatibility alias accepted for one release (see migration/docs).
+    opened = "open"
     in_review = "in_review"
     action_scheduled = "action_scheduled"
     in_progress = "in_progress"
@@ -57,8 +58,8 @@ class CaseStatus(enum.StrEnum):
 
 
 CASE_STATUS_TRANSITIONS: dict[CaseStatus, list[CaseStatus]] = {
-    CaseStatus.opened: [CaseStatus.in_review, CaseStatus.closed],
     CaseStatus.open: [CaseStatus.in_review, CaseStatus.closed],
+    CaseStatus.opened: [CaseStatus.in_review, CaseStatus.closed],
     CaseStatus.in_review: [
         CaseStatus.action_scheduled,
         CaseStatus.in_progress,
