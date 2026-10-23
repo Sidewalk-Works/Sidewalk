@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Postgres (with the _test and _e2e databases), the S3-compatible store and Mailpit (the SMTP sink the
+      # end-to-end tests read verification and reset emails from), exactly as in local development. `--wait` blocks
+      # until every service's healthcheck passes. The API tests apply every migration to the fresh _test database.
+      - name: Start Postgres, object storage and the mail sink
+        run: docker compose up -d --wait
+
+      - name: Dependency audit
+        run: pnpm audit --audit-level high
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit and integration tests
+        run: pnpm test
+
+      # The migrated test database must match schema.prisma exactly: no hand-edited migration may drift from the schema.
+      - name: Schema drift check
+        run: pnpm --filter @sidewalk/api exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+        env:
+          DOTENV_CONFIG_PATH: ${{ github.workspace }}/.env.test
+
+      - name: Build
+        run: pnpm build
+        env:
+          # Only used so `next build` has a valid environment; no secrets are involved.
+          API_INTERNAL_URL: http://127.0.0.1:4000
+
+      - name: Install browser for end-to-end tests
+        run: pnpm --filter @sidewalk/web exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: pnpm test:e2e
+
+      # A real pg_dump of the database the end-to-end run just filled, restored into a scratch database and compared
+      # table by table (rows and content hashes), plus indexes, constraints and the append-only triggers.
+      - name: Backup and restore rehearsal
+        run: scripts/ops/backup-restore-check.sh sidewalk_e2e
+        env:
+          APP_ENV_FILE: ${{ github.workspace }}/.env.e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7

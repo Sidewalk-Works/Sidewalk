@@ -1,0 +1,515 @@
+// Sidewalk data model. See docs/architecture.md for the reasoning behind each entity.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CITIZEN
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum ReportStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  REOPENED
+  REJECTED
+  DUPLICATE
+}
+
+enum ModerationState {
+  VISIBLE
+  HIDDEN
+  REMOVED
+}
+
+enum ResolutionVerification {
+  NONE
+  CLAIMED
+  VERIFIED
+}
+
+enum StatusBasis {
+  REPORTER_CLAIM
+  STAFF_REVIEW
+}
+
+enum EvidenceKind {
+  REPORT
+  RESOLUTION
+}
+
+enum CommentKind {
+  CITIZEN
+  STAFF
+  // Reserved for verified organizations. Nothing can create one yet.
+  OFFICIAL
+}
+
+enum ContentTarget {
+  REPORT
+  COMMENT
+}
+
+enum FlagReason {
+  SPAM
+  ABUSIVE
+  PRIVACY
+  MISLEADING
+  OFF_TOPIC
+  OTHER
+}
+
+enum FlagStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
+enum ModerationActionType {
+  HIDE
+  REMOVE
+  RESTORE
+  DISMISS
+}
+
+enum ModerationPolicy {
+  SPAM
+  ABUSE
+  PRIVACY_EXPOSURE
+  MISLEADING
+  OFF_TOPIC
+  ILLEGAL
+  OTHER
+}
+
+enum AuthTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum OutboxKind {
+  EMAIL_VERIFICATION
+  ACCOUNT_EXISTS
+  PASSWORD_RESET
+  PASSWORD_CHANGED
+  NOTIFICATION
+}
+
+enum OutboxStatus {
+  PENDING
+  SENDING
+  /// Delivered: the mail provider accepted the message. Never set merely because a send was queued.
+  SENT
+  /// A send attempt failed and another is scheduled.
+  FAILED
+  /// Gave up (permanent error or attempts exhausted). Visible to administrators, who can retry.
+  DEAD
+  /// No longer appropriate to send (account deleted, preference turned off, address unverified).
+  SKIPPED
+}
+
+enum NotificationType {
+  STATUS_CHANGED
+  REOPENED
+  RESOLUTION_VERIFIED
+  COMMENT
+  STAFF_UPDATE
+  MODERATION
+  REPORT_UPDATE
+}
+
+enum ActivityType {
+  SUBMITTED
+  STATUS_CHANGED
+  EVIDENCE_ADDED
+  EDITED
+  COMMENT_ADDED
+  RESOLUTION_VERIFIED
+}
+
+model User {
+  id                       String     @id @default(uuid()) @db.Uuid
+  /// Always stored lower-cased and trimmed.
+  email                    String     @unique
+  passwordHash             String
+  displayName              String
+  role                     Role       @default(CITIZEN)
+  status                   UserStatus @default(ACTIVE)
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+  lastLoginAt              DateTime?
+  /// Set when the owner proved control of the address (verification link, or a password reset link).
+  emailVerifiedAt          DateTime?
+  /// Optional email preferences. In-app notifications are always on; security email is not optional.
+  notifyEmailReportUpdates Boolean    @default(true)
+  notifyEmailComments      Boolean    @default(true)
+  notifyEmailModeration    Boolean    @default(true)
+  /// Set when the account is anonymised. Personal data is wiped; authored content stays, unattributed.
+  deletedAt                DateTime?
+
+  sessions         Session[]
+  reports          Report[]
+  comments         Comment[]
+  evidence         ReportEvidence[]
+  flags            ContentFlag[]         @relation("FlagReporter")
+  handledFlags     ContentFlag[]         @relation("FlagHandler")
+  moderationAction ModerationAction[]
+  statusChanges    ReportStatusHistory[]
+  activity         ActivityEvent[]
+  internalNotes    InternalNote[]
+  auditLogs        AuditLog[]
+  authTokens       AuthToken[]
+  notifications    Notification[]
+  follows          ReportFollow[]
+  emailOutbox      EmailOutbox[]
+
+  @@index([role])
+}
+
+model Session {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  /// SHA-256 of the opaque refresh token. The token itself is never stored.
+  tokenHash    String    @unique
+  /// All rotations of one login share a family so token reuse can revoke the whole chain.
+  familyId     String    @db.Uuid
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime  @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?   @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  name        String   @unique
+  description String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reports Report[]
+}
+
+model Report {
+  id               String                 @id @default(uuid()) @db.Uuid
+  /// Public, human-readable identifier, for example SW-7K4M2Q.
+  reference        String                 @unique
+  title            String
+  description      String
+  categoryId       String                 @db.Uuid
+  status           ReportStatus           @default(SUBMITTED)
+  moderationState  ModerationState        @default(VISIBLE)
+  /// WGS84 decimal degrees. Plain doubles with a composite index; see docs/architecture.md for the PostGIS upgrade path.
+  latitude         Float
+  longitude        Float
+  addressText      String?
+  areaName         String?
+  reporterId       String                 @db.Uuid
+  showReporterName Boolean                @default(false)
+  /// Client-generated idempotency key so a double-click or retry cannot create two reports.
+  clientRequestId  String?
+  verification     ResolutionVerification @default(NONE)
+  resolutionNote   String?
+  resolvedAt       DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  lastActivityAt   DateTime               @default(now())
+
+  category      Category              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  reporter      User                  @relation(fields: [reporterId], references: [id], onDelete: Restrict)
+  evidence      ReportEvidence[]
+  statusHistory ReportStatusHistory[]
+  comments      Comment[]
+  activity      ActivityEvent[]
+  flags         ContentFlag[]
+  moderation    ModerationAction[]
+  internalNotes InternalNote[]
+  followers     ReportFollow[]
+  notifications Notification[]
+
+  @@unique([reporterId, clientRequestId])
+  @@index([moderationState, status, lastActivityAt(sort: Desc)])
+  @@index([moderationState, createdAt(sort: Desc)])
+  @@index([categoryId])
+  @@index([reporterId, lastActivityAt(sort: Desc)])
+  @@index([latitude, longitude])
+}
+
+model ReportEvidence {
+  id         String       @id @default(uuid()) @db.Uuid
+  reportId   String       @db.Uuid
+  uploaderId String       @db.Uuid
+  kind       EvidenceKind @default(REPORT)
+  storageKey String       @unique
+  thumbKey   String       @unique
+  mimeType   String
+  sizeBytes  Int
+  width      Int
+  height     Int
+  /// SHA-256 of the re-encoded image; stops the same photo being attached twice.
+  sha256     String
+  caption    String?
+  createdAt  DateTime     @default(now())
+
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  uploader User   @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+
+  @@unique([reportId, sha256])
+  @@index([reportId, kind, createdAt])
+}
+
+model ReportStatusHistory {
+  id         String        @id @default(uuid()) @db.Uuid
+  reportId   String        @db.Uuid
+  fromStatus ReportStatus?
+  toStatus   ReportStatus
+  actorId    String        @db.Uuid
+  /// Role at the moment of the change, so later role changes never rewrite history.
+  actorRole  Role
+  basis      StatusBasis
+  publicNote String?
+  createdAt  DateTime      @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  actor  User   @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+}
+
+model Comment {
+  id                String          @id @default(uuid()) @db.Uuid
+  reportId          String          @db.Uuid
+  authorId          String          @db.Uuid
+  kind              CommentKind     @default(CITIZEN)
+  body              String
+  moderationState   ModerationState @default(VISIBLE)
+  deletedByAuthorAt DateTime?
+  editedAt          DateTime?
+  createdAt         DateTime        @default(now())
+
+  report     Report             @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  author     User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  flags      ContentFlag[]
+  moderation ModerationAction[]
+
+  @@index([reportId, createdAt])
+  @@index([authorId])
+}
+
+model ActivityEvent {
+  id        String       @id @default(uuid()) @db.Uuid
+  reportId  String       @db.Uuid
+  type      ActivityType
+  actorId   String?      @db.Uuid
+  /// Only public events feed the public timeline. Payloads must never hold private data when isPublic.
+  isPublic  Boolean      @default(true)
+  payload   Json         @default("{}")
+  createdAt DateTime     @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  actor  User?  @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([reportId, createdAt])
+  @@index([createdAt])
+}
+
+model ContentFlag {
+  id          String        @id @default(uuid()) @db.Uuid
+  target      ContentTarget
+  reportId    String        @db.Uuid
+  commentId   String?       @db.Uuid
+  /// "report:<id>" or "comment:<id>". Lets a unique index stop one person flagging the same item twice.
+  targetKey   String
+  reporterId  String        @db.Uuid
+  reason      FlagReason
+  details     String?
+  status      FlagStatus    @default(OPEN)
+  handledById String?       @db.Uuid
+  handledAt   DateTime?
+  createdAt   DateTime      @default(now())
+
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporter  User     @relation("FlagReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  handledBy User?    @relation("FlagHandler", fields: [handledById], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, targetKey])
+  @@index([status, createdAt])
+  @@index([reportId])
+}
+
+model ModerationAction {
+  id            String               @id @default(uuid()) @db.Uuid
+  moderatorId   String               @db.Uuid
+  target        ContentTarget
+  reportId      String               @db.Uuid
+  commentId     String?              @db.Uuid
+  action        ModerationActionType
+  /// Null for DISMISS: dismissing a flag is not a policy finding.
+  policy        ModerationPolicy?
+  reason        String
+  previousState ModerationState
+  newState      ModerationState
+  createdAt     DateTime             @default(now())
+
+  moderator User     @relation(fields: [moderatorId], references: [id], onDelete: Restrict)
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, createdAt])
+  @@index([createdAt])
+}
+
+/// Staff-only notes. Kept in their own table so no public query can ever select them by accident.
+model InternalNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  reportId  String   @db.Uuid
+  authorId  String   @db.Uuid
+  body      String
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+}
+
+/// Append-only record of privileged actions. Never holds secrets, tokens or message bodies.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+}
+
+/// Single-use email verification and password-reset tokens. Only the SHA-256 of the token is stored.
+model AuthToken {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  purpose   AuthTokenPurpose
+  tokenHash String           @unique
+  /// The address the token was sent to; redeeming it for a different address fails.
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  /// Set when a newer token replaces this one or the account's credentials change.
+  revokedAt DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+/// People who asked to hear about a report. The reporter is always notified and needs no row.
+model ReportFollow {
+  userId    String   @db.Uuid
+  reportId  String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@id([userId, reportId])
+  @@index([reportId])
+}
+
+/// In-app notifications. Written in the same transaction as the event they describe.
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  reportId  String?          @db.Uuid
+  /// Safe, public-only text. Never moderation notes or personal data.
+  title     String
+  body      String
+  /// Relative web path the notification points at.
+  url       String
+  /// Deterministic per event (for example "status:<historyId>") so a retried transaction cannot duplicate it.
+  dedupeKey String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report Report? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+/// Shared rate-limit counters (one fixed window per key). The key is an HMAC of the route and the person or
+/// address, so no address is stored. The table is UNLOGGED (see the migration): counters are disposable and are
+/// allowed to reset after a database crash, in exchange for much cheaper writes. Expired rows are purged every
+/// minute by whichever API instance holds the cleanup advisory lock.
+model RateLimitBucket {
+  key       String   @id
+  hits      Int
+  expiresAt DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
+}
+
+/// Transactional outbox for email. Rows are inserted inside the transaction that caused them, so a message
+/// exists if and only if its event committed. A worker delivers them; nothing is sent from a request thread.
+model EmailOutbox {
+  id                String       @id @default(uuid()) @db.Uuid
+  kind              OutboxKind
+  userId            String?      @db.Uuid
+  toEmail           String
+  /// AES-256-GCM encrypted JSON (it can hold a one-time link). Cleared as soon as the message is sent.
+  payloadCiphertext String?
+  /// Makes enqueueing idempotent.
+  dedupeKey         String?      @unique
+  status            OutboxStatus @default(PENDING)
+  attempts          Int          @default(0)
+  nextAttemptAt     DateTime     @default(now())
+  lockedAt          DateTime?
+  /// Sanitised failure code and reason. Never an address, a link or a token.
+  lastError         String?
+  providerMessageId String?
+  sentAt            DateTime?
+  createdAt         DateTime     @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, nextAttemptAt])
+  @@index([userId, kind, createdAt])
+}

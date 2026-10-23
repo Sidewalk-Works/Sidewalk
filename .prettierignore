@@ -1,0 +1,11 @@
+node_modules
+dist
+.next
+coverage
+pnpm-lock.yaml
+apps/api/src/generated
+apps/api/prisma/migrations
+apps/web/public/photography
+playwright-report
+test-results
+apps/web/public/vendor

@@ -1,0 +1,38 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Build scripts we explicitly allow (native modules and Prisma engines). Everything else stays blocked.
+allowBuilds:
+  "@parcel/watcher": true
+  "@prisma/engines": true
+  "@scarf/scarf": false
+  argon2: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+
+# Releases younger than the pnpm default quiet period are allowed only where we verified them.
+minimumReleaseAgeExclude:
+  - "@aws-sdk/client-s3@3.1156.0"
+  - "@nestjs/common@11.2.8"
+  - "@nestjs/core@11.2.8"
+  - "@nestjs/platform-express@11.2.8"
+  - "@nestjs/testing@11.2.8"
+  - "@next/env@16.4.3"
+  - "@next/eslint-plugin-next@16.4.3"
+  - "@next/swc-darwin-arm64@16.4.3"
+  - "@next/swc-darwin-x64@16.4.3"
+  - "@next/swc-linux-arm64-gnu@16.4.3"
+  - "@next/swc-linux-arm64-musl@16.4.3"
+  - "@next/swc-linux-x64-gnu@16.4.3"
+  - "@next/swc-linux-x64-musl@16.4.3"
+  - "@next/swc-win32-arm64-msvc@16.4.3"
+  - "@next/swc-win32-x64-msvc@16.4.3"
+  - eslint-config-next@16.4.3
+  - next@16.4.3
+
+# Security overrides for transitive dependencies with published advisories.
+overrides:
+  js-yaml: ">=5.4.1"
