@@ -1,5 +1,0 @@
-__init__
-core
-main
-models
-modules

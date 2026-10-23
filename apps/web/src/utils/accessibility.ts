@@ -1,1 +1,0 @@
-export function focusFirstInvalidField() {\n  // accessibility helpers\n}\n

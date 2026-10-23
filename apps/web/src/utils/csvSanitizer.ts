@@ -1,1 +1,0 @@
-export function sanitizeCsvField(field: string) {\n  return field.replace(/^[+=@-]/, '');\n}\n

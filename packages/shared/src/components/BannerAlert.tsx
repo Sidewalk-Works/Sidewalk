@@ -1,1 +1,0 @@
-export function BannerAlert() {\n  return null;\n}\n

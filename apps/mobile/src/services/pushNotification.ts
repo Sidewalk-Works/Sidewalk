@@ -1,1 +1,0 @@
-export function registerPushNotifications() {\n  // Native push permissions and token\n}\n

@@ -1,1 +1,0 @@
-export function ReportLifecycleTriggerBadge() {\n  return null;\n}\n
