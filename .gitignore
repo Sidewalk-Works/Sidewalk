@@ -14,8 +14,6 @@ coverage/
 *.db-journal
 
 # environment files
-.env
-.env.*
 !.env.example
 !.env.test
 
@@ -45,3 +43,4 @@ __pycache__/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+config.bat

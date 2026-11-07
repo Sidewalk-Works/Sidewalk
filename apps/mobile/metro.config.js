@@ -1,1 +1,1 @@
-module.exports = { resolver: { nodeModulesPaths: [] } };\n
+module.exports = { resolver: { nodeModulesPaths: [] } };
