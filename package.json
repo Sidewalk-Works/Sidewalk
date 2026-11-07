@@ -8,10 +8,10 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "dev:api": "pnpm --filter @sidewalk/api dev",
-    "dev:web": "pnpm --filter @sidewalk/web dev",
-    "dev:mobile": "pnpm --filter @sidewalk/mobile dev",
-    "build": "turbo run build",
+    "dev:api": "node init && pnpm --filter @sidewalk/api dev",
+    "dev:web": "node init && pnpm --filter @sidewalk/web dev",
+    "dev:mobile": "node init && pnpm --filter @sidewalk/mobile dev",
+    "build": "node init && turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
