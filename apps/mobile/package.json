@@ -4,7 +4,7 @@
   "private": true,
   "main": "expo/AppEntry",
   "scripts": {
-    "dev": "expo start",
+    "dev": "node init && expo start",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest"
@@ -27,6 +27,8 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "testMatch": ["<rootDir>/src/__tests__/**/*.test.ts?(x)"]
+    "testMatch": [
+      "<rootDir>/src/__tests__/**/*.test.ts?(x)"
+    ]
   }
 }
