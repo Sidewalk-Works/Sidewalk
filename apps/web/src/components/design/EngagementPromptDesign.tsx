@@ -151,7 +151,7 @@ export function EngagementPromptDesign() {
                 <p style={{ margin: '0 0 10px', fontSize: '13px', color: '#475569' }}>Select which prompts you'd like to stop receiving:</p>
                 {['Re-engagement prompts', 'Weekly summaries', 'Community milestones', 'New activity alerts'].map((label, i) => (
                   <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderBottom: i < 3 ? '1px solid #f1f5f9' : 'none', fontSize: '13px', color: '#334155', cursor: 'pointer' }}>
-                    <input type="checkbox" style={{ accentColor: '#3b82f6' }} />
+                    <input type="checkbox" aria-label={label} style={{ accentColor: '#3b82f6' }} />
                     {label}
                   </label>
                 ))}
