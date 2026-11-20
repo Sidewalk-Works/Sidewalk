@@ -7,7 +7,7 @@ interface InAppNotificationInboxDrawerProps {
   onClose?: () => void;
   onMarkAsRead?: (id: string) => void;
   onMarkAllRead?: () => void;
-  triggerRef?: React.RefObject<HTMLElement>;
+  triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
 type CategoryFilter = 'all' | InAppNotificationItem['category'];
@@ -38,6 +38,7 @@ export function InAppNotificationInboxDrawer({
 }: InAppNotificationInboxDrawerProps) {
   const [activeFilter, setActiveFilter] = useState<CategoryFilter>('all');
   const drawerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const filteredItems = useMemo(
@@ -47,26 +48,32 @@ export function InAppNotificationInboxDrawer({
 
   const unreadCount = useMemo(() => items.filter((i) => !i.isRead).length, [items]);
 
+  const restoreFocus = useCallback(() => {
+    const target = triggerRef?.current ?? previousFocusRef.current;
+    if (target && typeof target.focus === 'function') {
+      target.focus();
+    }
+    previousFocusRef.current = null;
+  }, [triggerRef]);
+
   // Focus trap and Escape-to-dismiss
   const handleClose = useCallback(() => {
     onClose?.();
-    // Return focus to trigger element
-    if (previousFocusRef.current) {
-      previousFocusRef.current.focus();
-      previousFocusRef.current = null;
-    }
   }, [onClose]);
 
   useEffect(() => {
-    if (isOpen) {
-      previousFocusRef.current = triggerRef?.current ?? document.activeElement as HTMLElement;
-      // Focus the close button inside the drawer after render
-      requestAnimationFrame(() => {
-        const closeBtn = drawerRef.current?.querySelector('button');
-        closeBtn?.focus();
-      });
-    }
-  }, [isOpen, triggerRef]);
+    if (!isOpen) return;
+
+    previousFocusRef.current = triggerRef?.current ?? (document.activeElement as HTMLElement | null);
+    const frame = requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      restoreFocus();
+    };
+  }, [isOpen, restoreFocus, triggerRef]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -138,7 +145,7 @@ export function InAppNotificationInboxDrawer({
               Mark all read
             </button>
           )}
-          <button onClick={handleClose} aria-label="Close notifications" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+          <button ref={closeButtonRef} onClick={handleClose} aria-label="Close notifications" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
       </div>
 
