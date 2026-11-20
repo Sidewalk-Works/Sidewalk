@@ -130,7 +130,7 @@ export function AlertPreviewDesign() {
               {expandedWhy === i && (
                 <div style={{ padding: '0 14px 14px 30px', background: '#f8fafc' }}>
                   <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#475569' }}>{v.explainer}</p>
-                  <a href="#" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}>Manage preferences →</a>
+                  <button type="button" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>Manage preferences →</button>
                 </div>
               )}
             </div>
