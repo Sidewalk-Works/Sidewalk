@@ -68,7 +68,7 @@ export function EmailDigestPreview({ template, onSnooze }: EmailDigestPreviewPro
           Your {FREQUENCY_LABELS[sampleTemplate.frequency]} Civic Update, {sampleTemplate.recipient.name}
         </h2>
         <div style={{ display: 'flex', gap: '6px' }}>
-          <button
+          <button type="button"
             onClick={() => setPreviewMode(!previewMode)}
             style={{
               padding: '4px 10px',
@@ -134,7 +134,7 @@ export function EmailDigestPreview({ template, onSnooze }: EmailDigestPreviewPro
         <div style={{ marginTop: '16px', padding: '12px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showSnooze ? '8px' : 0 }}>
             <span style={{ fontSize: '13px', color: '#64748b' }}>Snooze this digest</span>
-            <button
+            <button type="button"
               onClick={() => setShowSnooze(!showSnooze)}
               style={{
                 padding: '4px 10px',
@@ -152,7 +152,7 @@ export function EmailDigestPreview({ template, onSnooze }: EmailDigestPreviewPro
           {showSnooze && (
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {SNOOZE_OPTIONS.map((opt) => (
-                <button
+                <button type="button"
                   key={opt.days}
                   onClick={() => {
                     onSnooze(opt.days);

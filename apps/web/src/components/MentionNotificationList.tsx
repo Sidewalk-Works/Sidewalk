@@ -79,7 +79,7 @@ export function MentionNotificationList({
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {unreadCount > 0 && onMarkAllRead && (
-            <button
+            <button type="button"
               onClick={onMarkAllRead}
               style={{
                 background: 'none',
@@ -97,7 +97,7 @@ export function MentionNotificationList({
           )}
           <div style={{ display: 'flex', gap: '4px' }}>
             {(['all', 'unread'] as const).map((f) => (
-              <button
+              <button type="button"
                 key={f}
                 onClick={() => setFilter(f)}
                 style={{

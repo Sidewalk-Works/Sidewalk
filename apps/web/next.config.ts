@@ -14,21 +14,17 @@ const csp = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  poweredByHeader: false,
   transpilePackages: ["@sidewalk/shared"],
-  async headers() {
-    return [
+  // Standalone output for containerized deployments.
+  output: "standalone",
+  typedRoutes: true,
+  images: {
+    remotePatterns: [
       {
-        source: "/:path*",
-        headers: [
-          { key: "Content-Security-Policy", value: csp },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-        ],
+        protocol: "https",
+        hostname: "**",
       },
-    ];
+    ],
   },
 };
 

@@ -101,7 +101,7 @@ export function RealtimeStatusToastBannerContainer({
               <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>{t.message}</div>
             </div>
             {onDismiss && (
-              <button
+              <button type="button"
                 onClick={() => handleManualDismiss(t.id)}
                 style={{
                   background: 'transparent',

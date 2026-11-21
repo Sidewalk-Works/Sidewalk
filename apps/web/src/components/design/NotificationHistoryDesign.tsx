@@ -29,18 +29,22 @@ export function NotificationHistoryDesign() {
       <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#0f172a' }}>Notification History Timeline</h2>
       <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#64748b' }}>Visual timeline of all notifications sent to you across channels.</p>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="From date"
-          style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#94a3b8' }}
-        />
-        <input
-          type="text"
-          placeholder="To date"
-          style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#94a3b8' }}
-        />
-        <button style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>Export</button>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', alignItems: 'flex-end' }}>
+        <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#475569' }}>
+          From date
+          <input
+            type="date"
+            style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#334155' }}
+          />
+        </label>
+        <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#475569' }}>
+          To date
+          <input
+            type="date"
+            style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#334155' }}
+          />
+        </label>
+        <button type="button" style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', height: '38px' }}>Export</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
