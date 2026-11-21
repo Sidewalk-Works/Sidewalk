@@ -31,6 +31,8 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "testMatch": ["<rootDir>/src/__tests__/**/*.test.ts?(x)"]
+    "testMatch": [
+      "<rootDir>/src/__tests__/**/*.test.ts?(x)"
+    ]
   }
 }

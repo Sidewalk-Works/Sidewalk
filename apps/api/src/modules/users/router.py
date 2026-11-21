@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 
 from src.core.database import DBSession
 from src.core.dependencies import CurrentUser
@@ -6,6 +6,7 @@ from src.modules.auth.schemas import AuthResponse
 from src.modules.users import service as users_service
 from src.modules.users.schemas import (
     ChangePasswordRequest,
+    DeleteAccountRequest,
     UpdateProfileRequest,
     UserProfileResponse,
 )
@@ -31,3 +32,12 @@ async def change_my_password(
 ) -> AuthResponse:
     """Change the password. All older sessions are revoked; the response carries fresh tokens."""
     return await users_service.change_password(db, current_user, payload)
+
+
+@router.delete("/me", status_code=204)
+async def delete_my_account(
+    payload: DeleteAccountRequest, current_user: CurrentUser, db: DBSession
+) -> Response:
+    """Deactivate/anonymize the current account. Requires current password."""
+    await users_service.delete_account(db, current_user, payload)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
