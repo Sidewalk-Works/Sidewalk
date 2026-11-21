@@ -18,15 +18,15 @@
     "@sidewalk/shared": "workspace:*",
     "expo": "^56.0.12",
     "expo-status-bar": "^56.0.4",
-    "react": "^19.2.3",
-    "react-native": "^0.86.0"
+    "react": "^19.3.1",
+    "react-native": "^0.88.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
-    "@types/react": "^19.2.3",
+    "@types/react": "^19.3.0",
     "babel-preset-expo": "^56.0.15",
     "jest-expo": "^56.0.5",
-    "react-test-renderer": "^19.2.3",
+    "react-test-renderer": "^19.3.1",
     "typescript": "^5.6.3"
   },
   "jest": {
