@@ -12,8 +12,8 @@
 
 ## Rules
 
-1. **`packages/shared` is the cross-app contract package.** If two apps need the same type/schema, it belongs in `packages/shared`.
-2. **Apps never import from other apps.** Cross-app contracts go through `packages/shared` (or HTTP/API contracts).
+1. **`packages/shared` is the cross-app contract package.** If two apps need the same type or schema, it belongs in `packages/shared`.
+2. **Apps never import from other apps.** Cross-app contracts go through `packages/shared` or HTTP/API contracts.
 3. **`packages/stellar` wraps Stellar integration only.** Product/business logic belongs in the consuming app, not in the stellar package.
 4. **No circular dependencies.** Keep dependency direction one-way: apps -> packages, `packages/stellar` -> `packages/shared`.
 
