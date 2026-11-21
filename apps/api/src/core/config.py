@@ -1,5 +1,5 @@
-```python
 import os
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -12,6 +12,28 @@ DEFAULT_SECRET_KEY = (
 class Settings(BaseSettings):
     SECRET_KEY: str = DEFAULT_SECRET_KEY
     ENVIRONMENT: str = "development"
+    DATABASE_URL: str = "postgresql://sidewalk:sidewalk@localhost:5432/sidewalk"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRES_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRES_DAYS: int = 30
+    EMAIL_TOKEN_EXPIRES_HOURS: int = 24
+    REQUIRE_VERIFIED_EMAIL: bool = False
+    APP_BASE_URL: str = "http://localhost:8000"
+    MAIL_BACKEND: str = "console"
+    MEDIA_ALLOWED_HOSTS: str = ""
+    MEDIA_STORAGE_BACKEND: str = "local"
+    MEDIA_LOCAL_BASE_URL: str = "https://storage.local.test"
+    MEDIA_MAX_UPLOAD_BYTES: int = 5 * 1024 * 1024
+    MEDIA_ALLOWED_CONTENT_TYPES: str = "image/jpeg,image/png,image/webp"
+
+    @property
+    def media_allowed_hosts(self) -> set[str]:
+        return {h.strip().lower() for h in self.MEDIA_ALLOWED_HOSTS.split(",") if h.strip()}
+
+    @property
+    def media_allowed_content_types(self) -> set[str]:
+        return {c.strip().lower() for c in self.MEDIA_ALLOWED_CONTENT_TYPES.split(",") if c.strip()}
+
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -40,4 +62,9 @@ class Settings(BaseSettings):
 
 settings = Settings()
 settings.validate_production_secrets()
-```
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return settings
+

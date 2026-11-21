@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+
+from src.core.security import normalize_email
 
 
 class UserProfileResponse(BaseModel):
@@ -47,3 +49,7 @@ class ChangePasswordRequest(BaseModel):
         if len(v.encode("utf-8")) > 72:
             raise ValueError("Password must not exceed 72 bytes")
         return v
+
+
+class DeleteAccountRequest(BaseModel):
+    current_password: str = Field(min_length=1)

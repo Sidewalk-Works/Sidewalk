@@ -6,6 +6,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["**/*.{ts,tsx,mts,cts}"],
     languageOptions: {
       globals: {
         ...globals.node
@@ -16,6 +17,14 @@ export default tseslint.config(
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }
       ]
+    }
+  },
+  {
+    files: ["**/*.{js,jsx,mjs,cjs}"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
     }
   },
   {

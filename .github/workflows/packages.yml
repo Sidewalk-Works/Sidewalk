@@ -35,6 +35,9 @@ jobs:
       - name: Build
         run: pnpm --filter ${{ matrix.package }} build
 
+      - name: Typecheck
+        run: pnpm --filter ${{ matrix.package }} typecheck
+
       - name: Lint
         run: pnpm --filter ${{ matrix.package }} lint
 

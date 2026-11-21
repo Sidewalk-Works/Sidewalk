@@ -98,3 +98,16 @@ class ReportResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PresignMediaRequest(BaseModel):
+    filename: str = Field(min_length=1, max_length=255)
+    content_type: str = Field(min_length=1, max_length=100)
+    size_bytes: int = Field(gt=0)
+
+
+class PresignMediaResponse(BaseModel):
+    upload_url: str
+    media_url: str
+    method: str = "PUT"
+    headers: dict[str, str] = Field(default_factory=dict)

@@ -5,7 +5,7 @@
   "main": "expo/AppEntry",
   "scripts": {
     "dev": "expo start",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest"
   },
@@ -27,6 +27,8 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "testMatch": ["<rootDir>/src/__tests__/**/*.test.ts?(x)"]
+    "testMatch": [
+      "<rootDir>/src/__tests__/**/*.test.ts?(x)"
+    ]
   }
 }

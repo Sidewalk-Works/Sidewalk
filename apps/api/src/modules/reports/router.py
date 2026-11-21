@@ -6,9 +6,33 @@ from src.core.database import DBSession
 from src.core.dependencies import CurrentUser, VerifiedUser
 from src.core.enums import ReportCategory, ReportStatus
 from src.modules.reports import service as report_service
-from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
+from src.core.storage import get_media_storage
+from src.modules.reports.schemas import (
+    CreateReportRequest,
+    PresignMediaRequest,
+    PresignMediaResponse,
+    ReportResponse,
+    UpdateReportRequest,
+)
 
 router = APIRouter(prefix="/reports", tags=["reports"])
+
+
+@router.post("/media/presign", response_model=PresignMediaResponse)
+async def presign_report_media(
+    payload: PresignMediaRequest, _current_user: CurrentUser
+) -> PresignMediaResponse:
+    upload = get_media_storage().presign_upload(
+        filename=payload.filename,
+        content_type=payload.content_type,
+        size_bytes=payload.size_bytes,
+    )
+    return PresignMediaResponse(
+        upload_url=upload.upload_url,
+        media_url=upload.media_url,
+        method=upload.method,
+        headers=upload.headers or {},
+    )
 
 
 @router.post("", response_model=ReportResponse, status_code=201)
