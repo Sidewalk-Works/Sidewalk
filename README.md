@@ -217,11 +217,12 @@ will be built as new modules on top of this foundation.
 
 `apps/mobile`
 
-The mobile app is an Expo + React Native + TypeScript foundation: project
-setup, folder structure (`src/components`, `src/screens`, `src/navigation`,
-`src/hooks`, `src/services`, `src/utils`, `src/assets`), linting, formatting,
-and a working test setup. No screens or authentication flows are implemented
-yet — this is a starting point for future development.
+The mobile app is an Expo + React Native + TypeScript foundation. The current
+`src/` layout includes `api`, `assets`, `components`, `config`, `hooks`,
+`navigation`, `services`, `theme`, `utils`, and `__tests__`. It contains shared
+mobile plumbing and push-notification UI/services (for example registration,
+opt-out settings/dialog components, and push registration hooks/services), but
+it is still an early foundation rather than a complete end-user flow.
 
 ---
 

@@ -16,11 +16,11 @@
 
 ## For Database Changes
 
-- [ ] New Prisma migration file is included
-- [ ] `prisma generate` output is up to date
+- [ ] New Alembic migration is included when models/schema change
+- [ ] `uv run alembic upgrade head` and `uv run alembic check` pass in `apps/api`
 - [ ] Seed script updated if new required data added
 
 ## For API Changes
 
-- [ ] New endpoints documented in `docs/api/`
+- [ ] New endpoints documented in `docs/development/api-reference.md` or covered by OpenAPI `/docs`
 - [ ] Auth guards applied where required
