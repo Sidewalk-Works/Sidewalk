@@ -15,13 +15,13 @@ export function NotificationDigestBanner({ onEnableDigest, onDismiss }: Notifica
         </p>
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={() => onEnableDigest('daily')} style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>
+        <button type="button" onClick={() => onEnableDigest('daily')} style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>
           Daily
         </button>
-        <button onClick={() => onEnableDigest('weekly')} style={{ background: '#d97706', color: '#fff', border: 'none', borderRadius: '4px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>
+        <button type="button" onClick={() => onEnableDigest('weekly')} style={{ background: '#d97706', color: '#fff', border: 'none', borderRadius: '4px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>
           Weekly
         </button>
-        <button onClick={onDismiss} style={{ background: 'transparent', color: '#92400e', border: 'none', textDecoration: 'underline', cursor: 'pointer', padding: '6px' }}>
+        <button type="button" onClick={onDismiss} style={{ background: 'transparent', color: '#92400e', border: 'none', textDecoration: 'underline', cursor: 'pointer', padding: '6px' }}>
           Dismiss
         </button>
       </div>
