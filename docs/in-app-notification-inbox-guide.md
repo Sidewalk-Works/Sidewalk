@@ -5,10 +5,10 @@ This document details the in-app notification inbox drawer, read-state persisten
 ## Architecture
 
 1. **Inbox Service**:
-   - `apps/api/src/modules/notifications/services/in-app-notification-inbox.service.ts`: `InAppNotificationInboxService` retrieving user notification feeds.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/notifications/`): `InAppNotificationInboxService` retrieving user notification feeds.
 
 2. **Web Drawer UI**:
    - `InAppNotificationInboxDrawer`: React component rendering side-drawer notification feeds.
 
 3. **Validation Schemas & Interfaces**:
-   - `inAppNotificationItemSchema` and `InAppNotificationItem` defined in `@qyou/shared`.
+   - `inAppNotificationItemSchema` and `InAppNotificationItem` defined in `@sidewalk/shared`.

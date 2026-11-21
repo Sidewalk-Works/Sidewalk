@@ -5,10 +5,10 @@ This document explains the mobile push registration lifecycle and the technical 
 ## Architecture
 
 1. **Push Token Service**:
-   - `apps/api/src/modules/notifications/services/push-docs.service.ts`: Stores and removes push device tokens for users.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/notifications/`): Stores and removes push device tokens for users.
 
 2. **Web Push Registration Panel**:
    - `PushDocsPanel`: React component for users to manually trigger push registration or opt-out.
 
 3. **Validation Schemas & Interfaces**:
-   - `pushRegistrationDataSchema` and `PushRegistrationData` defined in `@qyou/shared`.
+   - `pushRegistrationDataSchema` and `PushRegistrationData` defined in `@sidewalk/shared`.

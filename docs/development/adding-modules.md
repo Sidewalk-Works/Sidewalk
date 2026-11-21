@@ -27,9 +27,10 @@ apps/api/src/modules/<module_name>/
 
 To preserve codebase maintainability and prevent spaghetti dependencies, strictly observe these rules:
 
-1. **Services never import other services directly:**
-   - Cross-module operations must go through public interfaces, events, or shared core utilities.
-   - If Module A needs data from Module B, query through repository interfaces or dispatch domain events rather than calling Module B's internal service methods.
+1. **Keep cross-module coupling explicit and minimal:**
+   - Prefer keeping business logic within the owning module's service/repository.
+   - When coordination is needed, import narrowly from the other module's public service or repository interface (for example, `moderation.service` calling `notifications.service.create_notification`) and avoid circular dependencies.
+   - Do not reach into another module's router or internal HTTP layer.
 
 2. **Repositories never call `commit()`:**
    - Repositories only add, query, or stage changes on the session (`session.add()`, `session.execute()`, etc.).
@@ -137,9 +138,9 @@ async def create_item(db: AsyncSession, data: ItemCreate, user_id: uuid.UUID) ->
 ### Step 3.5: Define Router (`router.py`)
 
 ```python
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.core.database import get_db
+from fastapi import APIRouter, status
+
+from src.core.database import DBSession
 from src.core.dependencies import CurrentUser
 from src.modules.<module_name> import schemas, service
 
@@ -149,8 +150,8 @@ router = APIRouter(prefix="/items", tags=["items"])
 async def create_item(
     payload: schemas.ItemCreate,
     current_user: CurrentUser,
-    db: AsyncSession = Depends(get_db),
-):
+    db: DBSession,
+) -> schemas.ItemResponse:
     return await service.create_item(db, payload, current_user.id)
 ```
 
