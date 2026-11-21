@@ -70,6 +70,15 @@ export function InAppNotificationInboxDrawer({
     previousFocusRef.current = null;
   }, [triggerRef]);
 
+  const restoreFocus = useCallback(() => {
+    const target = triggerRef?.current ?? previousFocusRef.current;
+    if (target && typeof target.focus === 'function') {
+      target.focus();
+    }
+    previousFocusRef.current = null;
+  }, [triggerRef]);
+
+  // Focus trap and Escape-to-dismiss
   const handleClose = useCallback(() => {
     setActiveFilter("all");
     onClose?.();
@@ -79,16 +88,12 @@ export function InAppNotificationInboxDrawer({
     if (!isOpen) return;
 
     previousFocusRef.current = triggerRef?.current ?? (document.activeElement as HTMLElement | null);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
     const frame = requestAnimationFrame(() => {
       closeButtonRef.current?.focus();
     });
 
     return () => {
       cancelAnimationFrame(frame);
-      document.body.style.overflow = previousOverflow;
       restoreFocus();
     };
   }, [isOpen, restoreFocus, triggerRef]);
@@ -215,7 +220,8 @@ export function InAppNotificationInboxDrawer({
             >
               ×
             </button>
-          </div>
+          )}
+          <button ref={closeButtonRef} onClick={handleClose} aria-label="Close notifications" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
 
         <div role="tablist" aria-label="Notification categories" style={{ display: "flex", gap: 0, borderBottom: "1px solid #e2e8f0" }}>
