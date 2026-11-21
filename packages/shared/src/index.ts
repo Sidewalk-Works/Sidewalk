@@ -19,8 +19,7 @@ export * from "./types/toast-patterns.types.js";
 export * from "./validation/toast-patterns.schemas.js";
 export * from "./types/community-mentions.types.js";
 export * from "./validation/community-mentions.schemas.js";
-export * from "./types/push-docs.types.js";
-export * from "./validation/push-docs.schemas.js";
+
 export * from "./types/notification-inbox.types.js";
 export * from "./validation/notification-inbox.schemas.js";
 export * from "./types/notification-preferences.types.js";

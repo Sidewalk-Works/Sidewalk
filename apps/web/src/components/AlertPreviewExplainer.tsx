@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import type {
   AlertPreviewPayload,
-  ExplanationContext,
 } from '@sidewalk/shared';
 
 interface AlertPreviewExplainerProps {

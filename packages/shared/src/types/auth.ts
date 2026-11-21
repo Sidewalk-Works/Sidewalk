@@ -4,26 +4,26 @@ export interface PublicUser {
   createdAt: string;
 }
 
-/** JWT claims decoded from a signed token. */
+/** JWT claims issued by the current API. */
 export interface AuthClaims {
   sub: string;
-  email: string;
-  role: string;
   exp: number;
   iat?: number;
 }
 
-/** Scoped token claims — extends AuthClaims with permission scopes. */
+/** Extended claims shape for clients that decode additional token data. Not issued by the current API. */
 export interface ScopedTokenClaims extends AuthClaims {
-  scope: string[];
+  email?: string;
+  role?: string;
+  scope?: string[];
 }
 
-/** Resolved caller identity after JWT verification. */
+/** Resolved caller identity after server-side auth resolution. */
 export interface ApiIdentity {
   id: string;
-  email: string;
-  role: string;
-  scopes: string[];
+  email?: string;
+  role?: string;
+  scopes?: string[];
 }
 
 export interface RegisterRequest {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -22,23 +22,17 @@ export function PushRegistrationPrompt({
   description = 'Stay informed about civic activity in your neighborhood. We will only send you alerts you care about.',
 }: PushRegistrationPromptProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleRegister = useCallback(async () => {
     setIsLoading(true);
-    setErrorMessage(null);
     try {
       const mockToken = `device_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
       const result = await onRegister(mockToken);
-      if (!result.success) {
-        const message = result.error?.trim() || 'Push notification registration failed. Please try again.';
-        setErrorMessage(message);
-        Alert.alert('Registration Failed', message);
+      if (!result.success && result.error) {
+        Alert.alert('Registration Failed', result.error);
       }
     } catch {
-      const message = 'An unexpected error occurred while enabling push notifications.';
-      setErrorMessage(message);
-      Alert.alert('Registration Failed', message);
+      Alert.alert('Registration Failed', 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -51,11 +45,6 @@ export function PushRegistrationPrompt({
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
-      {errorMessage ? (
-        <View accessibilityRole="alert" style={styles.errorBox}>
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        </View>
-      ) : null}
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.primaryButton, isLoading && styles.disabledButton]}
@@ -113,20 +102,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 16,
-  },
-  errorBox: {
-    width: '100%',
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-  },
-  errorText: {
-    color: '#b91c1c',
-    fontSize: 13,
-    lineHeight: 18,
   },
   actions: {
     width: '100%',

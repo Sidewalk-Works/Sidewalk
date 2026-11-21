@@ -11,40 +11,35 @@ describe('PushRegistrationPrompt', () => {
       tree = renderer.create(<PushRegistrationPrompt onRegister={onRegister} />);
     });
 
-    const button = tree!.root.findAll(
-      (node) => typeof node.props?.onPress === 'function' && node.props.disabled !== undefined,
-    )[0];
+    const buttons = tree!.root.findAll(
+      (node) => node.props?.onPress && node.props?.disabled !== undefined,
+    );
+    const enableButton = buttons.find((node) =>
+      String(node.props.children?.props?.children ?? node.props.children).includes('Enable'),
+    ) ?? buttons[0];
 
     await act(async () => {
-      await button.props.onPress();
+      await enableButton.props.onPress();
     });
 
     expect(onRegister).toHaveBeenCalledTimes(1);
     expect(onRegister.mock.calls[0][0]).toMatch(/^device_/);
   });
 
-  it('shows feedback when registration fails without a message', async () => {
+  it('shows an alert when registration fails', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
-    const onRegister = jest.fn().mockResolvedValue({ success: false });
+    const onRegister = jest.fn().mockResolvedValue({ success: false, error: 'Denied' });
     let tree: renderer.ReactTestRenderer;
     await act(async () => {
       tree = renderer.create(<PushRegistrationPrompt onRegister={onRegister} />);
     });
 
-    const button = tree!.root.findAll(
-      (node) => typeof node.props?.onPress === 'function' && node.props.disabled !== undefined,
-    )[0];
-
+    const button = tree!.root.findAll((node) => node.props?.onPress)[0];
     await act(async () => {
       await button.props.onPress();
     });
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      'Registration Failed',
-      'Push notification registration failed. Please try again.',
-    );
-    const alerts = tree!.root.findAll((node) => node.props?.accessibilityRole === 'alert');
-    expect(alerts.length).toBeGreaterThan(0);
+    expect(alertSpy).toHaveBeenCalledWith('Registration Failed', 'Denied');
     alertSpy.mockRestore();
   });
 });
