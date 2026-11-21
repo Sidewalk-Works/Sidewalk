@@ -90,13 +90,13 @@ export function NotificationPreferenceCenterCard({ userId }: NotificationPrefere
 
       {hasChanges && (
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
-          <button
+          <button type="button"
             onClick={handleDiscard}
             style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
           >
             Discard
           </button>
-          <button
+          <button type="button"
             onClick={handleSave}
             style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: '#3b82f6', color: '#ffffff', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
           >

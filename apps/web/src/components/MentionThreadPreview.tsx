@@ -129,7 +129,7 @@ export function MentionThreadPreview({
           </span>
         </div>
         {onNavigateToCase && (
-          <button
+          <button type="button"
             onClick={() => onNavigateToCase(mention.caseId, mention.commentId)}
             style={{
               fontSize: '12px',
@@ -213,7 +213,7 @@ export function MentionThreadPreview({
       )}
 
       {thread.length > 1 && !showFullThread && (
-        <button
+        <button type="button"
           onClick={() => setShowFullThread(true)}
           style={{
             marginTop: '10px',
@@ -230,7 +230,7 @@ export function MentionThreadPreview({
         </button>
       )}
       {showFullThread && thread.length > 1 && (
-        <button
+        <button type="button"
           onClick={() => setShowFullThread(false)}
           style={{
             marginTop: '10px',

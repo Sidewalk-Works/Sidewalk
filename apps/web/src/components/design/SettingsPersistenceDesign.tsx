@@ -98,7 +98,7 @@ export function SettingsPersistenceDesign() {
                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>{side.pushAlerts ? 'On' : 'Off'}</span>
                   </div>
                 </div>
-                <button style={{ marginTop: '12px', width: '100%', padding: '8px', fontSize: '12px', fontWeight: 600, border: '1px solid #e2e8f0', borderRadius: '6px', background: '#fff', color: '#334155', cursor: 'pointer' }}>
+                <button type="button" style={{ marginTop: '12px', width: '100%', padding: '8px', fontSize: '12px', fontWeight: 600, border: '1px solid #e2e8f0', borderRadius: '6px', background: '#fff', color: '#334155', cursor: 'pointer' }}>
                   Use this version
                 </button>
               </div>
@@ -110,7 +110,7 @@ export function SettingsPersistenceDesign() {
       {/* Manual Sync Button */}
       <section style={{ marginBottom: '32px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manual Sync</h3>
-        <button onClick={handleSync} disabled={syncing} style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 600, background: syncing ? '#93c5fd' : '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: syncing ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button type="button" onClick={handleSync} disabled={syncing} style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 600, background: syncing ? '#93c5fd' : '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: syncing ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
           {syncing && <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
           {syncing ? 'Syncing…' : 'Sync All Devices'}
         </button>

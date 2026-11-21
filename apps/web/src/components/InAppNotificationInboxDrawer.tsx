@@ -131,20 +131,20 @@ export function InAppNotificationInboxDrawer({
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {unreadCount > 0 && onMarkAllRead && (
-            <button
+            <button type="button"
               onClick={onMarkAllRead}
               style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: '4px', padding: '3px 8px', fontSize: '11px', color: '#3b82f6', cursor: 'pointer', fontWeight: '500' }}
             >
               Mark all read
             </button>
           )}
-          <button onClick={handleClose} aria-label="Close notifications" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+          <button type="button" onClick={handleClose} aria-label="Close notifications" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid #e2e8f0' }}>
         {CATEGORY_TABS.map((tab) => (
-          <button
+          <button type="button"
             key={tab.value}
             onClick={() => setActiveFilter(tab.value)}
             style={{

@@ -91,7 +91,7 @@ export function ModeratorReplyNotification({
             />
           )}
           {isHovered && onDismiss && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onDismiss(mention.id);
@@ -145,7 +145,7 @@ export function ModeratorReplyNotification({
             minute: '2-digit',
           })}
         </span>
-        <button
+        <button type="button"
           onClick={(e) => {
             e.stopPropagation();
             onNavigate?.(mention.caseId, mention.commentId);

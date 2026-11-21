@@ -76,25 +76,25 @@ export function StaleReportReminderBanner({
               </div>
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
-              <button
+              <button type="button"
                 style={btnStyle('#fef3c7', '#92400e')}
                 onClick={() => setExpandedId(expandedId === reminder.reminderId ? null : reminder.reminderId)}
               >
                 Snooze
               </button>
-              <button style={btnStyle('#fee2e2', '#991b1b')} onClick={() => onDismiss?.(reminder.reminderId)}>
+              <button type="button" style={btnStyle('#fee2e2', '#991b1b')} onClick={() => onDismiss?.(reminder.reminderId)}>
                 Dismiss
               </button>
-              <button style={btnStyle('#dcfce7', '#166534')} onClick={() => onAcknowledge?.(reminder.reminderId)}>
+              <button type="button" style={btnStyle('#dcfce7', '#166534')} onClick={() => onAcknowledge?.(reminder.reminderId)}>
                 Acknowledge
               </button>
             </div>
           </div>
           {expandedId === reminder.reminderId && (
             <div style={{ padding: '8px 12px', background: '#fef9ee', borderRadius: '0 0 6px 6px', marginBottom: '6px', display: 'flex', gap: '6px' }}>
-              <button style={btnStyle('#e0f2fe', '#0369a1')} onClick={() => { onSnooze?.(reminder.reminderId, 1); setExpandedId(null); }}>1 day</button>
-              <button style={btnStyle('#e0f2fe', '#0369a1')} onClick={() => { onSnooze?.(reminder.reminderId, 3); setExpandedId(null); }}>3 days</button>
-              <button style={btnStyle('#e0f2fe', '#0369a1')} onClick={() => { onSnooze?.(reminder.reminderId, 7); setExpandedId(null); }}>7 days</button>
+              <button type="button" style={btnStyle('#e0f2fe', '#0369a1')} onClick={() => { onSnooze?.(reminder.reminderId, 1); setExpandedId(null); }}>1 day</button>
+              <button type="button" style={btnStyle('#e0f2fe', '#0369a1')} onClick={() => { onSnooze?.(reminder.reminderId, 3); setExpandedId(null); }}>3 days</button>
+              <button type="button" style={btnStyle('#e0f2fe', '#0369a1')} onClick={() => { onSnooze?.(reminder.reminderId, 7); setExpandedId(null); }}>7 days</button>
             </div>
           )}
         </div>

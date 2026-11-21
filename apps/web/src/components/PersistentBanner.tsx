@@ -84,7 +84,7 @@ export function PersistentBanner({
               {actionText}
             </a>
           ) : (
-            <button
+            <button type="button"
               onClick={() => onAction?.(id)}
               style={{
                 padding: '6px 14px',
@@ -103,7 +103,7 @@ export function PersistentBanner({
           )
         )}
         {dismissable && onDismiss && (
-          <button
+          <button type="button"
             onClick={handleDismiss}
             style={{
               background: 'transparent',

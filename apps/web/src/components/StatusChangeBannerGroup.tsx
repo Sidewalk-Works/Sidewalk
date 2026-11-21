@@ -127,7 +127,7 @@ export function StatusChangeBannerGroup({
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, marginLeft: '16px' }}>
               {onViewCase && (
-                <button
+                <button type="button"
                   onClick={() => onViewCase(event.caseId)}
                   style={{
                     padding: '6px 12px',
@@ -143,7 +143,7 @@ export function StatusChangeBannerGroup({
                   View
                 </button>
               )}
-              <button
+              <button type="button"
                 onClick={() => handleDismiss(event.id)}
                 style={{
                   background: 'transparent',

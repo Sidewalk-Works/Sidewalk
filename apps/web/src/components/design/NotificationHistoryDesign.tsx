@@ -40,7 +40,7 @@ export function NotificationHistoryDesign() {
           placeholder="To date"
           style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#94a3b8' }}
         />
-        <button style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>Export</button>
+        <button type="button" style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>Export</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>

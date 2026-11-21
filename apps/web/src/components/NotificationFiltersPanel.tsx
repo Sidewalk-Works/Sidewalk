@@ -75,7 +75,7 @@ export function NotificationFiltersPanel({
         </label>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {URGENCY_OPTIONS.map((opt) => (
-            <button
+            <button type="button"
               key={opt.value}
               onClick={() => toggleUrgency(opt.value)}
               style={{
@@ -101,7 +101,7 @@ export function NotificationFiltersPanel({
         </label>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {['infrastructure', 'safety', 'sanitation', 'noise', 'other'].map((cat) => (
-            <button
+            <button type="button"
               key={cat}
               onClick={() => toggleCategory(cat)}
               style={{
@@ -137,7 +137,7 @@ export function NotificationFiltersPanel({
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-        <button
+        <button type="button"
           onClick={applyCurrentFilters}
           style={{
             padding: '8px 16px',
@@ -152,7 +152,7 @@ export function NotificationFiltersPanel({
         >
           Apply Filters
         </button>
-        <button
+        <button type="button"
           onClick={() => {
             setSelectedUrgency([]);
             setSelectedCategories([]);
@@ -192,7 +192,7 @@ export function NotificationFiltersPanel({
               outline: 'none',
             }}
           />
-          <button
+          <button type="button"
             onClick={saveCurrentFilter}
             disabled={!filterName.trim()}
             style={{
@@ -232,7 +232,7 @@ export function NotificationFiltersPanel({
               >
                 <span style={{ fontSize: '13px', color: '#1e293b' }}>{f.name}</span>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button
+                  <button type="button"
                     onClick={() => onToggleFilter(f.id)}
                     style={{
                       padding: '2px 8px',
@@ -246,7 +246,7 @@ export function NotificationFiltersPanel({
                   >
                     {f.isActive ? 'On' : 'Off'}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => onDeleteFilter(f.id)}
                     style={{
                       padding: '2px 8px',
