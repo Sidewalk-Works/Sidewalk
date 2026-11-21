@@ -53,6 +53,14 @@ export function CivicCaseWatchlistPanel({
     (i) => i.followUpStatus === "active_review" || i.followUpStatus === "pending_city_response",
   ).length;
 
+  const handleAddSubmit = () => {
+    const caseId = caseIdInput.trim();
+    if (!caseId || !onAddItem) return;
+    onAddItem(caseId);
+    setCaseIdInput("");
+    setIsAdding(false);
+  };
+
   return (
     <section style={{ padding: "20px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", gap: "8px" }}>
@@ -137,7 +145,7 @@ export function CivicCaseWatchlistPanel({
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
           {filtered.map((item) => {
-            const badge = STATUS_CONFIG[item.followUpStatus];
+            const badge = STATUS_CONFIG[item.followUpStatus] ?? STATUS_CONFIG.stale;
             return (
               <li
                 key={item.caseId}

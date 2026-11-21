@@ -93,7 +93,7 @@ export function MentionNotificationToast({
       </div>
 
       {parsedMentions.length > 1 && (
-        <button
+        <button type="button"
           onClick={() => setIsExpanded(!isExpanded)}
           style={{
             background: 'transparent',
@@ -128,7 +128,7 @@ export function MentionNotificationToast({
         </div>
       )}
 
-      <button
+      <button type="button"
         onClick={handleView}
         style={{
           alignSelf: 'flex-start',

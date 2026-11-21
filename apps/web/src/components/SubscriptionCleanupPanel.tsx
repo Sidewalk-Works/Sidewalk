@@ -67,7 +67,7 @@ export function SubscriptionCleanupPanel({
     <div style={cardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ margin: 0, fontSize: '16px' }}>Subscription Cleanup Rules</h3>
-        <button style={btnStyle('#dcfce7', '#166534')} onClick={() => setShowForm(!showForm)}>
+        <button type="button" style={btnStyle('#dcfce7', '#166534')} onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : '+ Add Rule'}
         </button>
       </div>
@@ -95,7 +95,7 @@ export function SubscriptionCleanupPanel({
             <label style={{ fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Description</label>
             <input value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Rule description..." style={{ ...inputStyle, width: '100%' }} />
           </div>
-          <button style={btnStyle('#3b82f6', '#ffffff')} onClick={handleAddRule}>Save</button>
+          <button type="button" style={btnStyle('#3b82f6', '#ffffff')} onClick={handleAddRule}>Save</button>
         </div>
       )}
 
@@ -124,7 +124,7 @@ export function SubscriptionCleanupPanel({
                   <td style={td}>{ACTION_LABELS[rule.action]}</td>
                   <td style={td}>{rule.runCount}</td>
                   <td style={td}>
-                    <button
+                    <button type="button"
                       style={btnStyle(rule.enabled ? '#dcfce7' : '#fee2e2', rule.enabled ? '#166534' : '#991b1b')}
                       onClick={() => onToggleRule?.(rule.ruleId, !rule.enabled)}
                     >
@@ -132,7 +132,7 @@ export function SubscriptionCleanupPanel({
                     </button>
                   </td>
                   <td style={td}>
-                    <button style={btnStyle('#fee2e2', '#991b1b')} onClick={() => onRemoveRule?.(rule.ruleId)}>Remove</button>
+                    <button type="button" style={btnStyle('#fee2e2', '#991b1b')} onClick={() => onRemoveRule?.(rule.ruleId)}>Remove</button>
                   </td>
                 </tr>
               ))
@@ -150,7 +150,7 @@ export function SubscriptionCleanupPanel({
             placeholder="Report ID"
             style={{ ...inputStyle, flex: 1 }}
           />
-          <button
+          <button type="button"
             style={btnStyle('#3b82f6', '#ffffff')}
             onClick={() => { if (manualReportId) { onManualCleanup?.(manualReportId); setManualReportId(''); } }}
           >

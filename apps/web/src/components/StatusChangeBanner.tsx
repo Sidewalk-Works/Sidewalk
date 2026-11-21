@@ -113,7 +113,7 @@ export function StatusChangeBanner({
           </a>
         )}
         {alert.isDismissible && (
-          <button
+          <button type="button"
             onClick={() => setIsVisible(false)}
             style={{
               background: 'transparent',

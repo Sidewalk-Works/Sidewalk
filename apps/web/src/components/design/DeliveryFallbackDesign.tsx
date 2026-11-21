@@ -122,7 +122,7 @@ export function DeliveryFallbackDesign() {
             <div style={{ fontSize: '13px', fontWeight: 600, color: '#92400e' }}>Next retry in 47 seconds</div>
             <div style={{ fontSize: '12px', color: '#a16207', marginTop: '2px' }}>Email delivery failed. Will retry via Push Notification.</div>
           </div>
-          <button style={{ marginLeft: 'auto', padding: '6px 14px', fontSize: '12px', fontWeight: 600, background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Retry Now</button>
+          <button type="button" style={{ marginLeft: 'auto', padding: '6px 14px', fontSize: '12px', fontWeight: 600, background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Retry Now</button>
         </div>
       </section>
 

@@ -45,9 +45,9 @@ export function EngagementPromptDesign() {
               <h4 style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>{p.title}</h4>
               <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#475569', lineHeight: '1.5' }}>{p.body}</p>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 600, background: p.accent, color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Open</button>
-                <button style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 500, background: 'transparent', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>Snooze</button>
-                <button style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 500, background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>Dismiss</button>
+                <button type="button" style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 600, background: p.accent, color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Open</button>
+                <button type="button" style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 500, background: 'transparent', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>Snooze</button>
+                <button type="button" style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 500, background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer' }}>Dismiss</button>
               </div>
             </div>
           ))}
@@ -84,7 +84,7 @@ export function EngagementPromptDesign() {
         <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dismiss & Snooze Options</h3>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           {[{ label: 'Snooze 1 hour', style: { background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569' } }, { label: 'Snooze 24 hours', style: { background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569' } }, { label: 'Snooze 1 week', style: { background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569' } }, { label: 'Dismiss', style: { background: '#fff', border: '1px solid #fecaca', color: '#991b1b' } }, { label: 'Don\'t show again', style: { background: '#fff', border: '1px solid #fecaca', color: '#991b1b' } }].map((b, i) => (
-            <button key={i} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 500, borderRadius: '6px', cursor: 'pointer', ...b.style }}>{b.label}</button>
+            <button type="button" key={i} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 500, borderRadius: '6px', cursor: 'pointer', ...b.style }}>{b.label}</button>
           ))}
         </div>
       </section>
@@ -155,15 +155,15 @@ export function EngagementPromptDesign() {
                     {label}
                   </label>
                 ))}
-                <button onClick={() => setOptOutStep(1)} style={{ marginTop: '12px', padding: '8px 16px', fontSize: '12px', fontWeight: 600, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Continue</button>
+                <button type="button" onClick={() => setOptOutStep(1)} style={{ marginTop: '12px', padding: '8px 16px', fontSize: '12px', fontWeight: 600, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Continue</button>
               </div>
             )}
             {optOutStep === 1 && (
               <div>
                 <p style={{ margin: '0 0 10px', fontSize: '13px', color: '#475569' }}>Are you sure? You can always re-enable these in Settings.</p>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => setOptOutStep(2)} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 600, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Yes, opt out</button>
-                  <button onClick={() => setOptOutStep(0)} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 500, background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" onClick={() => setOptOutStep(2)} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 600, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Yes, opt out</button>
+                  <button type="button" onClick={() => setOptOutStep(0)} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 500, background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
                 </div>
               </div>
             )}

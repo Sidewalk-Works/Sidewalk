@@ -120,7 +120,7 @@ export function AlertPreviewDesign() {
         <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
           {explainerVariants.map((v, i) => (
             <div key={i} style={{ borderBottom: i < explainerVariants.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-              <button onClick={() => setExpandedWhy(expandedWhy === i ? null : i)} style={{ width: '100%', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+              <button type="button" onClick={() => setExpandedWhy(expandedWhy === i ? null : i)} style={{ width: '100%', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: v.color }} />
                   <span style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{v.headline}</span>
