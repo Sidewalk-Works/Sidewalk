@@ -217,11 +217,12 @@ will be built as new modules on top of this foundation.
 
 `apps/mobile`
 
-The mobile app is an Expo + React Native + TypeScript foundation: project
-setup, folder structure (`src/components`, `src/screens`, `src/navigation`,
-`src/hooks`, `src/services`, `src/utils`, `src/assets`), linting, formatting,
-and a working test setup. No screens or authentication flows are implemented
-yet — this is a starting point for future development.
+The mobile app is an Expo + React Native + TypeScript foundation. The current
+`src/` layout includes `api`, `assets`, `components`, `config`, `hooks`,
+`navigation`, `services`, `theme`, `utils`, and `__tests__`. It contains shared
+mobile plumbing and push-notification UI/services (for example registration,
+opt-out settings/dialog components, and push registration hooks/services), but
+it is still an early foundation rather than a complete end-user flow.
 
 ---
 
@@ -261,40 +262,115 @@ Each phase builds upon the previous one to create a complete civic engagement ec
 * Python 3.12+ with [uv](https://github.com/astral-sh/uv)
 * Node.js 20+
 * pnpm 10+
-* Docker & Docker Compose (optional, for local PostgreSQL)
+* Docker (optional, for local PostgreSQL via `apps/api/docker-compose.yml`)
 
-### Backend API Setup
+## Quick Start (local development)
 
-```bash
-cd apps/api
-uv sync --extra dev
-cp .env.example .env   # fill in values
-docker-compose up -d   # optional: start local PostgreSQL
-uv run alembic upgrade head
-uv run uvicorn src.main:app --reload
-```
-
-The interactive OpenAPI docs are available at `http://localhost:8000/docs`.
-
-### Frontend & Mobile Setup
+### 1. Install dependencies
 
 From the repository root:
-
-Install web/mobile dependencies:
 
 ```bash
 pnpm install
 ```
 
-Run frontend applications:
+From `apps/api`:
 
 ```bash
+cd apps/api
+uv sync --extra dev
+```
+
+### 2. Configure environment
+
+Copy example env files (defaults are sufficient for basic local development):
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+cp apps/mobile/.env.example apps/mobile/.env
+```
+
+See [docs/environment.md](docs/environment.md) for variable details.
+
+### 3. Start PostgreSQL (optional but recommended)
+
+If you want to run the API against PostgreSQL instead of SQLite, start the local database from `apps/api`:
+
+```bash
+cd apps/api
+docker compose up -d
+```
+
+The default `DATABASE_URL` in `apps/api/.env.example` points to this local PostgreSQL instance.
+
+### 4. Run database migrations and seed data
+
+From `apps/api`:
+
+```bash
+uv run alembic upgrade head
+```
+
+To seed sample data (from the repository root, if using Makefile targets):
+
+```bash
+make seed
+```
+
+Or directly:
+
+```bash
+uv run python scripts/seed.py
+```
+
+### 5. Run the apps
+
+Use separate terminals:
+
+```bash
+# Terminal 1 - API (apps/api)
+cd apps/api
+uv run uvicorn src.main:app --reload
+```
+
+```bash
+# Terminal 2 - Web (repository root)
 pnpm dev:web
+```
+
+```bash
+# Terminal 3 - Mobile (repository root)
 pnpm dev:mobile
 ```
 
-Once the API and web app are running, visit `http://localhost:3000` to create
-an account and log in.
+### Ports and URLs
+
+| App | Default URL | Notes |
+| --- | --- | --- |
+| API | `http://localhost:8000` | FastAPI app; OpenAPI docs at `http://localhost:8000/docs` |
+| Web | `http://localhost:3000` | Next.js dev server |
+| Mobile | Expo dev server (terminal/QR) | Use Expo Go or simulator; see mobile networking notes below |
+
+Once the API and web app are running, visit `http://localhost:3000` to create an account and log in.
+
+## Mobile device networking
+
+When running the mobile app on a physical device or Android emulator, `localhost` does not point to your development machine:
+
+- **iOS Simulator:** `http://localhost:8000`
+- **Android Emulator:** `http://10.0.2.2:8000`
+- **Physical device:** `http://<YOUR_LAN_IP>:8000`
+
+Set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` accordingly.
+
+## Troubleshooting
+
+- **`docker compose` not found / compose file missing:** use `docker compose -f apps/api/docker-compose.yml up -d` from the repo root, or run `docker compose up -d` from `apps/api`.
+- **Web cannot reach API:** confirm the API is running on `http://localhost:8000` and `CORS_ORIGINS` in `apps/api/.env` includes `http://localhost:3000`.
+- **Mobile cannot reach API:** do not use `localhost` on Android emulator/physical devices; use `10.0.2.2` or your LAN IP.
+- **Database errors on startup:** verify `DATABASE_URL`, ensure PostgreSQL is running, then rerun `uv run alembic upgrade head`.
+- **Missing dependencies:** rerun `pnpm install` at repo root and `uv sync --extra dev` in `apps/api`.
 
 ---
 
@@ -345,6 +421,8 @@ on each variable and secrets handling.
 
 # Documentation
 
+* [Documentation Index](docs/README.md)
+* [API Reference](docs/development/api-reference.md)
 * [Environment Setup](docs/environment.md)
 * [Testing Guide](docs/testing.md)
 * [Contributor Guide](docs/contributing.md)

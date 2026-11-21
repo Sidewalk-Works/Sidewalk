@@ -101,7 +101,7 @@ export function SubscriptionRulesPanel({ userId }: SubscriptionRulesPanelProps) 
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <button
+        <button type="button"
           onClick={handleAddRule}
           style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#3b82f6', color: '#ffffff', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
         >
@@ -126,7 +126,7 @@ export function SubscriptionRulesPanel({ userId }: SubscriptionRulesPanelProps) 
               </div>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 {SCOPE_OPTIONS.map((opt) => (
-                  <button
+                  <button type="button"
                     key={opt.value}
                     onClick={() => handleScopeChange(rule.id, opt.value)}
                     style={{
@@ -142,7 +142,7 @@ export function SubscriptionRulesPanel({ userId }: SubscriptionRulesPanelProps) 
                     {opt.label}
                   </button>
                 ))}
-                <button
+                <button type="button"
                   onClick={() => handleRemoveRule(rule.id)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#ef4444' }}
                 >

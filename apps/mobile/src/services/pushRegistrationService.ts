@@ -1,6 +1,11 @@
-import type { PushRegistrationData } from '@sidewalk/shared';
-
 export type PushPermissionStatus = 'granted' | 'denied' | 'default';
+
+export interface PushRegistrationData {
+  deviceToken: string;
+  platform: 'ios' | 'android' | 'web';
+  optIn: boolean;
+  registeredAtIso: string;
+}
 
 export interface PushRegistrationResult {
   success: boolean;

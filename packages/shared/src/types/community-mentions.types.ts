@@ -8,8 +8,9 @@ export interface CommunityMention {
   context: MentionContext;
   caseId: string;
   caseTitle: string;
+  commentId?: string;
   excerpt: string;
-  createdAt: Date;
+  createdAt: Date | string;
   read: boolean;
 }
 

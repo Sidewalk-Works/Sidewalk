@@ -1,1 +1,1 @@
-export function Button(props: any) {\n  return <button {...props} />;\n}\n
+export function Button(props: any) {\n  return <button type="button" {...props} />;\n}\n

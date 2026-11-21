@@ -12,12 +12,12 @@ Complete this checklist before requesting review.
 ## Tests
 
 - [ ] New behaviour is covered by at least one test
-- [ ] Existing tests still pass: `pnpm test`
-- [ ] Test file lives next to the file it tests (`*.spec.ts` or `__tests__/`)
+- [ ] Existing tests still pass: `pnpm test` (and `uv run pytest` in `apps/api` for backend changes)
+- [ ] Test files follow project conventions (`*.test.ts(x)`/`__tests__/` for JS/TS, `tests/test_*.py` for Python)
 
 ## Documentation
 
-- [ ] Public API changes reflected in `docs/api/`
+- [ ] Public API changes reflected in `docs/development/api-reference.md` and/or verified in FastAPI OpenAPI docs (`/docs`)
 - [ ] New environment variables added to `.env.example` and `docs/environment.md`
 - [ ] Breaking changes noted at the top of the PR description
 
