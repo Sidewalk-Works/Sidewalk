@@ -1,116 +1,67 @@
 # Package Boundary Rules
 
-This document defines what each package and application in the Sidewalk monorepo owns, what it may depend on, and what it must not do.
+This document defines package/app ownership and dependency boundaries in the Sidewalk monorepo.
 
----
-
-## Monorepo Shape
+## Monorepo shape
 
 ```text
 sidewalk/
 ├── apps/
-│   ├── api/       # Express modular monolith
-│   ├── web/       # Next.js web UI
-│   └── mobile/    # Expo / React Native app
+│   ├── api/       # FastAPI backend (Python)
+│   ├── web/       # Next.js web app (TypeScript)
+│   └── mobile/    # Expo / React Native app (TypeScript)
 └── packages/
-    ├── shared/    # Shared types and validation schemas
-    └── stellar/   # Stellar integration scaffold
+    ├── shared/    # Shared TS types/schemas/constants for JS/TS apps
+    └── stellar/   # Stellar integration helpers
 ```
 
----
-
-## Package Rules
+## Ownership and boundaries
 
 ### `packages/shared`
-
-**Owns:** TypeScript types, Zod validation schemas, and constants that are consumed by more than one app.
-
-**May depend on:** nothing in this monorepo.
-
-**Must not:**
-- Contain business logic or application-level behaviour.
-- Import from `apps/*` or `packages/stellar`.
-- Grow into a general-purpose utilities dumping ground — every export must have at least two consumers.
-
----
+- **Owns:** TypeScript types, schemas, and constants used by JS/TS consumers.
+- **May depend on:** nothing in this monorepo.
+- **Must not:** import from `apps/*` or contain app-specific business logic.
 
 ### `packages/stellar`
+- **Owns:** Stellar/Soroban SDK wrappers and integration helpers.
+- **May depend on:** `packages/shared`.
+- **Must not:** import from `apps/*` or contain UI/route business logic.
 
-**Owns:** Stellar SDK integration, transaction helpers, and verification receipt logic.
-
-**May depend on:** `packages/shared`.
-
-**Must not:**
-- Import from any `apps/*` package.
-- Contain UI components or HTTP route handlers.
-- Hold application configuration (keys, network URLs) — those belong in the consuming app's environment.
-
----
-
-### `apps/api`
-
-**Owns:** HTTP route handlers, business logic, database access (Prisma), and authentication flows.
-
-Internal structure follows the modular monolith pattern: each domain lives under `src/modules/<domain>/`. Cross-cutting infrastructure (middleware, logger, database client, error types) lives in `src/shared/`.
-
-**May depend on:** `packages/shared`, `packages/stellar`.
-
-**Must not:**
-- Import from `apps/web` or `apps/mobile`.
-- Put business logic in `src/shared/` — that directory is for infrastructure only.
-- Introduce a global `controllers/` or `services/` layer outside of a module directory.
-
----
+### `apps/api` (FastAPI)
+- **Owns:** HTTP API routes, business logic, SQLAlchemy models, Alembic migrations, auth, and persistence.
+- **May depend on:** Python dependencies; it does **not** import TS workspace packages at runtime.
+- **Contracts:** API/web/mobile contracts are defined by FastAPI/OpenAPI schemas and shared API conventions. If TS types are needed in JS/TS apps, maintain them in `packages/shared` or generated client types as an explicit contract layer.
+- **Must not:** import from `apps/web` or `apps/mobile`.
 
 ### `apps/web`
-
-**Owns:** Next.js pages, React components, and client-side state for the web UI.
-
-**May depend on:** `packages/shared`.
-
-**Must not:**
-- Import from `apps/api` or `apps/mobile`.
-- Call the Stellar SDK directly — go through `packages/stellar` if Stellar functionality is needed in the browser.
-- Duplicate types that already exist in `packages/shared`.
-
----
+- **Owns:** Next.js UI, client/server components, web-only state.
+- **May depend on:** `packages/shared` (and `packages/stellar` only if explicitly needed).
+- **Must not:** import from `apps/api` or `apps/mobile`.
 
 ### `apps/mobile`
+- **Owns:** Expo screens/components/hooks/services.
+- **May depend on:** `packages/shared` (and `packages/stellar` only if explicitly needed).
+- **Must not:** import from `apps/api` or `apps/web`.
 
-**Owns:** Expo screens, React Native components, navigation, and mobile-specific hooks and services.
+## Dependency direction
 
-**May depend on:** `packages/shared`.
+```text
+apps/web     -> packages/shared
+apps/mobile  -> packages/shared
+packages/stellar -> packages/shared
 
-**Must not:**
-- Import from `apps/api` or `apps/web`.
-- Call the Stellar SDK directly — go through `packages/stellar` if needed.
-- Duplicate types that already exist in `packages/shared`.
-
----
-
-## Dependency Direction
-
-The allowed dependency graph flows in one direction only:
-
-```
-apps/* → packages/shared
-apps/* → packages/stellar
-packages/stellar → packages/shared
+apps/api (Python) -> HTTP/OpenAPI contract -> web/mobile clients
 ```
 
-No package or app may create a circular dependency or import upward from `packages/` into `apps/`.
+No app may import from another app. JS/TS packages must not import upward into apps.
 
----
-
-## Adding Something New
+## Adding new code
 
 | What you are adding | Where it goes |
 |---|---|
-| Type used by two or more apps | `packages/shared` |
-| Stellar SDK call or receipt logic | `packages/stellar` |
-| HTTP endpoint or business logic | `apps/api/src/modules/<domain>/` |
-| Web UI component or page | `apps/web` |
-| Mobile screen or component | `apps/mobile` |
-| Cross-cutting API infra (middleware, logger) | `apps/api/src/shared/` |
-
-When in doubt, keep it in the app that needs it first. Move it to a shared package only when a second consumer appears.
+| Shared TS type/schema used by web/mobile | `packages/shared` |
+| Stellar SDK wrapper/integration helper | `packages/stellar` |
+| API endpoint/business logic/persistence | `apps/api/src/modules/<domain>/` |
+| Web UI/page/component | `apps/web` |
+| Mobile screen/component | `apps/mobile` |
+| Cross-cutting API infrastructure | `apps/api/src/core/` or appropriate API shared infra |

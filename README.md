@@ -345,6 +345,7 @@ on each variable and secrets handling.
 
 # Documentation
 
+* [Getting Started](docs/development/getting-started.md)
 * [Environment Setup](docs/environment.md)
 * [Testing Guide](docs/testing.md)
 * [Contributor Guide](docs/contributing.md)
