@@ -1,7 +1,6 @@
 # Environment Setup
 
-Each app has its own `.env.example` file. Copy it to `.env` (or `.env.local`
-for the web app) before running the app locally.
+Each app has its own `.env.example` file. Copy it to the appropriate local env file before running locally.
 
 ```bash
 cp apps/api/.env.example apps/api/.env
@@ -11,35 +10,53 @@ cp apps/mobile/.env.example apps/mobile/.env
 
 ## API (`apps/api`)
 
-| Variable          | Description                                                   | Default                  |
-| ------------------ | -------------------------------------------------------------- | -------------------------- |
-| `PORT`             | Port the Express server listens on.                          | `4000`                   |
-| `APP_ENV`          | `development`, `test`, or `production`.                       | `development`            |
-| `DATABASE_URL`     | Prisma datasource URL. SQLite by default for local dev.       | `file:./dev.db`          |
-| `JWT_SECRET`       | Secret used to sign access tokens. **Must be changed in production.** | `replace-me-with-a-long-random-string` |
-| `JWT_EXPIRES_IN`   | Access token lifetime (e.g. `1h`, `15m`).                     | `1h`                     |
-| `ALLOWED_ORIGIN`   | Origin allowed by CORS (the web app's URL).                   | `http://localhost:3000`  |
+The API is a FastAPI service. Source-of-truth variables are defined in `apps/api/src/core/config.py` and documented in `apps/api/.env.example`.
 
-A non-secret `.env.test` is committed and used automatically by `pnpm test`,
-`pnpm typecheck`, and `pnpm build` to configure Prisma for local SQLite usage.
+| Variable | Description | Default / example |
+| --- | --- | --- |
+| `DATABASE_URL` | Async SQLAlchemy database URL. PostgreSQL for normal dev; SQLite also supported. | `postgresql+asyncpg://sidewalk:sidewalk@localhost:5432/sidewalk_dev` |
+| `DB_POOL_SIZE` | PostgreSQL pool base size (ignored by SQLite). | `10` |
+| `DB_MAX_OVERFLOW` | Extra PostgreSQL connections allowed during spikes. | `20` |
+| `DB_POOL_TIMEOUT` | Seconds to wait for a DB connection. | `30` |
+| `DB_POOL_RECYCLE_SECONDS` | Seconds before PostgreSQL connections are recycled. | `1800` |
+| `SECRET_KEY` | JWT signing secret. Must be long/random in production (>= 32 chars). | `default-dev-secret-key-change-in-production-min-32-chars` |
+| `JWT_ALGORITHM` | JWT signing algorithm. | `HS256` |
+| `JWT_EXPIRES_MINUTES` | Access token lifetime in minutes. | `15` |
+| `LOGIN_MAX_ATTEMPTS` | Failed login attempts before lockout. | `5` |
+| `LOGIN_LOCKOUT_MINUTES` | Account lockout duration in minutes. | `15` |
+| `ENVIRONMENT` | Runtime environment: `development`, `staging`, or `production`. | `development` |
+| `API_VERSION` | API version string returned by metadata/OpenAPI. | `0.1.0` |
+| `CORS_ORIGINS` | Allowed CORS origins (comma-separated list or JSON array). | `["http://localhost:3000","http://localhost:8081"]` |
+| `MEDIA_ALLOWED_HOSTS` | Comma-separated https hosts allowed for report media URLs; empty allows any https host. | empty |
+| `LOG_LEVEL` | Structured log level. | `INFO` |
+| `RATE_LIMIT_DEFAULT` | Default slowapi rate limit per IP. | `200/minute` |
+| `RATE_LIMIT_LOGIN` | Stricter rate limit for auth/login endpoints. | `10/minute` |
+| `RATE_LIMIT_STORAGE_URI` | Shared rate-limit store URI (e.g. Redis). Empty uses in-memory per-process storage. | empty |
+| `TRUSTED_PROXY_IPS` | Comma-separated trusted proxy IPs for `X-Forwarded-For`. | empty |
+
+Notes:
+- Run the API locally with `uv run uvicorn src.main:app --reload` from `apps/api` (default: `http://localhost:8000`).
+- Use `DATABASE_URL=sqlite+aiosqlite:///./sidewalk.db` for simple local SQLite development/testing when appropriate.
+- `.env` files are local-only; do not commit secrets. Keep `.env.example` updated when config changes.
 
 ## Web (`apps/web`)
 
-| Variable               | Description                  | Default                 |
-| ----------------------- | ------------------------------- | -------------------------- |
-| `NEXT_PUBLIC_API_URL`  | Base URL of the API.          | `http://localhost:4000` |
+| Variable | Description | Default |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | Base URL of the API used by the Next.js app. | `http://localhost:4000` |
+
+For local FastAPI development on the default port, set `NEXT_PUBLIC_API_URL=http://localhost:8000` if needed.
 
 ## Mobile (`apps/mobile`)
 
-| Variable               | Description                  | Default                 |
-| ----------------------- | ------------------------------- | -------------------------- |
-| `EXPO_PUBLIC_API_URL`  | Base URL of the API.          | `http://localhost:4000` |
+| Variable | Description | Default |
+| --- | --- | --- |
+| `EXPO_PUBLIC_API_URL` | Base URL of the API used by the Expo app. | `http://localhost:4000` |
+
+For local FastAPI development on the default port, set `EXPO_PUBLIC_API_URL=http://localhost:8000` (Android emulator typically uses `http://10.0.2.2:8000`).
 
 ## Secrets Handling
 
-- Never commit `.env` files — only `.env.example` (and the non-secret
-  `apps/api/.env.test`) are tracked in git.
-- `JWT_SECRET` must be a long, random value in any deployed environment.
-- Production deployments should use a managed Postgres (or other relational)
-  database instead of the default SQLite file by updating `DATABASE_URL` and
-  the Prisma datasource provider.
+- Never commit `.env` files; only `.env.example` files should be tracked.
+- `SECRET_KEY` must be a long random value in deployed environments.
+- Use managed PostgreSQL and managed secrets in staging/production.
