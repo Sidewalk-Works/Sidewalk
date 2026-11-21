@@ -31,11 +31,16 @@ async def test_emails_differing_only_by_case_are_the_same_account(client: AsyncC
 
 async def test_registered_email_is_stored_lower_cased(client: AsyncClient, db_session):
     email = _email()
-    res = await client.post("/api/auth/register", json={"email": f"  {email}  ", "password": PASSWORD})
+    res = await client.post(
+        "/api/auth/register",
+        json={"email": f"  {email}  ", "password": PASSWORD},
+    )
     assert res.status_code == 201
     assert res.json()["user"]["email"] == email.lower()
 
-    stored = (await db_session.execute(select(User.email).where(User.email == email.lower()))).scalar_one()
+    stored = (
+        await db_session.execute(select(User.email).where(User.email == email.lower()))
+    ).scalar_one()
     assert stored == email.lower()
 
 
@@ -49,7 +54,9 @@ async def test_login_ignores_email_case(client: AsyncClient):
     assert res.json()["user"]["email"] == email.lower()
 
 
-async def test_accounts_stored_before_normalization_can_still_log_in(client: AsyncClient, db_session):
+async def test_accounts_stored_before_normalization_can_still_log_in(
+    client: AsyncClient, db_session
+):
     from tests.factories import UserFactory
 
     legacy = f"Legacy_{uuid.uuid4().hex[:6]}@Example.com"
@@ -65,7 +72,9 @@ async def test_accounts_stored_before_normalization_can_still_log_in(client: Asy
 
 async def test_profile_email_change_is_normalized(client: AsyncClient):
     email = _email("owner")
-    body = (await client.post("/api/auth/register", json={"email": email, "password": PASSWORD})).json()
+    body = (
+        await client.post("/api/auth/register", json={"email": email, "password": PASSWORD})
+    ).json()
     other = _email("other")
     await client.post("/api/auth/register", json={"email": other, "password": PASSWORD})
 

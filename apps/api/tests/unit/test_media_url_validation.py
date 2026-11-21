@@ -6,7 +6,12 @@ from src.modules.reports.schemas import CreateReportRequest, UpdateReportRequest
 
 
 def _create(urls):
-    return CreateReportRequest(title="Pothole", description="Deep", category="road", media_urls=urls)
+    return CreateReportRequest(
+        title="Pothole",
+        description="Deep",
+        category="road",
+        media_urls=urls,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -22,7 +27,13 @@ def test_https_urls_are_accepted():
 
 @pytest.mark.parametrize(
     "url",
-    ["http://example.com/a.png", "ftp://example.com/a.png", "javascript:alert(1)", "not a url", "https://"],
+    [
+        "http://example.com/a.png",
+        "ftp://example.com/a.png",
+        "javascript:alert(1)",
+        "not a url",
+        "https://",
+    ],
 )
 def test_non_https_or_malformed_urls_are_rejected(url):
     with pytest.raises(ValidationError):

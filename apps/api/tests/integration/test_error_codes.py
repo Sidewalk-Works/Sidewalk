@@ -49,7 +49,11 @@ def test_every_app_error_subclass_defines_its_own_code():
     classes = [
         cls
         for cls in vars(exceptions).values()
-        if isinstance(cls, type) and issubclass(cls, exceptions.AppError) and cls is not exceptions.AppError
+        if (
+            isinstance(cls, type)
+            and issubclass(cls, exceptions.AppError)
+            and cls is not exceptions.AppError
+        )
     ]
     assert classes
     for cls in classes:
