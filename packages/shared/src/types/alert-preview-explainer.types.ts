@@ -6,7 +6,7 @@ export interface ExplainerCopyOptions {
   locationName?: string;
 }
 
-export interface AlertPreviewPayload {
+export interface AlertExplainerPayload {
   previewId: string;
   headline: string;
   bodySnippet: string;

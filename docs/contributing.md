@@ -67,12 +67,13 @@ See [environment.md](environment.md) for variable details.
 
 ### 4. Set up and run the API (FastAPI)
 
-From `apps/api`:
+The API uses FastAPI with SQLAlchemy and Alembic. From `apps/api`, install
+dependencies and apply migrations:
 
 ```bash
+cd apps/api
 uv sync --extra dev
 uv run alembic upgrade head
-uv run uvicorn src.main:app --reload
 ```
 
 API defaults to `http://localhost:8000` (health: `/api/health`, docs: `/docs`).

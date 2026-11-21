@@ -5,10 +5,10 @@ This document details the improved public activity feed service and the visually
 ## Architecture
 
 1. **Activity Service**:
-   - `apps/api/src/modules/cases/services/refined-activity-signals.service.ts`: Handles aggregating the latest 50 live events for broad consumption.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/cases/`): Handles aggregating the latest 50 live events for broad consumption.
 
 2. **Web Refined Ticker UI**:
    - `RefinedActivitySignalTicker`: React UI component for horizontally scrolling live activity updates with a pulse indicator and semantic themes.
 
 3. **Validation Schemas & Interfaces**:
-   - `refinedProgressEventSchema` and `RefinedProgressEvent` defined in `@qyou/shared`.
+   - `refinedProgressEventSchema` and `RefinedProgressEvent` defined in `@sidewalk/shared`.

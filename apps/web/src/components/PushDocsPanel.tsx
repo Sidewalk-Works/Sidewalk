@@ -143,7 +143,7 @@ export function PushDocsPanel() {
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {!isRegistered ? (
-            <button
+            <button type="button"
               onClick={handleRegister}
               disabled={!deviceToken.trim()}
               style={{
@@ -161,7 +161,7 @@ export function PushDocsPanel() {
             </button>
           ) : (
             <>
-              <button
+              <button type="button"
                 onClick={handleRevoke}
                 style={{
                   padding: '8px 16px',
@@ -176,7 +176,7 @@ export function PushDocsPanel() {
               >
                 Revoke Push Access
               </button>
-              <button
+              <button type="button"
                 onClick={handleOptOutToggle}
                 style={{
                   padding: '8px 16px',
@@ -211,7 +211,7 @@ export function PushDocsPanel() {
               Are you sure you want to opt out of push notifications? You will still receive in-app notifications.
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
+              <button type="button"
                 onClick={confirmOptOut}
                 style={{
                   padding: '6px 12px',
@@ -225,7 +225,7 @@ export function PushDocsPanel() {
               >
                 Yes, Opt Out
               </button>
-              <button
+              <button type="button"
                 onClick={() => setShowOptOutConfirm(false)}
                 style={{
                   padding: '6px 12px',

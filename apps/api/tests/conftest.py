@@ -1,9 +1,11 @@
 import asyncio
-from collections.abc import AsyncGenerator
+import os
+from collections.abc import AsyncGenerator, Generator
 
 import pytest
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 import src.models  # noqa: F401
@@ -11,18 +13,18 @@ from src.core.database import enable_sqlite_foreign_keys, get_db
 from src.core.models import Base
 from src.main import create_app
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
 
 
 @pytest.fixture(autouse=True)
-def reset_limiter():
+def reset_limiter() -> Generator[None, None, None]:
     from src.core.limiter import limiter
 
     limiter.reset()
@@ -31,27 +33,24 @@ def reset_limiter():
 
 
 @pytest.fixture(scope="session")
-async def test_engine():
-    # sqlite+aiosqlite:///:memory: gives each new pooled connection its own
-    # separate in-memory database by default, so a connection opened later
-    # (e.g. by a fixture's own AsyncSession) would see none of the tables
-    # created here. StaticPool forces every checkout to reuse the single
-    # connection this engine opened, so they all share the same database.
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        echo=False,
-        poolclass=StaticPool,
-        connect_args={"check_same_thread": False},
-    )
-    enable_sqlite_foreign_keys(engine)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
+    is_sqlite = TEST_DATABASE_URL.startswith("sqlite")
+    engine_kwargs: dict[str, object] = {"echo": False}
+    if is_sqlite:
+        engine_kwargs["poolclass"] = StaticPool
+        engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+    engine = create_async_engine(TEST_DATABASE_URL, **engine_kwargs)
+    if is_sqlite:
+        enable_sqlite_foreign_keys(engine)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     yield engine
     await engine.dispose()
 
 
 @pytest.fixture
-async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
+async def db_session(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
     async_session = async_sessionmaker(test_engine, expire_on_commit=False, class_=AsyncSession)
     async with async_session() as session:
         yield session
@@ -59,12 +58,11 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-def app(test_engine):
+def app(test_engine: AsyncEngine) -> FastAPI:
     application = create_app()
     async_session = async_sessionmaker(test_engine, expire_on_commit=False, class_=AsyncSession)
 
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
-        # Mirrors get_db: one transaction per request.
         async with async_session() as session:
             try:
                 yield session
@@ -78,14 +76,14 @@ def app(test_engine):
 
 
 @pytest.fixture
-async def client(app) -> AsyncGenerator[AsyncClient, None]:
+async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
 
 @pytest.fixture
-async def auth_client(client, db_session):
+async def auth_client(client: AsyncClient, db_session: AsyncSession) -> AsyncClient:
     import uuid
 
     user_data = {"email": f"auth_{uuid.uuid4().hex[:6]}@test.com", "password": "testpassword123"}
@@ -97,7 +95,7 @@ async def auth_client(client, db_session):
 
 
 @pytest.fixture
-async def admin_auth_client(client, db_session):
+async def admin_auth_client(client: AsyncClient, db_session: AsyncSession) -> AsyncClient:
     import uuid
 
     from sqlalchemy import select

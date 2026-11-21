@@ -16,7 +16,10 @@ async def test_preflight_succeeds_for_configured_origin_method_and_headers(clien
 
 
 async def test_preflight_fails_for_unknown_origin(client: AsyncClient):
-    res = await client.options("/api/reports", headers={**PREFLIGHT, "Origin": "http://evil.example"})
+    res = await client.options(
+        "/api/reports",
+        headers={**PREFLIGHT, "Origin": "http://evil.example"},
+    )
     assert res.status_code == 400
     assert "access-control-allow-origin" not in res.headers
 

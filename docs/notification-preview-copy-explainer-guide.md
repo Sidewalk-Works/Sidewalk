@@ -5,10 +5,10 @@ This document details the alert preview generator logic, trigger reason categori
 ## Architecture
 
 1. **Explainer Service**:
-   - `apps/api/src/modules/notifications/services/alert-preview-explainer.service.ts`: `AlertPreviewExplainerService` formatting human-readable trigger explainers.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/notifications/`): `AlertPreviewExplainerService` formatting human-readable trigger explainers.
 
 2. **Web Explainer UI**:
    - `AlertPreviewExplainerCard`: React component displaying alert preview text alongside trigger rationale callouts.
 
 3. **Validation Schemas & Interfaces**:
-   - `alertPreviewPayloadSchema` and `AlertPreviewPayload` defined in `@qyou/shared`.
+   - `alertPreviewPayloadSchema` and `AlertPreviewPayload` defined in `@sidewalk/shared`.

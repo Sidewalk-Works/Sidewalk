@@ -1,69 +1,50 @@
 # Cross-Package Review Checklist
 
-Use this checklist when reviewing a pull request that touches more than one package or application in the monorepo (e.g. a change to `packages/shared` alongside a change in `apps/api`).
+Use this checklist when a PR touches more than one package/app or changes a shared contract.
 
----
+## When to apply
 
-## When to apply this checklist
+Apply when a PR modifies:
 
-Apply it whenever a PR modifies files in:
+- `packages/shared` and any app/package consumer
+- `packages/stellar` and any consumer
+- two or more apps
+- public exports/contracts used across package boundaries
 
-- `packages/shared` **and** at least one app, or
-- `packages/stellar` **and** at least one app, or
-- two or more apps at once, or
-- any `packages/*` entry point (`index.ts`, exported types).
-
-Single-app changes that stay entirely within one `apps/*` directory do not require this checklist.
-
----
-
-## Checklist
-
-### Dependency direction
+## Dependency direction
 
 - [ ] No `apps/*` package imports from another `apps/*` package.
 - [ ] No `packages/*` package imports from `apps/*`.
-- [ ] `packages/stellar` does not import from anything other than `packages/shared`.
-- [ ] No new circular dependencies are introduced (`pnpm check` or `tsc --noEmit` across the workspace stays clean).
+- [ ] `packages/stellar` only depends on allowed packages (e.g. `packages/shared`), not apps.
+- [ ] `apps/api` (FastAPI/Python) does not claim direct TS workspace imports; API contracts are documented via OpenAPI/schemas or explicit shared contract artifacts.
+- [ ] No new circular dependencies.
 
-### Shared package changes (`packages/shared`, `packages/stellar`)
+## Shared package changes
 
-- [ ] Every new export in `packages/shared` is consumed by at least two packages/apps (or a follow-up issue is filed to track the second consumer).
-- [ ] No business logic or application-specific behaviour has been added to `packages/shared`.
-- [ ] Stellar SDK calls and receipt logic land in `packages/stellar`, not in `apps/*` directly.
-- [ ] Public API changes (renamed or removed exports) are reflected in every consumer in the same PR.
+- [ ] New exports in `packages/shared` have a clear owner and consumer; avoid dumping unused abstractions.
+- [ ] No app-specific business logic added to `packages/shared`.
+- [ ] Public API/contract changes are reflected in all affected consumers in the same PR (or explicitly coordinated).
+- [ ] If a change affects API-to-client contracts, OpenAPI/schema/type artifacts are updated as needed.
 
-### Type safety
+## Type safety and tests
 
-- [ ] `pnpm typecheck` passes across the full workspace with no new errors.
-- [ ] No types are duplicated across packages — if the same shape appears in two places, it belongs in `packages/shared`.
+- [ ] `pnpm typecheck` passes for affected JS/TS packages.
+- [ ] `pnpm lint` passes where applicable (including `no-restricted-imports` boundary checks).
+- [ ] `pnpm test` passes for affected JS/TS packages.
+- [ ] For `apps/api` changes, relevant `uv run pytest`/Ruff/mypy checks pass as applicable.
 
-### Tests
+## PR description
 
-- [ ] Behaviour added or changed in a shared package is covered by tests in that package (or, if only validated by build/lint, that is explicitly noted in the PR description).
-- [ ] Consumer apps that are affected by the shared change have their own tests updated to reflect the new behaviour.
-- [ ] `pnpm test` passes across all affected packages.
-
-### CI
-
-- [ ] All GitHub Actions workflows triggered by the PR are green (lint, typecheck, test, build).
-- [ ] No workflow is skipped or has its failure silenced without a documented reason.
-
-### PR description
-
-- [ ] The description explains why the change needs to touch multiple packages rather than staying in one.
-- [ ] Any intentional deviation from the [package boundary rules](package-boundaries.md) is called out explicitly.
-- [ ] Breaking changes to shared types or interfaces are highlighted so dependent teams can prepare.
-
----
+- [ ] Explains why multiple packages/apps needed to change.
+- [ ] Calls out any intentional boundary deviation explicitly.
+- [ ] Highlights breaking contract changes (API/OpenAPI/shared types).
 
 ## Quick reference: allowed dependency graph
 
-```
-apps/api     → packages/shared, packages/stellar
-apps/web     → packages/shared
-apps/mobile  → packages/shared
-packages/stellar → packages/shared
-```
+```text
+apps/web     -> packages/shared
+apps/mobile  -> packages/shared
+packages/stellar -> packages/shared
 
-Any import that flows against this graph is a boundary violation and must be resolved before merge.
+apps/api (Python) -> HTTP/OpenAPI contract -> web/mobile clients
+```
