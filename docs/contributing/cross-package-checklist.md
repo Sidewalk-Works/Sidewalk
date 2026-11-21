@@ -6,12 +6,12 @@ Use this checklist when a PR touches more than one package in the monorepo.
 
 - [ ] Changes to `packages/shared` are backward-compatible or all consumers are updated
 - [ ] New exports in `packages/shared` are re-exported from the package index
-- [ ] API and web packages compile after the change (`pnpm build`)
+- [ ] Affected packages compile/build after the change (`pnpm build`)
 - [ ] No circular imports introduced between packages
 - [ ] Types are exported from the correct package (shared vs. app-local)
-- [ ] Migrations in `apps/api` are in sync with Prisma schema changes
+- [ ] Alembic migrations in `apps/api` are in sync with SQLAlchemy model changes
 - [ ] Environment variables added to `.env.example` and `docs/environment.md`
-- [ ] Tests pass in all affected packages (`pnpm test`)
+- [ ] Tests pass in all affected packages (`pnpm test`, and `uv run pytest` in `apps/api` when applicable)
 
 ## Notes
 

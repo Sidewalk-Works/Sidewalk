@@ -7,7 +7,7 @@ export const triggerReasonCategorySchema = z.enum([
   'community_mention',
 ]);
 
-export const alertPreviewPayloadSchema = z.object({
+export const alertExplainerPayloadSchema = z.object({
   previewId: z.string().min(1, 'Preview ID is required.'),
   headline: z.string().min(1),
   bodySnippet: z.string().min(1),
@@ -16,4 +16,4 @@ export const alertPreviewPayloadSchema = z.object({
   generatedAtIso: z.string().min(1),
 });
 
-export type AlertPreviewPayloadInput = z.infer<typeof alertPreviewPayloadSchema>;
+export type AlertExplainerPayloadInput = z.infer<typeof alertExplainerPayloadSchema>;

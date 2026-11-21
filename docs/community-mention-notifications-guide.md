@@ -5,10 +5,10 @@ This document details the @mention parsing logic, notification event payloads, a
 ## Architecture
 
 1. **Mention Parser Service**:
-   - `apps/api/src/modules/notifications/services/mention-parser.service.ts`: `MentionParserService` extracting @usernames and building notification events.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/notifications/`): `MentionParserService` extracting @usernames and building notification events.
 
 2. **Web Mention Toast UI**:
    - `MentionNotificationToast`: React component rendering styled alert banners for comment mentions.
 
 3. **Validation Schemas & Interfaces**:
-   - `mentionNotificationPayloadSchema` and `MentionNotificationPayload` defined in `@qyou/shared`.
+   - `mentionNotificationPayloadSchema` and `MentionNotificationPayload` defined in `@sidewalk/shared`.

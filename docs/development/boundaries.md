@@ -22,5 +22,5 @@ Is the code used by more than one app?
 
 ## Enforcement
 
-ESLint `import/no-restricted-paths` rules are configured in `eslint.config.mjs`.
-Violations will fail CI.
+ESLint `no-restricted-imports` rules are configured in `eslint.config.mjs`.
+Run `pnpm lint` locally; CI should fail on violations when lint is enforced.
