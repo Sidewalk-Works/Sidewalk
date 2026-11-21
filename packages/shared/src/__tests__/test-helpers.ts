@@ -6,18 +6,15 @@
  */
 import type { AuthClaims, ScopedTokenClaims, PublicUser } from "../types/auth.js";
 import type { ReportSubmission } from "../types/civic.js";
-import type { Visibility } from "../types/enums.js";
+import { ReportCategory, type Visibility } from "../types/enums.js";
 
 // ---------------------------------------------------------------------------
 // Identity / auth helpers
 // ---------------------------------------------------------------------------
 
-export interface TestIdentity {
-  sub: string;
-  email: string;
-  role: "user" | "admin" | "staff" | "moderator";
-  exp: number;
-  iat: number;
+export interface TestIdentity extends AuthClaims {
+  email?: string;
+  role?: "user" | "admin" | "staff" | "moderator";
 }
 
 export function makeIdentity(overrides: Partial<TestIdentity> = {}): TestIdentity {
@@ -32,14 +29,24 @@ export function makeIdentity(overrides: Partial<TestIdentity> = {}): TestIdentit
 }
 
 export function makeAuthClaims(overrides: Partial<AuthClaims> = {}): AuthClaims {
-  return makeIdentity(overrides as Partial<TestIdentity>);
+  const identity = makeIdentity(overrides as Partial<TestIdentity>);
+  return { sub: identity.sub, exp: identity.exp, iat: identity.iat, ...overrides };
 }
 
 export function makeScopedClaims(
   scopes: string[] = ["reports:read"],
   overrides: Partial<ScopedTokenClaims> = {},
 ): ScopedTokenClaims {
-  return { ...makeIdentity(), scope: scopes, ...overrides };
+  const identity = makeIdentity(overrides as Partial<TestIdentity>);
+  return {
+    sub: identity.sub,
+    exp: identity.exp,
+    iat: identity.iat,
+    email: identity.email,
+    role: identity.role,
+    scope: scopes,
+    ...overrides,
+  };
 }
 
 export function authHeader(token = "test-token"): Record<string, string> {
@@ -86,28 +93,32 @@ export function makeReportSubmission(
   return {
     title: "Test Report",
     description: "A test report description.",
-    visibility: "public" as Visibility,
+    category: ReportCategory.POTHOLE,
+    latitude: null,
+    longitude: null,
+    address: null,
+    media_urls: [],
     ...overrides,
   };
 }
 
 export interface TestReport {
   id: string;
-  authorId: string;
+  user_id: string;
   title: string;
   description: string;
-  status: "draft" | "submitted" | "under_review" | "resolved" | "closed";
-  visibility: Visibility;
+  category: ReportCategory;
+  status: "submitted" | "under_review" | "verified" | "assigned" | "in_progress" | "resolved" | "closed";
 }
 
 export function makeReport(overrides: Partial<TestReport> = {}): TestReport {
   return {
     id: "test-report-id",
-    authorId: "test-user-id",
+    user_id: "test-user-id",
     title: "Test Report",
     description: "A test report description.",
-    status: "draft",
-    visibility: "public" as Visibility,
+    category: ReportCategory.POTHOLE,
+    status: "submitted",
     ...overrides,
   };
 }
