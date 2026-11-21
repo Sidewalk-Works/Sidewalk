@@ -5,10 +5,10 @@ This document details the refined in-app toast and banner UI patterns for real-t
 ## Architecture
 
 1. **Toast Trigger Service**:
-   - `apps/api/src/modules/notifications/services/toast-trigger.service.ts`: Dispatches status change payloads formatted for client-side consumption.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/notifications/`): Dispatches status change payloads formatted for client-side consumption.
 
 2. **Web Banner Component**:
    - `StatusChangeBanner`: React component displaying persistent or dismissible global banners.
 
 3. **Validation Schemas & Interfaces**:
-   - `toastNotificationSchema` and `ToastNotification` defined in `@qyou/shared`.
+   - `toastNotificationSchema` and `ToastNotification` defined in `@sidewalk/shared`.

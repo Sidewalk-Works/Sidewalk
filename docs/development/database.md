@@ -70,8 +70,11 @@ If there are uncommitted model changes that have not been captured in an Alembic
 
 ## CI Enforcement
 
-In the GitHub Actions API workflow (`.github/workflows/api.yml`), the test pipeline:
-1. Boots a real PostgreSQL 16 container.
-2. Applies all migrations: `uv run alembic upgrade head`.
-3. Runs `uv run alembic check` to verify no models have unmigrated schema changes.
-4. Executes the test suite against the migrated database with `uv run pytest --cov=src --cov-fail-under=80`.
+In the GitHub Actions API workflow (`.github/workflows/api.yml`), the API jobs:
+1. Boot a real PostgreSQL 16 service container for the test job.
+2. Install dependencies with `uv sync --frozen --extra dev`.
+3. Apply all migrations against that PostgreSQL database: `uv run alembic upgrade head`.
+4. Run `uv run alembic check` to verify models and migrations are in sync.
+5. Run the test suite with `uv run pytest --cov=src --cov-fail-under=80`.
+
+Note: the current pytest fixtures in `apps/api/tests/conftest.py` create an in-memory SQLite schema via `Base.metadata.create_all` for test isolation. CI still validates migrations against PostgreSQL before running tests.

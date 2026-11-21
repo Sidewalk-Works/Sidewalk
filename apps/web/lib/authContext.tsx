@@ -1,67 +1,60 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-
 import type { PublicUser } from "@sidewalk/shared";
-
 import { apiClient } from "./apiClient";
-
-const TOKEN_STORAGE_KEY = "sidewalk.authToken";
 
 interface AuthContextValue {
   user: PublicUser | null;
-  token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<PublicUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({
+  children,
+  initialUser,
+}: {
+  children: ReactNode;
+  initialUser?: PublicUser | null;
+}) {
+  const hasInitialUser = initialUser !== undefined;
+  const [user, setUser] = useState<PublicUser | null>(initialUser ?? null);
+  const [isLoading, setIsLoading] = useState(!hasInitialUser);
 
   useEffect(() => {
-    const storedToken = window.localStorage.getItem(TOKEN_STORAGE_KEY);
-    if (!storedToken) {
-      setIsLoading(false);
-      return;
-    }
-
+    if (hasInitialUser) return;
     apiClient
-      .getCurrentUser(storedToken)
+      .getCurrentUser()
       .then((currentUser) => {
-        setToken(storedToken);
         setUser(currentUser);
       })
       .catch(() => {
-        window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+        setUser(null);
       })
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [hasInitialUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await apiClient.login(email, password);
-    window.localStorage.setItem(TOKEN_STORAGE_KEY, result.token);
-    setToken(result.token);
     setUser(result.user);
   }, []);
 
   const register = useCallback(async (email: string, password: string) => {
-    await apiClient.register(email, password);
+    const result = await apiClient.register(email, password);
+    setUser(result.user);
   }, []);
 
-  const logout = useCallback(() => {
-    window.localStorage.removeItem(TOKEN_STORAGE_KEY);
-    setToken(null);
+  const logout = useCallback(async () => {
+    await apiClient.logout();
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

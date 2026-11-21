@@ -58,7 +58,7 @@ export function ToastViewport() {
                 </div>
               </div>
             </div>
-            <button
+            <button type="button"
               onClick={() => dismissToast(toast.id)}
               style={{
                 background: 'transparent',
