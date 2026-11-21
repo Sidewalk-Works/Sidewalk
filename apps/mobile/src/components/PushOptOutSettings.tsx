@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ interface PushOptOutSettingsProps {
   registrationState: PushRegistrationState | null;
   onToggleOptOut: (optedOut: boolean) => void;
   onRevokeAccess: () => void;
+  syncStatus?: 'idle' | 'pending' | 'failed';
+  syncError?: string;
 }
 
 const STATUS_CONFIG = {
@@ -31,6 +33,8 @@ export function PushOptOutSettings({
   registrationState,
   onToggleOptOut,
   onRevokeAccess,
+  syncStatus = 'idle',
+  syncError,
 }: PushOptOutSettingsProps) {
   const status = getStatus(registrationState);
   const statusInfo = STATUS_CONFIG[status];
@@ -82,6 +86,14 @@ export function PushOptOutSettings({
         )}
       </View>
 
+      {syncStatus !== 'idle' && (
+        <View style={[styles.syncBox, syncStatus === 'failed' ? styles.syncBoxFailed : styles.syncBoxPending]}>
+          <Text style={[styles.syncText, syncStatus === 'failed' ? styles.syncTextFailed : styles.syncTextPending]}>
+            {syncStatus === 'pending' ? 'Sync pending: changes will retry when connection returns.' : (syncError || 'Sync failed. Changes will retry when connection returns.')}
+          </Text>
+        </View>
+      )}
+
       {registrationState?.isRegistered && (
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
@@ -96,6 +108,14 @@ export function PushOptOutSettings({
             trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
             thumbColor={registrationState.optOut ? '#94a3b8' : '#3b82f6'}
           />
+        </View>
+      )}
+
+      {syncStatus !== 'idle' && (
+        <View style={[styles.syncBox, syncStatus === 'failed' ? styles.syncBoxFailed : styles.syncBoxPending]}>
+          <Text style={[styles.syncText, syncStatus === 'failed' ? styles.syncTextFailed : styles.syncTextPending]}>
+            {syncStatus === 'pending' ? 'Sync pending: changes will retry when connection returns.' : (syncError || 'Sync failed. Changes will retry when connection returns.')}
+          </Text>
         </View>
       )}
 
@@ -226,5 +246,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94a3b8',
     lineHeight: 16,
+  },
+  syncBox: {
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  syncBoxPending: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+  },
+  syncBoxFailed: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  syncText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  syncTextPending: {
+    color: '#92400e',
+  },
+  syncTextFailed: {
+    color: '#b91c1c',
   },
 });

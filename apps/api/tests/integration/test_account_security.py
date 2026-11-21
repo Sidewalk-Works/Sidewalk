@@ -54,7 +54,11 @@ async def test_expired_and_invalid_tokens_have_different_codes(client: AsyncClie
     assert res.json()["code"] == "token_expired"
     assert res.headers["www-authenticate"] == "Bearer"
 
-    forged = jwt.encode({"sub": user_id, "tv": 0}, "wrong-secret-wrong-secret-wrong-secret", "HS256")
+    forged = jwt.encode(
+        {"sub": user_id, "tv": 0},
+        "wrong-secret-wrong-secret-wrong-secret",
+        "HS256",
+    )
     res = await client.get("/api/auth/me", headers=_bearer(forged))
     assert res.status_code == 401
     assert res.json()["code"] == "token_invalid"
@@ -175,9 +179,13 @@ async def test_password_change_revokes_older_sessions_and_returns_fresh_tokens(c
     for stale in (body["access_token"], other_session["access_token"]):
         assert (await client.get("/api/auth/me", headers=_bearer(stale))).status_code == 401
     assert (
-        await client.post("/api/auth/refresh", json={"refresh_token": other_session["refresh_token"]})
+        await client.post(
+            "/api/auth/refresh",
+            json={"refresh_token": other_session["refresh_token"]},
+        )
     ).status_code == 401
-    assert (await client.get("/api/auth/me", headers=_bearer(fresh["access_token"]))).status_code == 200
+    res = await client.get("/api/auth/me", headers=_bearer(fresh["access_token"]))
+    assert res.status_code == 200
     login = await client.post(
         "/api/auth/login", json={"email": creds["email"], "password": "brand-new-password"}
     )
@@ -200,13 +208,17 @@ async def test_forgot_password_answers_the_same_for_unknown_accounts(client: Asy
     assert known["user"]["email"] == mailbox.outbox[0].to
 
 
-async def test_reset_token_works_once_and_is_hashed_at_rest(client: AsyncClient, mailbox, db_session):
+async def test_reset_token_works_once_and_is_hashed_at_rest(
+    client: AsyncClient, mailbox, db_session
+):
     _, creds = await _register(client)
     mailbox.outbox.clear()
     await client.post("/api/auth/forgot-password", json={"email": creds["email"]})
     raw = _token_from(mailbox.outbox[0])
 
-    stored = (await db_session.execute(select(AuthToken).where(AuthToken.kind == "password_reset"))).scalars().all()
+    stored = (
+        await db_session.execute(select(AuthToken).where(AuthToken.kind == "password_reset"))
+    ).scalars().all()
     assert all(raw not in row.token_hash for row in stored)
     assert any(row.token_hash == hash_token(raw) for row in stored)
 
@@ -215,7 +227,10 @@ async def test_reset_token_works_once_and_is_hashed_at_rest(client: AsyncClient,
     )
     assert ok.status_code == 200
     assert (
-        await client.post("/api/auth/login", json={"email": creds["email"], "password": "reset-password-1"})
+        await client.post(
+            "/api/auth/login",
+            json={"email": creds["email"], "password": "reset-password-1"},
+        )
     ).status_code == 200
 
     reuse = await client.post(
@@ -229,7 +244,9 @@ async def test_expired_or_bogus_reset_tokens_are_rejected(client: AsyncClient, m
     mailbox.outbox.clear()
     await client.post("/api/auth/forgot-password", json={"email": creds["email"]})
     raw = _token_from(mailbox.outbox[0])
-    row = (await db_session.execute(select(AuthToken).where(AuthToken.token_hash == hash_token(raw)))).scalar_one()
+    row = (
+        await db_session.execute(select(AuthToken).where(AuthToken.token_hash == hash_token(raw)))
+    ).scalar_one()
     row.expires_at = datetime.now(UTC) - timedelta(minutes=1)
     await db_session.commit()
 
@@ -254,7 +271,9 @@ async def test_a_verification_token_cannot_reset_a_password(client: AsyncClient,
 # --- email verification (1160) -----------------------------------------------------------
 
 
-async def test_registration_sends_a_verification_email_that_verifies_once(client: AsyncClient, mailbox):
+async def test_registration_sends_a_verification_email_that_verifies_once(
+    client: AsyncClient, mailbox
+):
     body, _ = await _register(client)
     assert body["user"]["email_verified"] is False
     message = mailbox.outbox[-1]
@@ -278,11 +297,15 @@ async def test_unverified_accounts_cannot_create_reports_when_required(
         body, _ = await _register(client)
         report = {"title": "Pothole", "description": "Deep", "category": "road"}
 
-        blocked = await client.post("/api/reports", json=report, headers=_bearer(body["access_token"]))
+        blocked = await client.post(
+            "/api/reports", json=report, headers=_bearer(body["access_token"])
+        )
         assert blocked.status_code == 403
 
         await client.post("/api/auth/verify-email", json={"token": _token_from(mailbox.outbox[-1])})
-        allowed = await client.post("/api/reports", json=report, headers=_bearer(body["access_token"]))
+        allowed = await client.post(
+            "/api/reports", json=report, headers=_bearer(body["access_token"])
+        )
         assert allowed.status_code == 201
     finally:
         get_settings.cache_clear()
@@ -291,7 +314,9 @@ async def test_unverified_accounts_cannot_create_reports_when_required(
 # --- email change (1161) -----------------------------------------------------------------
 
 
-async def test_email_change_needs_confirmation_from_the_new_address(client: AsyncClient, mailbox, db_session):
+async def test_email_change_needs_confirmation_from_the_new_address(
+    client: AsyncClient, mailbox, db_session
+):
     body, creds = await _register(client)
     new_email = f"moved_{uuid.uuid4().hex[:6]}@test.com"
     mailbox.outbox.clear()
@@ -310,7 +335,9 @@ async def test_email_change_needs_confirmation_from_the_new_address(client: Asyn
         "/api/auth/confirm-email-change", json={"token": _token_from(mailbox.outbox[0])}
     )
     assert confirm.status_code == 200
-    user = (await db_session.execute(select(User).where(User.id == uuid.UUID(body["user"]["id"])))).scalar_one()
+    user = (
+        await db_session.execute(select(User).where(User.id == uuid.UUID(body["user"]["id"])))
+    ).scalar_one()
     await db_session.refresh(user)
     assert user.email == new_email
     assert user.pending_email is None

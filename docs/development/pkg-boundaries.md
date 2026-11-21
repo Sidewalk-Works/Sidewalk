@@ -10,13 +10,13 @@ modules are added.
 
 ```
 packages/
-  shared/     → types, utils, constants — imported by all apps
-  stellar/    → Stellar SDK helpers — imported by api and mobile
+  shared/     → types, schemas, constants — used by web/mobile (and as contracts where applicable)
+  stellar/    → Stellar SDK helpers — imported by apps that need Stellar integration
 
 apps/
-  api/        → NestJS REST backend — the single source of truth for data
-  web/        → Next.js frontend — calls api over HTTP only
-  mobile/     → React Native app — calls api over HTTP only
+  api/        → FastAPI backend — source of truth for API behavior and data
+  web/        → Next.js frontend — calls API over HTTP
+  mobile/     → Expo/React Native app — calls API over HTTP
 ```
 
 ## What Belongs Where
@@ -30,5 +30,5 @@ apps/
 ## Detecting Violations
 
 ```bash
-pnpm lint   # ESLint import rules catch cross-app imports at CI time
+pnpm lint   # ESLint no-restricted-imports rules catch disallowed cross-package imports
 ```

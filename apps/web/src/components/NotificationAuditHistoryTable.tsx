@@ -69,7 +69,7 @@ export function NotificationAuditHistoryTable({ logs = [], pageSize = 10 }: Noti
           <option value="failed">Failed</option>
           <option value="suppressed_quiet_hours">Suppressed</option>
         </select>
-        <button style={{ ...btnStyle, background: '#dcfce7', color: '#166534', marginLeft: 'auto' }} onClick={exportCsv}>
+        <button type="button" style={{ ...btnStyle, background: '#dcfce7', color: '#166534', marginLeft: 'auto' }} onClick={exportCsv}>
           Export CSV
         </button>
       </div>
@@ -93,10 +93,9 @@ export function NotificationAuditHistoryTable({ logs = [], pageSize = 10 }: Noti
               pageData.map((log) => (
                 <tr
                   key={log.auditId}
+                  className="sw-audit-row"
                   style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer', transition: 'background 0.15s' }}
                   onClick={() => setSelectedLog(selectedLog?.auditId === log.auditId ? null : log)}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                 >
                   <td style={td}>{new Date(log.sentAtIso).toLocaleString()}</td>
                   <td style={{ ...td, textTransform: 'uppercase' }}>{log.channel}</td>
@@ -116,9 +115,9 @@ export function NotificationAuditHistoryTable({ logs = [], pageSize = 10 }: Noti
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', fontSize: '12px', color: '#64748b' }}>
         <span>Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length}</span>
         <div style={{ display: 'flex', gap: '6px' }}>
-          <button style={btnStyle} disabled={page === 0} onClick={() => setPage(page - 1)}>Prev</button>
+          <button type="button" style={btnStyle} disabled={page === 0} onClick={() => setPage(page - 1)}>Prev</button>
           <span style={{ padding: '6px 8px' }}>Page {page + 1} of {totalPages}</span>
-          <button style={btnStyle} disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>Next</button>
+          <button type="button" style={btnStyle} disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>Next</button>
         </div>
       </div>
 
@@ -134,7 +133,7 @@ export function NotificationAuditHistoryTable({ logs = [], pageSize = 10 }: Noti
             <div><strong>Status:</strong> {selectedLog.status}</div>
             <div><strong>Sent:</strong> {new Date(selectedLog.sentAtIso).toLocaleString()}</div>
           </div>
-          <button style={{ ...btnStyle, marginTop: '10px' }} onClick={() => setSelectedLog(null)}>Close</button>
+          <button type="button" style={{ ...btnStyle, marginTop: '10px' }} onClick={() => setSelectedLog(null)}>Close</button>
         </div>
       )}
     </div>

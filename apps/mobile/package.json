@@ -5,9 +5,14 @@
   "main": "expo/AppEntry",
   "scripts": {
     "dev": "expo start",
-    "lint": "eslint .",
+    "ios": "expo start --ios",
+    "android": "expo start --android",
+    "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@sidewalk/shared": "workspace:*",
@@ -17,7 +22,6 @@
     "react-native": "^0.86.0"
   },
   "devDependencies": {
-    "@react-native/jest-preset": "^0.86.0",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.2.3",
     "babel-preset-expo": "^56.0.15",

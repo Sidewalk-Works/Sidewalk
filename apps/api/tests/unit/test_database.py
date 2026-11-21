@@ -31,7 +31,12 @@ async def test_sqlite_rejects_rows_that_violate_foreign_keys():
         factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
         async with factory() as session:
             session.add(
-                Notification(user_id=uuid.uuid4(), type=NotificationType.status_change.value, payload={}, read=False)
+                Notification(
+                    user_id=uuid.uuid4(),
+                    type=NotificationType.status_change.value,
+                    payload={},
+                    read=False,
+                )
             )
             with pytest.raises(IntegrityError):
                 await session.flush()

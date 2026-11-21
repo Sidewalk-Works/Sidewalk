@@ -1,0 +1,13 @@
+# Default owners
+* @Sidewalk-Works/maintainers
+
+# App ownership
+/apps/api/ @Sidewalk-Works/backend
+/apps/web/ @Sidewalk-Works/frontend
+/apps/mobile/ @Sidewalk-Works/mobile
+
+# Shared packages
+/packages/ @Sidewalk-Works/maintainers
+
+# CI and repository config
+/.github/ @Sidewalk-Works/maintainers
