@@ -5,10 +5,10 @@ This document details the template generation for daily and weekly scheduled upd
 ## Architecture
 
 1. **Email Summary Service**:
-   - `apps/api/src/modules/notifications/services/email-summary.service.ts`: Populates HTML payload structures based on scheduled intervals.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/notifications/`): Populates HTML payload structures based on scheduled intervals.
 
 2. **Web Preview UI**:
    - `EmailDigestPreview`: React component used in the admin panel to preview how generated email templates look.
 
 3. **Validation Schemas & Interfaces**:
-   - `emailDigestTemplateSchema` and `EmailDigestTemplate` defined in `@qyou/shared`.
+   - `emailDigestTemplateSchema` and `EmailDigestTemplate` defined in `@sidewalk/shared`.

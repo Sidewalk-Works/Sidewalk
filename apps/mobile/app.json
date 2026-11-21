@@ -1,1 +1,14 @@
-{\n  "expo": {\n    "name": "Sidewalk",\n    "slug": "sidewalk"\n  }\n}\n
+{
+  "expo": {
+    "name": "Sidewalk",
+    "slug": "sidewalk",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    }
+  }
+}

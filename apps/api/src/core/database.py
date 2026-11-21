@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends
 from sqlalchemy import event
@@ -26,7 +26,7 @@ def normalize_database_url(url: str) -> str:
 def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
     """Turn on FK enforcement for every SQLite connection (SQLite ignores FKs by default)."""
 
-    def _set_pragma(dbapi_connection, _record) -> None:  # type: ignore[no-untyped-def]
+    def _set_pragma(dbapi_connection: Any, _record: Any) -> None:
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()

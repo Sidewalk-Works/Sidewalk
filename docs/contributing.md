@@ -59,7 +59,7 @@ Each app ships an `.env.example`. Copy the relevant one(s) before running:
 
 ```bash
 cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
+cp apps/web/.env.example apps/web/.env.local
 cp apps/mobile/.env.example apps/mobile/.env
 ```
 
@@ -67,12 +67,13 @@ See [docs/environment.md](environment.md) for a description of every variable.
 
 ### 4. Set up the API database
 
-The API uses Prisma with a local SQLite file by default. Generate the Prisma
-client and push the schema on first run:
+The API uses FastAPI with SQLAlchemy and Alembic. From `apps/api`, install
+dependencies and apply migrations:
 
 ```bash
-pnpm --filter @sidewalk/api exec prisma generate
-pnpm --filter @sidewalk/api exec prisma db push
+cd apps/api
+uv sync --extra dev
+uv run alembic upgrade head
 ```
 
 ### 5. Start the apps

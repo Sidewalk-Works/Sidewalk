@@ -5,10 +5,10 @@ This document details the notification preference channels, moderation alert set
 ## Architecture
 
 1. **Preference Center Service**:
-   - `apps/api/src/modules/notifications/services/notification-preference-center.service.ts`: `NotificationPreferenceCenterService` managing user channel toggles.
+   - Planned backend service (not implemented; current module: `apps/api/src/modules/notifications/`): `NotificationPreferenceCenterService` managing user channel toggles.
 
 2. **Web Preference UI**:
    - `NotificationPreferenceCenterCard`: React UI component offering granular toggles for report updates and moderation alerts.
 
 3. **Validation Schemas & Interfaces**:
-   - `notificationCategoryPreferencesSchema` and `NotificationCategoryPreferences` defined in `@qyou/shared`.
+   - `notificationCategoryPreferencesSchema` and `NotificationCategoryPreferences` defined in `@sidewalk/shared`.

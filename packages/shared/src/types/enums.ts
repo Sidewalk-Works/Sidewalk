@@ -1,12 +1,25 @@
 export const ReportStatus = {
-  DRAFT: "draft",
   SUBMITTED: "submitted",
   UNDER_REVIEW: "under_review",
+  VERIFIED: "verified",
+  ASSIGNED: "assigned",
+  IN_PROGRESS: "in_progress",
   RESOLVED: "resolved",
   CLOSED: "closed",
 } as const;
 
 export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus];
+
+export const ReportCategory = {
+  POTHOLE: "pothole",
+  STREETLIGHT: "streetlight",
+  DRAINAGE: "drainage",
+  WASTE: "waste",
+  VANDALISM: "vandalism",
+  OTHER: "other",
+} as const;
+
+export type ReportCategory = (typeof ReportCategory)[keyof typeof ReportCategory];
 
 export const Visibility = {
   PUBLIC: "public",

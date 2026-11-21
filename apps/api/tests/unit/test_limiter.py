@@ -6,7 +6,13 @@ from src.core.config import get_settings
 
 def _request(peer: str, forwarded: str | None = None) -> Request:
     headers = [(b"x-forwarded-for", forwarded.encode())] if forwarded else []
-    scope = {"type": "http", "headers": headers, "client": (peer, 1234), "method": "GET", "path": "/"}
+    scope = {
+        "type": "http",
+        "headers": headers,
+        "client": (peer, 1234),
+        "method": "GET",
+        "path": "/",
+    }
     return Request(scope)
 
 
