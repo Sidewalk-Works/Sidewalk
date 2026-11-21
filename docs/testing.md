@@ -2,67 +2,73 @@
 
 ## Running Tests
 
-Run all tests across the monorepo:
+Run all workspace tests from the repo root:
 
 ```bash
 pnpm test
 ```
 
-Run tests for a single package:
+Run package/app tests individually:
 
 ```bash
-pnpm --filter @sidewalk/api test
+# API (FastAPI / pytest)
+cd apps/api
+uv run pytest
+
+# Web (Vitest)
 pnpm --filter @sidewalk/web test
+
+# Mobile (Jest / jest-expo)
 pnpm --filter @sidewalk/mobile test
+
+# Shared package (Vitest)
+pnpm --filter @sidewalk/shared test
 ```
 
 ## Test Structure
 
 ### `apps/api`
 
-- Tests live alongside each module in `src/modules/<module>/tests/`.
-- Tests use [Vitest](https://vitest.dev/) and
-  [Supertest](https://github.com/ladjs/supertest) against the Express `app`.
-- `apps/api/.env.test` provides a committed, non-secret configuration
-  (SQLite database file, test JWT secret) so tests run immediately after
-  `pnpm install` with no extra setup.
-- `pretest` resets the SQLite test database (`prisma db push --force-reset`)
-  before each run, so tests start from a clean database.
+- Framework: [pytest](https://docs.pytest.org/) with `pytest-asyncio` (`asyncio_mode = "auto"`).
+- Tests live in `apps/api/tests/`, organized into `unit/` and `integration/`.
+- Shared fixtures live in `apps/api/tests/conftest.py`; factories/helpers live in `apps/api/tests/factories.py`.
+- Default local test configuration uses in-memory SQLite (see `conftest.py`) unless `TEST_DATABASE_URL` is provided.
+- Coverage is enforced by pytest-cov with a minimum threshold (`--cov-fail-under=80` in config/CI).
 
-Coverage includes:
+Run common API checks from `apps/api`:
 
-- Registration: successful registration, duplicate email, invalid input.
-- Login: successful login, invalid password, non-existent account.
+```bash
+uv sync --extra dev
+uv run ruff check src tests
+uv run ruff format --check src tests
+uv run mypy src
+uv run pytest --cov=src
+```
 
 ### `apps/web`
 
-- Tests live in `__tests__/` and use
-  [Vitest](https://vitest.dev/) with
-  [React Testing Library](https://testing-library.com/react).
-- Coverage includes rendering and form validation for the Login and Create
-  Account pages.
+- Framework: [Vitest](https://vitest.dev/) + React Testing Library.
+- Tests live primarily in `apps/web/__tests__/`, with additional tests under `apps/web/src/**/__tests__` and `apps/web/src/tests/`.
+- Coverage includes auth pages/components and a growing set of notification/UI behavior tests (do not assume only login/register coverage).
 
 ### `apps/mobile`
 
-- Tests live in `src/__tests__/` and run with `jest-expo`.
-- A single setup-verification test confirms the testing infrastructure works.
-  No authentication or screen logic exists yet, so no feature tests are
-  included.
+- Framework: Jest with `jest-expo`.
+- Tests live in `apps/mobile/__tests__/` and `apps/mobile/src/**/__tests__/`.
+- Coverage includes setup/smoke tests and feature tests (for example push notification registration/manager behavior).
 
 ### `packages/shared` and `packages/stellar`
 
-- These packages are validated via build and lint only (no runtime logic to
-  unit test yet).
+- `packages/shared` includes Vitest tests (`src/__tests__`) and exposes a `test` script.
+- `packages/stellar` currently has no runtime test suite; validate with lint/build/typecheck as applicable.
 
 ## CI Expectations
 
-Every pull request runs the workflows in `.github/workflows/`:
+GitHub Actions workflows in `.github/workflows/` run on pull requests and pushes to `main`:
 
-- **API**: install, lint, test, build.
-- **Web**: install, lint, test, build.
-- **Mobile**: install, lint, test.
-- **Packages**: install, build, lint for `@sidewalk/shared` and
-  `@sidewalk/stellar`.
+- **API (`api.yml`)**: lint (`ruff check`, `ruff format --check`), typecheck (`mypy src`), and test job with PostgreSQL service, Alembic migrations (`upgrade head`, `alembic check`), and `pytest --cov=src --cov-fail-under=80`.
+- **Web (`web.yml`)**: install, lint, test, build.
+- **Mobile (`mobile.yml`)**: install, lint, test.
+- **Packages (`packages.yml`)**: matrix build/lint/test for shared packages (test uses `--if-present`).
 
-A failing lint, test, or build step fails the corresponding workflow and
-blocks merging.
+A failing lint, test, typecheck, migration, or build step fails the workflow and blocks merging.
