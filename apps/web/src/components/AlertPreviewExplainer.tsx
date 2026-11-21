@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useId, useState } from "react";
-import type { AlertExplainerPayload, TriggerReasonCode } from "@sidewalk/shared";
+import React, { useState } from 'react';
+import type {
+  AlertPreviewPayload,
+} from '@sidewalk/shared';
 
 interface AlertPreviewExplainerProps {
   payload: AlertExplainerPayload;

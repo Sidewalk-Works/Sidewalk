@@ -93,10 +93,9 @@ export function NotificationAuditHistoryTable({ logs = [], pageSize = 10 }: Noti
               pageData.map((log) => (
                 <tr
                   key={log.auditId}
+                  className="sw-audit-row"
                   style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer', transition: 'background 0.15s' }}
                   onClick={() => setSelectedLog(selectedLog?.auditId === log.auditId ? null : log)}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                 >
                   <td style={td}>{new Date(log.sentAtIso).toLocaleString()}</td>
                   <td style={{ ...td, textTransform: 'uppercase' }}>{log.channel}</td>

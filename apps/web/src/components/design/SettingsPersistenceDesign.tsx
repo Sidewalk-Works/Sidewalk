@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const SYNC_STATUS = {
   synced: { color: '#22c55e', label: 'Synced' },
@@ -25,10 +25,18 @@ const conflictRight = { device: 'Pixel 8', emailDigest: 'Weekly', pushAlerts: fa
 
 export function SettingsPersistenceDesign() {
   const [syncing, setSyncing] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleSync = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setSyncing(true);
-    setTimeout(() => setSyncing(false), 2000);
+    timeoutRef.current = setTimeout(() => setSyncing(false), 2000);
   };
 
   return (

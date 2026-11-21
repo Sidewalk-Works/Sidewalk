@@ -15,6 +15,11 @@ const channelStatusGrid = [
 const deliveryBanner = { status: 'delivered', message: 'Your alert was delivered via Push Notification at 10:30 AM.' };
 
 export function DeliveryFallbackDesign() {
+  const maxCount = Math.max(
+    1,
+    ...channelStatusGrid.flatMap((row) => [row.success, row.failed, row.pending]),
+  );
+
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', padding: '32px', maxWidth: '820px', margin: '0 auto' }}>
       <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>Delivery Fallback Design</h2>
@@ -87,19 +92,19 @@ export function DeliveryFallbackDesign() {
               <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.channel}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ height: '6px', borderRadius: '3px', background: '#dcfce7', width: '100%', position: 'relative' }}>
-                  <div style={{ height: '100%', borderRadius: '3px', background: '#22c55e', width: `${(row.success / 60) * 100}%` }} />
+                  <div style={{ height: '100%', borderRadius: '3px', background: '#22c55e', width: `${Math.min(100, (row.success / maxCount) * 100)}%` }} />
                 </div>
                 <span style={{ fontSize: '12px', color: '#166534', fontWeight: 600, minWidth: '20px' }}>{row.success}</span>
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ height: '6px', borderRadius: '3px', background: '#fee2e2', width: '100%', position: 'relative' }}>
-                  <div style={{ height: '100%', borderRadius: '3px', background: '#ef4444', width: `${(row.failed / 60) * 100}%` }} />
+                  <div style={{ height: '100%', borderRadius: '3px', background: '#ef4444', width: `${Math.min(100, (row.failed / maxCount) * 100)}%` }} />
                 </div>
                 <span style={{ fontSize: '12px', color: '#991b1b', fontWeight: 600, minWidth: '20px' }}>{row.failed}</span>
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ height: '6px', borderRadius: '3px', background: '#fef3c7', width: '100%', position: 'relative' }}>
-                  <div style={{ height: '100%', borderRadius: '3px', background: '#f59e0b', width: `${(row.pending / 60) * 100}%` }} />
+                  <div style={{ height: '100%', borderRadius: '3px', background: '#f59e0b', width: `${Math.min(100, (row.pending / maxCount) * 100)}%` }} />
                 </div>
                 <span style={{ fontSize: '12px', color: '#92400e', fontWeight: 600, minWidth: '20px' }}>{row.pending}</span>
               </span>
