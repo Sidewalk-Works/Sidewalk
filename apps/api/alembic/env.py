@@ -65,3 +65,25 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+
+url = config.get_main_option("sqlalchemy.url")
+is_sqlite = bool(url and url.startswith("sqlite"))
+
+context.configure(
+    url=url,
+    target_metadata=target_metadata,
+    literal_binds=True,
+    dialect_opts={"paramstyle": "named"},
+    compare_type=True,
+    compare_server_default=True,
+    render_as_batch=is_sqlite,
+)
+resolved_url = str(connection.engine.url) if connection is not None else (url or "")
+
+context.configure(
+    connection=connection,
+    target_metadata=target_metadata,
+    compare_type=True,
+    compare_server_default=True,
+    render_as_batch=resolved_url.startswith("sqlite"),
+)
