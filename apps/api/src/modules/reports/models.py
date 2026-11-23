@@ -22,7 +22,11 @@ class Report(Base, UUIDPKMixin, TimestampMixin):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(50), default="submitted", nullable=False, index=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", name="fk_reports_user_id_users", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -31,4 +35,4 @@ class Report(Base, UUIDPKMixin, TimestampMixin):
     flagged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     flag_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="reports")
+    user: Mapped["User | None"] = relationship(back_populates="reports")

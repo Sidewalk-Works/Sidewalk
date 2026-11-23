@@ -1,7 +1,4 @@
-import os
 from functools import lru_cache
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -68,4 +65,14 @@ settings.validate_production_secrets()
 @lru_cache
 def get_settings() -> Settings:
     return settings
+
+
+def get_async_database_url(database_url: str | None = None) -> str:
+    """Return a database URL using the async driver expected by SQLAlchemy."""
+    url = get_settings().DATABASE_URL if database_url is None else database_url
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("sqlite://"):
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+    return url
 

@@ -36,7 +36,7 @@ Settings are read from the environment (or `.env`) and validated at startup. See
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | Async SQLAlchemy URL (`postgresql+asyncpg://...` or `sqlite+aiosqlite://...`) |
+| `DATABASE_URL` | yes | SQLAlchemy URL (`postgresql://` / `postgresql+asyncpg://` or `sqlite://` / `sqlite+aiosqlite://`) |
 | `SECRET_KEY` | yes | Signs JWT access tokens; use 32+ random characters in production |
 | `ENVIRONMENT` | no | `development` (default), `staging`, `production`; production enables HSTS |
 | `CORS_ORIGINS` | no | Allowed origins, as a JSON array or a comma-separated list |
@@ -79,6 +79,13 @@ so the response cannot be used to discover which ids are real. Callers should tr
 ## Database migrations
 
 Alembic is configured with an async engine and reads `DATABASE_URL` from the settings.
+The empty `001_baseline` revision is retained as the stable root required by the original
+migration chain; it does not create schema objects. New revisions use timestamped filenames
+and generated revision identifiers.
+
+Foreign-key delete behavior preserves authored reports: deleting a user sets the report's
+`user_id` to `NULL`, while a deleted report removes its case. Deleting a case removes its
+follows; deleting a user removes their follows and notifications, and unassigns their cases.
 
 ```bash
 uv run alembic upgrade head                              # apply pending migrations

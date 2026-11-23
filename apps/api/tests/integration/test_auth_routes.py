@@ -48,6 +48,35 @@ async def test_register_rejects_a_short_password(client: AsyncClient):
     assert "at least 8" in body["errors"][0]["message"]
 
 
+async def test_register_rejects_a_common_password(client: AsyncClient):
+    res = await client.post(
+        "/api/auth/register", json={**_credentials(), "password": "12345678"}
+    )
+
+    assert res.status_code == 422
+    assert res.json()["errors"][0]["field"] == "password"
+    assert "too common" in res.json()["errors"][0]["message"]
+
+
+async def test_register_rejects_the_email_username_as_password(client: AsyncClient):
+    email = "longusername@test.com"
+    res = await client.post(
+        "/api/auth/register", json={"email": email, "password": "LongUserName"}
+    )
+
+    assert res.status_code == 422
+    assert res.json()["errors"][0]["field"] == "password"
+    assert "email username" in res.json()["errors"][0]["message"]
+
+
+async def test_register_accepts_a_non_common_password(client: AsyncClient):
+    res = await client.post(
+        "/api/auth/register", json={**_credentials(), "password": "correct-horse-battery-7"}
+    )
+
+    assert res.status_code == 201
+
+
 async def test_register_rejects_an_invalid_email(client: AsyncClient):
     res = await client.post(
         "/api/auth/register", json={"email": "not-an-email", "password": PASSWORD}

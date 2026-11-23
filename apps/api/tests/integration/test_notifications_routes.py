@@ -9,7 +9,7 @@ from src.modules.notifications import service as notif_service
 async def register_and_login(
     client: AsyncClient,
     email: str = "notifroute@example.com",
-    password: str = "password123",
+    password: str = "testpassword123",
 ) -> tuple[str, dict]:
     reg_res = await client.post("/api/auth/register", json={"email": email, "password": password})
     assert reg_res.status_code == 201, reg_res.text
