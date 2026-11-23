@@ -56,3 +56,19 @@ def test_allowed_report_transitions(
         item.get("type") == "json_invalid"
         for item in detail
     )
+
+    def test_notifications_limit_returns_expected_count(
+    client, auth_headers, create_notifications
+):
+    create_notifications(count=5)
+
+    response = client.get(
+        "/notifications?limit=2&offset=0",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Adapt to the actual response schema.
+    assert len(data["items"]) == 2
