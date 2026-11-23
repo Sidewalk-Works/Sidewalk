@@ -9,7 +9,7 @@ if str(api_dir) not in sys.path:
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from src.core.config import get_settings
+from src.core.config import get_async_database_url
 from src.core.enums import CaseStatus, ReportCategory, ReportStatus
 from src.core.models import Base
 from src.core.security import hash_password
@@ -17,8 +17,7 @@ from src.models import Case, Report, User
 
 
 async def seed() -> None:
-    settings = get_settings()
-    engine = create_async_engine(settings.DATABASE_URL)
+    engine = create_async_engine(get_async_database_url())
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

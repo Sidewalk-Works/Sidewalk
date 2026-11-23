@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from src.core.exceptions import AppError, ConflictError
+from src.core.exceptions import AppError, ConflictError, ValidationError
 
 log = structlog.get_logger(__name__)
 
@@ -30,7 +30,7 @@ def _request_id(request: Request) -> str | None:
 
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     content: dict[str, object] = {"code": exc.code, "message": exc.message}
-    if isinstance(exc, ConflictError) and exc.field:
+    if isinstance(exc, (ConflictError, ValidationError)) and exc.field:
         content["field"] = exc.field
     headers = {"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None
     return JSONResponse(status_code=exc.status_code, content=content, headers=headers)

@@ -86,7 +86,7 @@ class ReportResponse(BaseModel):
     description: str
     category: ReportCategory
     status: ReportStatus
-    user_id: uuid.UUID
+    user_id: uuid.UUID | None
     latitude: float | None = None
     longitude: float | None = None
     address: str | None = None

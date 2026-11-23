@@ -15,7 +15,7 @@ async def test_not_found_has_a_code(client: AsyncClient):
 
 
 async def test_duplicate_email_has_a_specific_code(client: AsyncClient):
-    payload = {"email": f"dup_{uuid.uuid4().hex[:6]}@example.com", "password": "password123"}
+    payload = {"email": f"dup_{uuid.uuid4().hex[:6]}@example.com", "password": "testpassword123"}
     await client.post("/api/auth/register", json=payload)
 
     res = await client.post("/api/auth/register", json=payload)
@@ -27,7 +27,7 @@ async def test_duplicate_email_has_a_specific_code(client: AsyncClient):
 
 async def test_bad_credentials_have_a_specific_code(client: AsyncClient):
     res = await client.post(
-        "/api/auth/login", json={"email": "nobody@example.com", "password": "password123"}
+        "/api/auth/login", json={"email": "nobody@example.com", "password": "testpassword123"}
     )
     assert res.status_code == 401
     assert res.json()["code"] == "invalid_credentials"

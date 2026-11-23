@@ -11,16 +11,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from src.core.config import get_settings
-
-
-def normalize_database_url(url: str) -> str:
-    """Select the async driver for plain ``postgresql://`` and ``sqlite://`` URLs."""
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    if url.startswith("sqlite://"):
-        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
-    return url
+from src.core.config import get_async_database_url, get_settings
 
 
 def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
@@ -37,7 +28,7 @@ def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
 def build_engine(database_url: str) -> AsyncEngine:
     """Create an engine for ``database_url`` using the pool settings from configuration."""
     settings = get_settings()
-    url = normalize_database_url(database_url)
+    url = get_async_database_url(database_url)
     kwargs: dict[str, object] = {}
     if not url.startswith("sqlite"):
         kwargs.update(
@@ -87,5 +78,4 @@ __all__ = [
     "get_db",
     "get_engine",
     "get_session_factory",
-    "normalize_database_url",
 ]
