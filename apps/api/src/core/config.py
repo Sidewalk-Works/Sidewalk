@@ -1,18 +1,10 @@
 import os
-
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class Settings(BaseSettings):
-    """
-    Typed application settings validated at startup using Pydantic BaseSettings.
-    """
-    # Required fields without defaults (must be provided via environment or .env)
-    DATABASE_URL: str
-    SECRET_KEY: str
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-    # Fields with sensible defaults
 DEFAULT_SECRET_KEY = (
     "default-dev-secret-key-change-in-production-min-32-chars"
 )
@@ -23,25 +15,6 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DATABASE_URL: str = "postgresql://sidewalk:sidewalk@localhost:5432/sidewalk"
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRES_MINUTES: int = 1440  # 24 hours
-    LOGIN_MAX_ATTEMPTS: int = 5
-    LOGIN_LOCKOUT_MINUTES: int = 15
-    LOG_LEVEL: str = "INFO"
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
-    )
-
-@lru_cache()
-def get_settings() -> Settings:
-    """
-    Returns a cached instance of the application Settings.
-    Fails at startup with a validation error if required fields are missing.
-    """
-    return Settings()
     JWT_EXPIRES_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRES_DAYS: int = 30
     EMAIL_TOKEN_EXPIRES_HOURS: int = 24
@@ -95,3 +68,4 @@ settings.validate_production_secrets()
 @lru_cache
 def get_settings() -> Settings:
     return settings
+
