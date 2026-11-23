@@ -15,13 +15,18 @@ class Case(Base, UUIDPKMixin, TimestampMixin):
     __tablename__ = "cases"
 
     report_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("reports.id"), unique=True, index=True, nullable=False
+        ForeignKey("reports.id", name="fk_cases_report_id_reports", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+        nullable=False,
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="open", nullable=False, index=True)
     assigned_to_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("users.id"), nullable=True, index=True
+        ForeignKey("users.id", name="fk_cases_assigned_to_id_users", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
 
     report: Mapped["Report"] = relationship("Report")
@@ -35,8 +40,16 @@ class CaseFollow(Base, UUIDPKMixin, TimestampMixin):
     __tablename__ = "case_follows"
     __table_args__ = (UniqueConstraint("case_id", "user_id", name="uq_case_user_follow"),)
 
-    case_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cases.id"), index=True, nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cases.id", name="fk_case_follows_case_id_cases", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", name="fk_case_follows_user_id_users", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
 
     case: Mapped["Case"] = relationship("Case", back_populates="followers")
     user: Mapped["User"] = relationship("User")

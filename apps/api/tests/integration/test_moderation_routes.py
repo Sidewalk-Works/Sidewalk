@@ -10,7 +10,7 @@ from src.modules.reports.models import Report
 async def register_and_login(
     client: AsyncClient,
     email: str = "moduser@example.com",
-    password: str = "password123",
+    password: str = "testpassword123",
 ) -> tuple[str, dict]:
     reg_res = await client.post("/api/auth/register", json={"email": email, "password": password})
     assert reg_res.status_code == 201, reg_res.text

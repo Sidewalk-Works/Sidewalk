@@ -8,17 +8,32 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
-from src.core.config import settings
+from src.core.config import get_async_database_url, get_settings
 
 
-def build_engine(database_url: str | None = None) -> AsyncEngine:
-    url = database_url or settings.DATABASE_URL
+def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
+    """Turn on FK enforcement for every SQLite connection (SQLite ignores FKs by default)."""
 
-    if "sqlite" in url:
-        return create_async_engine(
-            url,
-            echo=settings.DB_ECHO,
-            poolclass=NullPool,
+    def _set_pragma(dbapi_connection: Any, _record: Any) -> None:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    event.listen(engine.sync_engine, "connect", _set_pragma)
+
+
+def build_engine(database_url: str) -> AsyncEngine:
+    """Create an engine for ``database_url`` using the pool settings from configuration."""
+    settings = get_settings()
+    url = get_async_database_url(database_url)
+    kwargs: dict[str, object] = {}
+    if not url.startswith("sqlite"):
+        kwargs.update(
+            pool_size=settings.DB_POOL_SIZE,
+            max_overflow=settings.DB_MAX_OVERFLOW,
+            pool_timeout=settings.DB_POOL_TIMEOUT,
+            pool_recycle=settings.DB_POOL_RECYCLE_SECONDS,
+            pool_pre_ping=True,
         )
 
     engine_kwargs: dict[str, object] = {

@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from src.core.security import normalize_email
+from src.modules.auth.schemas import validate_new_password
 
 
 class UserProfileResponse(BaseModel):
@@ -44,11 +45,7 @@ class ChangePasswordRequest(BaseModel):
     @field_validator("new_password")
     @classmethod
     def check_password(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if len(v.encode("utf-8")) > 72:
-            raise ValueError("Password must not exceed 72 bytes")
-        return v
+        return validate_new_password(v)
 
 
 class DeleteAccountRequest(BaseModel):

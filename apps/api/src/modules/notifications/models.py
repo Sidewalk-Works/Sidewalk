@@ -19,7 +19,11 @@ class Notification(Base, UUIDPKMixin, TimestampMixin):
         Index("ix_notifications_user_read_created", "user_id", "read", "created_at"),
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", name="fk_notifications_user_id_users", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
     type: Mapped[NotificationType] = mapped_column(
         SAEnum(NotificationType, values_callable=lambda x: [e.value for e in x], native_enum=False),
         nullable=False,

@@ -56,6 +56,10 @@ class ValidationError(AppError):
     status_code = 422
     code = "validation_error"
 
+    def __init__(self, message: str, field: str | None = None):
+        super().__init__(message)
+        self.field = field
+
 
 class InvalidTransitionError(ValidationError):
     code = "invalid_transition"
