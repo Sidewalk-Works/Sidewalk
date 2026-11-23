@@ -1,0 +1,1 @@
+export function AuthForm() {\n  return null;\n}\n

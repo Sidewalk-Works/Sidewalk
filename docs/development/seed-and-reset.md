@@ -1,127 +1,75 @@
 # Seed and Reset Workflow
 
-This document describes how to seed your local SQLite database with development
-fixtures and how to reset it to a clean state when something goes wrong.
+This document describes the current local database seed and reset workflow for the FastAPI backend.
+
+## Scripts and commands
+
+| Command | What it does |
+| --- | --- |
+| `make seed` | Runs `uv run python scripts/seed.py` from the repo root (see `Makefile`) |
+| `make reset-db` | Runs `uv run python scripts/reset_db.py` from the repo root |
+| `uv run python scripts/seed.py` | Creates tables if needed and inserts sample data if not already seeded |
+| `uv run python scripts/reset_db.py [--confirm]` | Drops tables, runs `alembic upgrade head`, then seeds |
 
 ## Prerequisites
 
-The scripts below use `dotenv-cli` and `tsx`, both already present as
-dev-dependencies in `apps/api/package.json`. All commands run from the
-repo root unless noted otherwise.
+- Python 3.12+ with project dependencies installed (`cd apps/api && uv sync --extra dev`)
+- A configured `DATABASE_URL` in `apps/api/.env` (or environment variables)
+- For PostgreSQL workflows, a reachable database (for example `apps/api/docker-compose.yml`)
 
----
+## Seed the database
 
-## Local Reset
-
-Resetting returns the local SQLite database to an empty, schema-correct state.
-
-### Quick reset (recommended)
-
-The `pretest` hook in `apps/api/package.json` already does a full reset:
+From the repository root:
 
 ```bash
-pnpm --filter @sidewalk/api exec dotenv -e .env.test -- prisma db push --force-reset --skip-generate
+make seed
 ```
 
-You can run the same command against your development `.env` to reset your
-local dev database:
+Or directly:
 
 ```bash
-pnpm --filter @sidewalk/api exec dotenv -e .env -- prisma db push --force-reset --skip-generate
+uv run python scripts/seed.py
 ```
 
-`--force-reset` drops the existing SQLite file and recreates it from the
-current schema. `--skip-generate` is safe here because the Prisma client was
-already generated at build/typecheck time.
+### What `scripts/seed.py` does
 
-### What `--force-reset` does
+- Creates an async engine from `src.core.config.get_settings().DATABASE_URL`.
+- Runs `Base.metadata.create_all` to ensure tables exist.
+- Skips seeding when `admin@sidewalk.local` already exists.
+- Inserts sample data:
+  - 3 users (1 admin, 2 regular) with password `password123`
+  - 10 reports across categories/statuses
+  - 3 cases linked to selected reports
 
-1. Deletes the SQLite database file referenced by `DATABASE_URL` in your
-   `.env` (or `.env.test`).
-2. Recreates the file and applies the current `schema.prisma` in one step.
+## Reset the database
 
-No data is preserved. This is intentional — the goal is a known-clean state.
-
----
-
-## Seeding
-
-After a reset you may want to populate the database with enough data to
-exercise the app end-to-end.
-
-### Run the seed
+From the repository root:
 
 ```bash
-pnpm --filter @sidewalk/api exec dotenv -e .env -- prisma db seed
+make reset-db
 ```
 
-The seed script is located at `apps/api/prisma/seed.ts` and is registered in
-`apps/api/package.json` under `"prisma": { "seed": "tsx prisma/seed.ts" }`.
-
-The seed is **idempotent** — it uses `upsert` calls so re-running it on an
-already-seeded database is safe.
-
-### What the seed creates
-
-| Block | Records | Purpose |
-| ----- | ------- | ------- |
-| `users` | ~5 | Auth surface coverage (one admin, four regular users) |
-| `reports` | ~10 | Per-user submissions spread across all valid statuses |
-| `moderationEvents` | ~5 | Audit timeline fixtures for the moderation surface |
-
-> **Note:** The `reports` and `moderationEvents` blocks depend on the `Report`
-> and `Moderation` models defined in `schema.prisma`. If those models are not
-> yet present in your branch, only the `users` block will seed successfully.
-
----
-
-## Reset + seed in one step
+Or directly:
 
 ```bash
-pnpm --filter @sidewalk/api exec dotenv -e .env -- prisma db push --force-reset --skip-generate \
-  && pnpm --filter @sidewalk/api exec dotenv -e .env -- prisma db seed
+uv run python scripts/reset_db.py
 ```
 
----
+### What `scripts/reset_db.py` does
 
-## Switching between dev and test databases
+- Refuses to reset non-development environments unless `--confirm` is passed.
+- Drops all tables via SQLAlchemy metadata (`Base.metadata.drop_all`).
+- Runs Alembic migrations to head: `alembic upgrade head` (executed from `apps/api`).
+- Runs `seed()` to repopulate sample data.
 
-The API uses two separate SQLite files:
+For a non-development environment (only when intentional):
 
-| Environment | File (set by `DATABASE_URL`) | Used by |
-| ----------- | --------------------------- | ------- |
-| Development | `apps/api/prisma/dev.db` (default in `.env`) | `pnpm dev:api` |
-| Test | `apps/api/prisma/test.db` (default in `.env.test`) | `pnpm test` |
-
-The `pretest` script resets and regenerates the **test** database automatically
-before every `pnpm test` run. You do not need to manage the test database by
-hand.
-
----
-
-## Troubleshooting
-
-**`P1000` / "unable to open database file"**
-The directory referenced by `DATABASE_URL` does not exist. Create it:
 ```bash
-mkdir -p apps/api/prisma
+uv run python scripts/reset_db.py --confirm
 ```
 
-**"The table `X` does not exist"**
-The schema has not been pushed yet. Run:
-```bash
-pnpm --filter @sidewalk/api exec dotenv -e .env -- prisma db push
-```
+## Notes
 
-**Prisma client out of date after a schema change**
-Regenerate the client:
-```bash
-pnpm --filter @sidewalk/api exec prisma generate
-```
-
-**Seed fails with unique-constraint errors**
-The database already contains conflicting data. Reset first, then seed:
-```bash
-pnpm --filter @sidewalk/api exec dotenv -e .env -- prisma db push --force-reset --skip-generate
-pnpm --filter @sidewalk/api exec dotenv -e .env -- prisma db seed
-```
+- `make reset-db` and `make seed` are defined in the repository `Makefile`.
+- The scripts are Python-based (`scripts/seed.py`, `scripts/reset_db.py`); there is no Prisma/Node seed workflow in the current FastAPI backend.
+- After schema changes, generate/apply Alembic migrations as needed before relying on reset behavior in migration-based environments.

@@ -1,11 +1,14 @@
 import asyncio
 from logging.config import fileConfig
+
 from alembic import context
 from sqlalchemy import pool
+from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
 from src.core.config import get_settings
 from src.core.models import Base
-import src.modules.auth.models  # noqa: F401
+import src.models  # noqa: F401  # register all models for autogenerate
 
 config = context.config
 
@@ -15,7 +18,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
-def get_url():
+def get_url() -> str:
     url = get_settings().DATABASE_URL
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+asyncpg://", 1)
@@ -25,9 +28,8 @@ def get_url():
 
 
 def run_migrations_offline() -> None:
-    url = get_url()
     context.configure(
-        url=url,
+        url=get_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -36,7 +38,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection):
+def do_run_migrations(connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
     with context.begin_transaction():
         context.run_migrations()

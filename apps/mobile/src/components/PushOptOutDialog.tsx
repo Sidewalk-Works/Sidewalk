@@ -11,8 +11,8 @@ import {
 interface PushOptOutDialogProps {
   visible: boolean;
   isCurrentlyOptedOut: boolean;
-  onConfirmOptOut: () => void;
-  onConfirmOptIn: () => void;
+  onConfirmOptOut: () => Promise<void> | void;
+  onConfirmOptIn: () => Promise<void> | void;
   onCancel: () => void;
 }
 
@@ -29,9 +29,9 @@ export function PushOptOutDialog({
     setIsProcessing(true);
     try {
       if (isCurrentlyOptedOut) {
-        onConfirmOptIn();
+        await onConfirmOptIn();
       } else {
-        onConfirmOptOut();
+        await onConfirmOptOut();
       }
     } finally {
       setIsProcessing(false);

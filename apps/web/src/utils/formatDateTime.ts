@@ -1,0 +1,1 @@
+export function formatDateTime(date: string | Date) {\n  return new Date(date).toLocaleString();\n}\n

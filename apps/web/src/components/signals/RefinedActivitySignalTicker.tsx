@@ -1,0 +1,1 @@
+'use client';\nexport function RefinedActivitySignalTicker() {\n  return null;\n}\n

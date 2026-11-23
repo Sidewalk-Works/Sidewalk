@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+
 from src.core.enums import ReportStatus
 
 

@@ -1,7 +1,7 @@
 import enum
 
 
-class ReportStatus(str, enum.Enum):
+class ReportStatus(enum.StrEnum):
     submitted = "submitted"
     under_review = "under_review"
     verified = "verified"
@@ -38,7 +38,7 @@ REPORT_STATUS_TRANSITIONS: dict[ReportStatus, list[ReportStatus]] = {
 }
 
 
-class ReportCategory(str, enum.Enum):
+class ReportCategory(enum.StrEnum):
     road = "road"
     waste = "waste"
     infrastructure = "infrastructure"
@@ -46,9 +46,10 @@ class ReportCategory(str, enum.Enum):
     utility = "utility"
 
 
-class CaseStatus(str, enum.Enum):
-    opened = "opened"
+class CaseStatus(enum.StrEnum):
     open = "open"
+    # Backward-compatibility alias accepted for one release (see migration/docs).
+    opened = "open"
     in_review = "in_review"
     action_scheduled = "action_scheduled"
     in_progress = "in_progress"
@@ -57,8 +58,8 @@ class CaseStatus(str, enum.Enum):
 
 
 CASE_STATUS_TRANSITIONS: dict[CaseStatus, list[CaseStatus]] = {
-    CaseStatus.opened: [CaseStatus.in_review, CaseStatus.closed],
     CaseStatus.open: [CaseStatus.in_review, CaseStatus.closed],
+    CaseStatus.opened: [CaseStatus.in_review, CaseStatus.closed],
     CaseStatus.in_review: [
         CaseStatus.action_scheduled,
         CaseStatus.in_progress,
@@ -71,10 +72,9 @@ CASE_STATUS_TRANSITIONS: dict[CaseStatus, list[CaseStatus]] = {
 }
 
 
-class NotificationType(str, enum.Enum):
+class NotificationType(enum.StrEnum):
     report_update = "report_update"
     status_change = "status_change"
     mention = "mention"
     case_assigned = "case_assigned"
     moderation_action = "moderation_action"
-

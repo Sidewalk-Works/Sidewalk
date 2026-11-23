@@ -1,0 +1,1 @@
+export function createMobileClient() {\n  return {};\n}\n

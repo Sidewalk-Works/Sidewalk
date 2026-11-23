@@ -1,7 +1,8 @@
 import uuid
-import pytest
+
 from httpx import AsyncClient
 from sqlalchemy import select
+
 from src.modules.auth.models import User
 from src.modules.reports.models import Report
 

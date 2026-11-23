@@ -1,17 +1,43 @@
 import uuid
+
 from fastapi import APIRouter, Query, Response, status
+
 from src.core.database import DBSession
-from src.core.dependencies import CurrentUser
+from src.core.dependencies import CurrentUser, VerifiedUser
 from src.core.enums import ReportCategory, ReportStatus
-from src.modules.reports.schemas import CreateReportRequest, ReportResponse, UpdateReportRequest
 from src.modules.reports import service as report_service
+from src.core.storage import get_media_storage
+from src.modules.reports.schemas import (
+    CreateReportRequest,
+    PresignMediaRequest,
+    PresignMediaResponse,
+    ReportResponse,
+    UpdateReportRequest,
+)
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
+@router.post("/media/presign", response_model=PresignMediaResponse)
+async def presign_report_media(
+    payload: PresignMediaRequest, _current_user: CurrentUser
+) -> PresignMediaResponse:
+    upload = get_media_storage().presign_upload(
+        filename=payload.filename,
+        content_type=payload.content_type,
+        size_bytes=payload.size_bytes,
+    )
+    return PresignMediaResponse(
+        upload_url=upload.upload_url,
+        media_url=upload.media_url,
+        method=upload.method,
+        headers=upload.headers or {},
+    )
+
+
 @router.post("", response_model=ReportResponse, status_code=201)
 async def create_report(
-    payload: CreateReportRequest, current_user: CurrentUser, db: DBSession
+    payload: CreateReportRequest, current_user: VerifiedUser, db: DBSession
 ) -> ReportResponse:
     return await report_service.create_report(db, current_user.id, payload)
 
@@ -46,8 +72,6 @@ async def update_report(
 
 
 @router.delete("/{report_id}", status_code=204)
-async def delete_report(
-    report_id: uuid.UUID, current_user: CurrentUser, db: DBSession
-) -> Response:
+async def delete_report(report_id: uuid.UUID, current_user: CurrentUser, db: DBSession) -> Response:
     await report_service.delete_report(db, report_id, current_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

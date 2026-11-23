@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+tests/
+.env
+.env.*
+!.env.example
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# VCS / editor
+.git/
+.gitignore
+.vscode/
+.idea/

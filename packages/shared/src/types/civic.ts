@@ -1,4 +1,4 @@
-import type { ReportStatus, Visibility, ModerationOutcome } from "./enums.js";
+import type { ModerationOutcome, ReportCategory, ReportStatus, Visibility } from "./enums.js";
 
 export interface ReportProfile {
   id: string;
@@ -9,30 +9,57 @@ export interface ReportProfile {
 export interface ReportSubmission {
   title: string;
   description: string;
-  visibility: Visibility;
+  category: ReportCategory;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string | null;
+  media_urls?: string[];
+  /** @deprecated The API does not accept visibility. */
+  visibility?: Visibility;
+  /** @deprecated Use address/latitude/longitude. */
   location?: string;
+  /** @deprecated Use media_urls. */
   mediaUrls?: string[];
 }
 
 export interface Report {
   id: string;
-  authorId: string;
+  user_id: string;
   title: string;
   description: string;
+  category: ReportCategory;
   status: ReportStatus;
-  visibility: Visibility;
+  latitude: number | null;
+  longitude: number | null;
+  address: string | null;
+  media_urls: string[];
+  created_at: string;
+  updated_at: string;
+  /** @deprecated Use user_id. */
+  authorId?: string;
+  /** @deprecated The API does not return visibility. */
+  visibility?: Visibility;
+  /** @deprecated Use address/latitude/longitude. */
   location?: string;
-  mediaUrls: string[];
-  createdAt: string;
-  updatedAt: string;
+  /** @deprecated Use media_urls. */
+  mediaUrls?: string[];
+  /** @deprecated Use created_at. */
+  createdAt?: string;
+  /** @deprecated Use updated_at. */
+  updatedAt?: string;
 }
 
 export interface ReportSummary {
   id: string;
   title: string;
   status: ReportStatus;
-  createdAt: string;
-  author: ReportProfile;
+  category?: ReportCategory;
+  created_at?: string;
+  user_id?: string;
+  /** @deprecated Use created_at. */
+  createdAt?: string;
+  /** @deprecated The API does not return an author profile object. */
+  author?: ReportProfile;
 }
 
 export interface UserSummary {
@@ -58,15 +85,17 @@ export interface StatusDetail {
   changedAt: string;
 }
 
+/** @deprecated The current API does not support report drafts. */
 export interface ReportDraft {
   id: string;
   authorId: string;
   title: string;
   description: string;
-  visibility: Visibility;
+  category?: ReportCategory;
+  visibility?: Visibility;
   location?: string;
   mediaUrls: string[];
-  status: Extract<ReportStatus, "draft">;
+  status: "draft";
   createdAt: string;
   updatedAt: string;
 }

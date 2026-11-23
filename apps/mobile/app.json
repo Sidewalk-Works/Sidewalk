@@ -1,17 +1,14 @@
 {
   "expo": {
-    "name": "sidewalk",
+    "name": "Sidewalk",
     "slug": "sidewalk",
-    "version": "0.1.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
-    "android": {},
-    "web": {
-      "bundler": "metro"
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
     }
   }
 }

@@ -1,7 +1,10 @@
 import uuid
 from typing import TYPE_CHECKING, Any
-from sqlalchemy import Boolean, ForeignKey, JSON, Enum as SAEnum
+
+from sqlalchemy import JSON, Boolean, ForeignKey, Index
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.core.enums import NotificationType
 from src.core.models import Base, TimestampMixin, UUIDPKMixin
 
@@ -11,6 +14,10 @@ if TYPE_CHECKING:
 
 class Notification(Base, UUIDPKMixin, TimestampMixin):
     __tablename__ = "notifications"
+    __table_args__ = (
+        # list_notifications: WHERE user_id = ? [AND read = false] ORDER BY created_at DESC
+        Index("ix_notifications_user_read_created", "user_id", "read", "created_at"),
+    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     type: Mapped[NotificationType] = mapped_column(

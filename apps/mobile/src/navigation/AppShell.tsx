@@ -1,0 +1,1 @@
+export function AppShell() {\n  return null;\n}\n
