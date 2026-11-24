@@ -1,3 +1,4 @@
+
 import asyncio
 from logging.config import fileConfig
 
@@ -12,8 +13,12 @@ import src.models  # noqa: F401  # register all models for autogenerate
 
 config = context.config
 
+# Preserve existing application loggers when Alembic configures logging.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    fileConfig(
+        config.config_file_name,
+        disable_existing_loggers=False,
+    )
 
 target_metadata = Base.metadata
 

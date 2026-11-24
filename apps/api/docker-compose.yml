@@ -1,4 +1,6 @@
 # apps/api/docker-compose.yml
+version: '3.8'
+
 #
 #   docker compose up --build     # API on http://localhost:8000 (docs at /docs)
 #
@@ -32,7 +34,6 @@ services:
       - "6379:6379"
     networks:
       - sidewalk-network
-
   api:
     build:
       context: .
@@ -60,4 +61,5 @@ volumes:
 
 networks:
   sidewalk-network:
+    driver: bridge
     driver: bridge
