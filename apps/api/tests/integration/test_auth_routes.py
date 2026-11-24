@@ -37,9 +37,7 @@ async def test_register_rejects_a_duplicate_email(client: AsyncClient):
 
 
 async def test_register_rejects_a_short_password(client: AsyncClient):
-    res = await client.post(
-        "/api/auth/register", json={**_credentials(), "password": "short"}
-    )
+    res = await client.post("/api/auth/register", json={**_credentials(), "password": "short"})
 
     assert res.status_code == 422
     body = res.json()
@@ -49,9 +47,7 @@ async def test_register_rejects_a_short_password(client: AsyncClient):
 
 
 async def test_register_rejects_a_common_password(client: AsyncClient):
-    res = await client.post(
-        "/api/auth/register", json={**_credentials(), "password": "12345678"}
-    )
+    res = await client.post("/api/auth/register", json={**_credentials(), "password": "12345678"})
 
     assert res.status_code == 422
     assert res.json()["errors"][0]["field"] == "password"
@@ -60,9 +56,7 @@ async def test_register_rejects_a_common_password(client: AsyncClient):
 
 async def test_register_rejects_the_email_username_as_password(client: AsyncClient):
     email = "longusername@test.com"
-    res = await client.post(
-        "/api/auth/register", json={"email": email, "password": "LongUserName"}
-    )
+    res = await client.post("/api/auth/register", json={"email": email, "password": "LongUserName"})
 
     assert res.status_code == 422
     assert res.json()["errors"][0]["field"] == "password"

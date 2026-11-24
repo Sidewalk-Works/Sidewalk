@@ -20,10 +20,7 @@ def test_importing_the_module_does_not_create_an_engine():
 def test_url_normalization_selects_async_drivers():
     assert get_async_database_url("postgresql://u:p@h/db") == "postgresql+asyncpg://u:p@h/db"
     assert get_async_database_url("sqlite:///./x.db") == "sqlite+aiosqlite:///./x.db"
-    assert (
-        get_async_database_url("sqlite+aiosqlite:///:memory:")
-        == "sqlite+aiosqlite:///:memory:"
-    )
+    assert get_async_database_url("sqlite+aiosqlite:///:memory:") == "sqlite+aiosqlite:///:memory:"
 
 
 def test_url_normalization_uses_settings_when_no_url_is_supplied(monkeypatch):

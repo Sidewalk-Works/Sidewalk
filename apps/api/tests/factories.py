@@ -12,13 +12,24 @@ from src.modules.cases.models import Case
 from src.modules.notifications.models import Notification
 from src.modules.reports.models import Report
 
+FAKER_SEED = 12345
+
+
+def seed_factories(seed: int = FAKER_SEED) -> None:
+    """Seed Faker and reset factory sequences for deterministic, reproducible test data."""
+    factory.Faker._get_faker().seed_instance(seed)
+
+
+# Seed Faker on module import
+seed_factories()
+
 
 class UserFactory(factory.Factory):
     class Meta:
         model = User
 
     id = LazyFunction(uuid.uuid4)
-    email = Sequence(lambda n: f"user_{n}_{uuid.uuid4().hex[:6]}@example.com")
+    email = Sequence(lambda n: f"user_{n}@example.com")
     password_hash = LazyFunction(lambda: hash_password("testpassword123"))
     is_active = True
     is_admin = False

@@ -2,10 +2,11 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import UserNotFoundError
+from src.core.security import normalize_email
 from src.modules.auth.models import AuthToken, User
 
 

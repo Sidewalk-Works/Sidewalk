@@ -1,1 +1,0 @@
-def test_security_auth():\n    assert True\n

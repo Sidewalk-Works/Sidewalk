@@ -5,8 +5,8 @@ from fastapi import APIRouter, Query, Response, status
 from src.core.database import DBSession
 from src.core.dependencies import CurrentUser, VerifiedUser
 from src.core.enums import ReportCategory, ReportStatus
-from src.modules.reports import service as report_service
 from src.core.storage import get_media_storage
+from src.modules.reports import service as report_service
 from src.modules.reports.schemas import (
     CreateReportRequest,
     PresignMediaRequest,

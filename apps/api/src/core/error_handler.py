@@ -23,9 +23,9 @@ DEFAULT_RETRY_AFTER_SECONDS = 60
 
 
 def _request_id(request: Request) -> str | None:
-    return getattr(request.state, "request_id", None) or structlog.contextvars.get_contextvars().get(
-        "request_id"
-    )
+    return getattr(
+        request.state, "request_id", None
+    ) or structlog.contextvars.get_contextvars().get("request_id")
 
 
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
@@ -58,7 +58,9 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     try:
-        retry_after = int(exc.limit.limit.get_expiry())
+        retry_after = (
+            int(exc.limit.limit.get_expiry()) if exc.limit else DEFAULT_RETRY_AFTER_SECONDS
+        )
     except (AttributeError, TypeError, ValueError):
         retry_after = DEFAULT_RETRY_AFTER_SECONDS
     log.warning(

@@ -16,8 +16,8 @@ from src.core.security import hash_password
 from src.models import Case, Report, User
 
 
-async def seed() -> None:
-    engine = create_async_engine(get_async_database_url())
+async def seed(database_url: str | None = None) -> None:
+    engine = create_async_engine(get_async_database_url(database_url))
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -28,6 +28,7 @@ async def seed() -> None:
         admin_check = await session.execute(select(User).where(User.email == "admin@sidewalk.local"))
         if admin_check.scalar_one_or_none():
             print("Database already seeded")
+            await engine.dispose()
             return
 
         # 1. Admin user

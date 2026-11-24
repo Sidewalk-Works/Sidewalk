@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 import structlog
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.core.database import DBSession
@@ -46,3 +46,19 @@ async def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_optional_user(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security_scheme)],
+    db: DBSession,
+) -> User | None:
+    if credentials is None:
+        return None
+    try:
+        return await get_current_user(request, credentials, db)
+    except Exception:
+        return None
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]

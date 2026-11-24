@@ -2,7 +2,6 @@ import hashlib
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
-from functools import lru_cache
 from typing import Any
 
 import anyio.to_thread
@@ -11,10 +10,21 @@ import jwt
 import structlog
 
 from src.core.config import get_settings
-from src.core.exceptions import InvalidTokenError, ValidationError
+from src.core.exceptions import (
+    TokenExpiredError,
+    TokenInvalidError,
+    ValidationError,
+)
+
+log = structlog.get_logger(__name__)
 
 # bcrypt only reads the first 72 bytes of its input; longer values are rejected, never truncated.
 MAX_PASSWORD_BYTES = 72
+
+
+def normalize_email(email: str) -> str:
+    """Normalize email address to lowercase and stripped of whitespace."""
+    return email.strip().lower()
 
 
 def hash_password(plain: str) -> str:

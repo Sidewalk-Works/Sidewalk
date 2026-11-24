@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.config import get_settings
 from src.core.exceptions import (
     ConflictError,
-    ForbiddenError,
     TokenInvalidError,
     UnauthorizedError,
 )
@@ -24,7 +23,6 @@ from src.modules.auth.models import AuthToken, User
 from src.modules.auth.schemas import (
     AuthResponse,
     LoginRequest,
-    MessageResponse,
     RegisterRequest,
     UserOut,
 )
@@ -96,7 +94,9 @@ async def _send_verification_email(db: AsyncSession, user: User) -> None:
 async def register(db: AsyncSession, payload: RegisterRequest) -> AuthResponse:
     existing = await auth_repo.get_user_by_email(db, payload.email)
     if existing:
-        raise ConflictError("A user with this email already exists", field="email", code="email_taken")
+        raise ConflictError(
+            "A user with this email already exists", field="email", code="email_taken"
+        )
     hashed = hash_password(payload.password)
     # The get_user_by_email check above is not atomic with the insert below:
     # two concurrent registrations for the same email can both pass it and

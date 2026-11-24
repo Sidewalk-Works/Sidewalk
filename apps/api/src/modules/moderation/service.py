@@ -38,8 +38,8 @@ async def update_report_status(
     report = await get_report_by_id(db, report_id)
     try:
         current_status = ReportStatus(report.status)
-    except ValueError:
-        raise InvalidTransitionError(f"Invalid current status: {report.status}")
+    except ValueError as err:
+        raise InvalidTransitionError(f"Invalid current status: {report.status}") from err
 
     valid_transitions = REPORT_STATUS_TRANSITIONS.get(current_status, [])
 

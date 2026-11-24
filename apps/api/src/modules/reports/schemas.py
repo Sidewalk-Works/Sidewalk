@@ -40,7 +40,9 @@ def validate_media_urls(urls: list[str]) -> list[str]:
     return urls
 
 
-MediaUrls = Annotated[list[str], Field(max_length=MAX_MEDIA_URLS), AfterValidator(validate_media_urls)]
+MediaUrls = Annotated[
+    list[str], Field(max_length=MAX_MEDIA_URLS), AfterValidator(validate_media_urls)
+]
 
 
 class CreateReportRequest(BaseModel):
