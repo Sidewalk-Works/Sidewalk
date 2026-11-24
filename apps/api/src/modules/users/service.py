@@ -6,13 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.exceptions import ConflictError, UnauthorizedError
 from src.core.security import verify_password_async
 from src.modules.auth import repository as user_repository
-from src.modules.auth import service as auth_service
 from src.modules.auth.models import User
-from src.modules.auth.schemas import AuthResponse
 from src.modules.cases.models import CaseFollow
 from src.modules.notifications.models import Notification
 from src.modules.users.schemas import (
-    ChangePasswordRequest,
     DeleteAccountRequest,
     UpdateProfileRequest,
     UserProfileResponse,
@@ -32,7 +29,9 @@ async def update_profile(
     if payload.email is not None and payload.email != user.email:
         existing = await user_repository.get_user_by_email(db, payload.email)
         if existing and existing.id != user.id:
-            raise ConflictError("A user with this email already exists", field="email", code="email_taken")
+            raise ConflictError(
+                "A user with this email already exists", field="email", code="email_taken"
+            )
     update_data = payload.model_dump(exclude_none=True)
     # The existing-email check above isn't atomic with the update below:
     # two concurrent PATCH /users/me calls changing different accounts to
@@ -46,7 +45,9 @@ async def update_profile(
         await db.flush()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError("A user with this email already exists", field="email", code="email_taken") from None
+        raise ConflictError(
+            "A user with this email already exists", field="email", code="email_taken"
+        ) from None
     log.info("update_profile", user_id=str(user.id))
     return UserProfileResponse.model_validate(updated_user)
 

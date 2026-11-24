@@ -4,7 +4,12 @@ from fastapi import Depends
 
 from src.core.config import get_settings
 from src.core.exceptions import ForbiddenError
-from src.modules.auth.dependencies import CurrentUser, get_current_user
+from src.modules.auth.dependencies import (
+    CurrentUser,
+    OptionalUser,
+    get_current_user,
+    get_optional_user,
+)
 from src.modules.auth.models import User
 
 
@@ -29,8 +34,10 @@ VerifiedUser = Annotated[User, Depends(require_verified_email)]
 __all__ = [
     "AdminUser",
     "CurrentUser",
+    "OptionalUser",
     "VerifiedUser",
     "get_current_user",
+    "get_optional_user",
     "require_admin",
     "require_verified_email",
 ]

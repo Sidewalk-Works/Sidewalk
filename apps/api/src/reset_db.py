@@ -1,11 +1,22 @@
-
 import subprocess
 import sys
 
 from sqlalchemy import inspect, text
 
+from src.core.models import Base
+
 # Keep your existing engine/session setup and safety guard.
 # Ensure your database target has been validated before destructive actions.
+
+
+def get_database_target(url: str) -> dict[str, object]:
+    is_sqlite = url.startswith("sqlite")
+    return {"url": url, "requires_confirmation": not is_sqlite}
+
+
+def require_confirmation(target: dict[str, object], confirmed: bool = False) -> None:
+    if target.get("requires_confirmation") and not confirmed:
+        sys.exit(1)
 
 
 def reset_database(engine) -> None:
@@ -21,7 +32,7 @@ def reset_database(engine) -> None:
             connection.execute(text("DROP TABLE alembic_version"))
 
     # Rebuild schema exclusively through Alembic.
-    result = subprocess.run(
+    subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
         check=True,
     )

@@ -19,7 +19,7 @@ import src.models  # noqa: F401
 from scripts.seed import seed
 
 
-async def reset_database(confirm: bool = False) -> None:
+async def reset_database(confirm: bool = False, database_url: str | None = None) -> None:
     settings = get_settings()
 
     if settings.ENVIRONMENT != "development" and not confirm:
@@ -31,7 +31,8 @@ async def reset_database(confirm: bool = False) -> None:
 
     print(f"Resetting database ({settings.ENVIRONMENT})...")
 
-    engine = create_async_engine(get_async_database_url(settings.DATABASE_URL))
+    target_url = database_url or settings.DATABASE_URL
+    engine = create_async_engine(get_async_database_url(target_url))
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
@@ -42,7 +43,7 @@ async def reset_database(confirm: bool = False) -> None:
         print(f"Alembic upgrade failed:\n{result.stderr}", file=sys.stderr)
         sys.exit(result.returncode)
 
-    await seed()
+    await seed(database_url=target_url)
     print("Database reset complete")
 
 

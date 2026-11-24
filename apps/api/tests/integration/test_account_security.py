@@ -217,8 +217,10 @@ async def test_reset_token_works_once_and_is_hashed_at_rest(
     raw = _token_from(mailbox.outbox[0])
 
     stored = (
-        await db_session.execute(select(AuthToken).where(AuthToken.kind == "password_reset"))
-    ).scalars().all()
+        (await db_session.execute(select(AuthToken).where(AuthToken.kind == "password_reset")))
+        .scalars()
+        .all()
+    )
     assert all(raw not in row.token_hash for row in stored)
     assert any(row.token_hash == hash_token(raw) for row in stored)
 

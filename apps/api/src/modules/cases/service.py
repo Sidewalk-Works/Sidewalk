@@ -8,7 +8,7 @@ from src.core.enums import CaseStatus
 from src.core.exceptions import NotFoundError
 from src.core.pagination import PageParams, PaginatedResponse
 from src.modules.cases.models import Case, CaseFollow
-from src.modules.cases.schemas import CaseResponse
+from src.modules.cases.schemas import CaseDetailResponse, CaseResponse
 
 log = structlog.get_logger(__name__)
 
@@ -84,12 +84,14 @@ async def is_case_followed(db: AsyncSession, case_id: uuid.UUID, user_id: uuid.U
     return result.scalar_one_or_none() is not None
 
 
-async def get_case_detail(db: AsyncSession, case_id: uuid.UUID, user) -> "CaseDetailResponse":
+async def get_case_detail(
+    db: AsyncSession, case_id: uuid.UUID, user: object = None
+) -> "CaseDetailResponse":
     from src.modules.cases.schemas import CaseDetailResponse
 
     case = await get_case_by_id(db, case_id)
-    follower_count_stmt = select(func.count()).select_from(CaseFollow).where(
-        CaseFollow.case_id == case_id
+    follower_count_stmt = (
+        select(func.count()).select_from(CaseFollow).where(CaseFollow.case_id == case_id)
     )
     follower_count_res = await db.execute(follower_count_stmt)
     follower_count = follower_count_res.scalar() or 0

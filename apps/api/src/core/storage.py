@@ -16,14 +16,18 @@ class PresignedUpload:
 
 
 class MediaStorage:
-    def presign_upload(self, *, filename: str, content_type: str, size_bytes: int) -> PresignedUpload:
+    def presign_upload(
+        self, *, filename: str, content_type: str, size_bytes: int
+    ) -> PresignedUpload:
         raise NotImplementedError
 
 
 class LocalFakeMediaStorage(MediaStorage):
     """Local/fake storage for development and tests. Returns deterministic https URLs."""
 
-    def presign_upload(self, *, filename: str, content_type: str, size_bytes: int) -> PresignedUpload:
+    def presign_upload(
+        self, *, filename: str, content_type: str, size_bytes: int
+    ) -> PresignedUpload:
         settings = get_settings()
         allowed = settings.media_allowed_content_types
         if content_type.lower() not in allowed:

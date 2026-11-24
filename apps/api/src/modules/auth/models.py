@@ -20,7 +20,9 @@ class User(Base, UUIDPKMixin, TimestampMixin):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     # Bumped on logout, password change and reset: every access token carries the version
     # it was issued under, so a bump revokes all of the user's outstanding tokens at once.
-    token_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
+    token_version: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
     email_verified: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false(), nullable=False
     )
