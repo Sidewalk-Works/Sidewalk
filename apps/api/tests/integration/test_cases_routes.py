@@ -1,14 +1,15 @@
 import uuid
-import pytest
+
 from httpx import AsyncClient
-from src.modules.reports.models import Report
+
 from src.modules.cases.models import Case
+from src.modules.reports.models import Report
 
 
 async def register_and_login(
     client: AsyncClient,
     email: str = "caseuser@example.com",
-    password: str = "password123",
+    password: str = "testpassword123",
 ) -> tuple[str, dict]:
     reg_res = await client.post("/api/auth/register", json={"email": email, "password": password})
     assert reg_res.status_code == 201, reg_res.text
@@ -23,7 +24,7 @@ async def create_test_case(
     db_session,
     user_id: uuid.UUID,
     title: str = "Test Case",
-    status: str = "opened",
+    status: str = "open",
 ) -> Case:
     report = Report(
         title="Test Report",

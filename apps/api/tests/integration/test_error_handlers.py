@@ -1,5 +1,5 @@
 import uuid
-import pytest
+
 from httpx import ASGITransport, AsyncClient
 
 
@@ -14,7 +14,7 @@ async def test_not_found_error_returns_404_with_message(client: AsyncClient):
 
 async def test_conflict_error_returns_409(client: AsyncClient):
     unique_email = f"conflict_{uuid.uuid4().hex[:6]}@example.com"
-    payload = {"email": unique_email, "password": "password123"}
+    payload = {"email": unique_email, "password": "testpassword123"}
     first = await client.post("/api/auth/register", json=payload)
     assert first.status_code == 201
 

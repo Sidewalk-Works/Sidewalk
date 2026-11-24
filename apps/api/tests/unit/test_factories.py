@@ -1,5 +1,5 @@
-import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from tests.factories import CaseFactory, NotificationFactory, ReportFactory, UserFactory
 
 
@@ -29,7 +29,7 @@ async def test_case_factory_create_async(db_session: AsyncSession):
     case = await CaseFactory.create_async(db_session)
     assert case.id is not None
     assert case.report_id is not None
-    assert case.status == "opened"
+    assert case.status == "open"
 
 
 async def test_notification_factory_create_async(db_session: AsyncSession):

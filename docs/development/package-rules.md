@@ -18,5 +18,5 @@
 
 ## Enforcement
 
-ESLint `import/no-restricted-paths` runs in CI.
+ESLint `no-restricted-imports` rules are configured in `eslint.config.mjs` to block app-to-app imports and package-to-app imports.
 Run `pnpm lint` locally to catch violations before pushing.

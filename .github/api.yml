@@ -1,0 +1,22 @@
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+  test-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+  test-sqlite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20

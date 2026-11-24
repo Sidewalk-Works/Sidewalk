@@ -1,0 +1,1 @@
+export interface TopicSubscription { id: string; }\n

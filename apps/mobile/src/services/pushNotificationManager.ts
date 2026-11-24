@@ -1,65 +1,69 @@
 import type { PushRegistrationState } from './pushRegistrationService';
 import {
+  clearRegistration,
+  getOptOutState,
   getStoredRegistration,
   saveRegistration,
-  getOptOutState,
   setOptOutState,
-  clearRegistration,
 } from './pushRegistrationService';
 
 export interface PushNotificationManagerConfig {
-  apiBaseUrl?: string;
   onPermissionDenied?: () => void;
   onTokenRefreshed?: (newToken: string) => void;
   onOptOutChanged?: (optedOut: boolean) => void;
 }
 
-export interface PushNotificationManager {
-  getState(): PushRegistrationState | null;
-  isOptedOut(): boolean;
-  hasPermission(): boolean;
-  refreshState(): PushRegistrationState | null;
-}
+export class PushNotificationManager {
+  constructor(private readonly config: PushNotificationManagerConfig = {}) {}
 
-export function createPushNotificationManager(
-  config: PushNotificationManagerConfig = {},
-): PushNotificationManager {
-  function getState(): PushRegistrationState | null {
+  getState(): PushRegistrationState | null {
     return getStoredRegistration();
   }
 
-  function isOptedOut(): boolean {
+  isOptedOut(): boolean {
     return getOptOutState();
   }
 
-  function hasPermission(): boolean {
+  hasPermission(): boolean {
     if (typeof Notification === 'undefined') return false;
     return Notification.permission === 'granted';
   }
 
-  function refreshState(): PushRegistrationState | null {
+  refreshState(): PushRegistrationState | null {
     const state = getStoredRegistration();
     if (!state) return null;
 
-    const currentPermission = hasPermission() ? 'granted' : state.permissionState;
+    const permissionState = this.hasPermission() ? 'granted' : 'denied';
+    if (permissionState === 'denied') {
+      this.config.onPermissionDenied?.();
+    }
+
     const updated: PushRegistrationState = {
       ...state,
-      permissionState: currentPermission,
+      permissionState,
       optOut: getOptOutState(),
     };
-
     saveRegistration(updated);
     return updated;
   }
 
-  function handlePermissionDenied(): void {
-    config.onPermissionDenied?.();
+  setOptedOut(optedOut: boolean): void {
+    setOptOutState(optedOut);
+    const state = getStoredRegistration();
+    if (state) {
+      saveRegistration({ ...state, optOut: optedOut });
+    }
+    if (optedOut) {
+      clearRegistration();
+    }
+    this.config.onOptOutChanged?.(optedOut);
   }
 
-  return {
-    getState,
-    isOptedOut,
-    hasPermission,
-    refreshState,
-  };
+  handleTokenRefreshed(newToken: string): void {
+    const state = getStoredRegistration();
+    if (state) {
+      saveRegistration({ ...state, deviceToken: newToken });
+    }
+    this.config.onTokenRefreshed?.(newToken);
+  }
 }

@@ -1,0 +1,1 @@
+export function StaleReportReminderBanner() {\n  return null;\n}\n

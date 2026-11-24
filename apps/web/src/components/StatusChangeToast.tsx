@@ -79,7 +79,7 @@ export function StatusChangeToast({
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>
         {onViewCase && (
-          <button
+          <button type="button"
             onClick={() => onViewCase(payload.caseId)}
             style={{
               padding: '6px 14px',
@@ -96,7 +96,7 @@ export function StatusChangeToast({
           </button>
         )}
         {onDismiss && (
-          <button
+          <button type="button"
             onClick={() => onDismiss(payload.toast.id)}
             style={{
               padding: '6px 14px',

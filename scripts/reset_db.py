@@ -13,7 +13,7 @@ if str(api_dir) not in sys.path:
     sys.path.insert(0, str(api_dir))
 
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.core.config import get_settings
+from src.core.config import get_async_database_url, get_settings
 from src.core.models import Base
 import src.models  # noqa: F401
 from scripts.seed import seed
@@ -31,7 +31,7 @@ async def reset_database(confirm: bool = False) -> None:
 
     print(f"Resetting database ({settings.ENVIRONMENT})...")
 
-    engine = create_async_engine(settings.DATABASE_URL)
+    engine = create_async_engine(get_async_database_url(settings.DATABASE_URL))
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()

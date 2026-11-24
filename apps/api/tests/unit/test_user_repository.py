@@ -1,5 +1,7 @@
 import uuid
+
 import pytest
+
 from src.core.exceptions import UserNotFoundError
 from src.modules.auth.repository import create_user, get_user_by_id, update_user
 

@@ -1,0 +1,1 @@
+export function IconButton({ label }: { label: string }) {\n  return <button type="button" aria-label={label} />;\n}\n

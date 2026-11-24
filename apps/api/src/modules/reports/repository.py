@@ -1,7 +1,9 @@
 import uuid
 from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.modules.reports.models import Report
 
 

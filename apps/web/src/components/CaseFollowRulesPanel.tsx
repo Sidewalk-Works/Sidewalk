@@ -65,7 +65,7 @@ export function CaseFollowRulesPanel({
         <h3 style={{ margin: 0, fontSize: '16px', color: '#0f172a' }}>
           Case Follow Rules
         </h3>
-        <button
+        <button type="button"
           onClick={() => setIsAdding(!isAdding)}
           style={{
             padding: '6px 12px',
@@ -113,7 +113,7 @@ export function CaseFollowRulesPanel({
               </option>
             ))}
           </select>
-          <button
+          <button type="button"
             onClick={handleAdd}
             style={{
               padding: '8px 16px',
@@ -167,7 +167,7 @@ export function CaseFollowRulesPanel({
                 >
                   {TRIGGER_LABELS[rule.triggerCondition] ?? rule.triggerCondition}
                 </span>
-                <button
+                <button type="button"
                   onClick={() => onRemoveRule?.(rule.ruleId)}
                   style={{
                     background: 'transparent',

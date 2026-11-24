@@ -63,7 +63,7 @@ export function SubscriptionCleanupDesign() {
       </div>
 
       <div style={{ marginBottom: '24px' }}>
-        <button style={{ padding: '10px 20px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+        <button type="button" style={{ padding: '10px 20px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
           Run Cleanup Now
         </button>
       </div>

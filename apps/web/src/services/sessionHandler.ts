@@ -1,0 +1,1 @@
+export function handleExpiredTokens() {\n  // tab-safe session clearing\n}\n

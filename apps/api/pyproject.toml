@@ -37,6 +37,11 @@ dev = [
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "--strict-markers"
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks integration tests",
+]
 filterwarnings = [
     "error::DeprecationWarning",
     "ignore:.*iscoroutinefunction.*:DeprecationWarning",
@@ -46,6 +51,13 @@ filterwarnings = [
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "ASYNC", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
@@ -53,7 +65,7 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["alembic/*"]
+branch = true
 
 [tool.coverage.report]
 fail_under = 80

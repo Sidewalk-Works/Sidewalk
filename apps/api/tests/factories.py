@@ -1,5 +1,6 @@
 import uuid
 from typing import Any
+
 import factory
 from factory import LazyFunction, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,7 +75,7 @@ class CaseFactory(factory.Factory):
     id = LazyFunction(uuid.uuid4)
     title = Sequence(lambda n: f"Case Title #{n}")
     description = factory.Faker("sentence", nb_words=10)
-    status = "opened"
+    status = "open"
     report_id = None
     assigned_to_id = None
 

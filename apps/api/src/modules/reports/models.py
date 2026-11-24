@@ -1,7 +1,9 @@
 import uuid
 from typing import TYPE_CHECKING
-from sqlalchemy import Boolean, Float, ForeignKey, JSON, String, Text
+
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.core.models import Base, TimestampMixin, UUIDPKMixin
 
 if TYPE_CHECKING:
@@ -10,12 +12,21 @@ if TYPE_CHECKING:
 
 class Report(Base, UUIDPKMixin, TimestampMixin):
     __tablename__ = "reports"
+    __table_args__ = (
+        # list_reports: WHERE is_deleted = false [AND status/category = ?] ORDER BY created_at DESC
+        Index("ix_reports_deleted_status_created", "is_deleted", "status", "created_at"),
+        Index("ix_reports_deleted_category_created", "is_deleted", "category", "created_at"),
+    )
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(50), default="submitted", nullable=False, index=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", name="fk_reports_user_id_users", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -24,4 +35,4 @@ class Report(Base, UUIDPKMixin, TimestampMixin):
     flagged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     flag_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="reports")
+    user: Mapped["User | None"] = relationship(back_populates="reports")

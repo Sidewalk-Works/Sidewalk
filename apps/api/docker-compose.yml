@@ -1,6 +1,10 @@
 # apps/api/docker-compose.yml
 version: '3.8'
 
+#
+#   docker compose up --build     # API on http://localhost:8000 (docs at /docs)
+#
+# The API container applies pending Alembic migrations before it starts serving.
 services:
   postgres:
     image: postgres:16-alpine
@@ -14,6 +18,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sidewalk_user -d sidewalk_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - sidewalk-network
 
@@ -25,6 +34,26 @@ services:
       - "6379:6379"
     networks:
       - sidewalk-network
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sidewalk_api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://sidewalk_user:sidewalk_password@postgres:5432/sidewalk_dev
+      SECRET_KEY: ${SECRET_KEY:-default-dev-secret-key-change-in-production-min-32-chars}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn src.main:app --host 0.0.0.0 --port 8000 --proxy-headers"
+    networks:
+      - sidewalk-network
 
 volumes:
   postgres_data:
@@ -32,4 +61,5 @@ volumes:
 
 networks:
   sidewalk-network:
+    driver: bridge
     driver: bridge

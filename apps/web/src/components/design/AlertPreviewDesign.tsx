@@ -120,7 +120,7 @@ export function AlertPreviewDesign() {
         <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
           {explainerVariants.map((v, i) => (
             <div key={i} style={{ borderBottom: i < explainerVariants.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-              <button onClick={() => setExpandedWhy(expandedWhy === i ? null : i)} style={{ width: '100%', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+              <button type="button" onClick={() => setExpandedWhy(expandedWhy === i ? null : i)} style={{ width: '100%', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: v.color }} />
                   <span style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{v.headline}</span>
@@ -130,7 +130,7 @@ export function AlertPreviewDesign() {
               {expandedWhy === i && (
                 <div style={{ padding: '0 14px 14px 30px', background: '#f8fafc' }}>
                   <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#475569' }}>{v.explainer}</p>
-                  <a href="#" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}>Manage preferences →</a>
+                  <button type="button" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>Manage preferences →</button>
                 </div>
               )}
             </div>

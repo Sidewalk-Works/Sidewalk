@@ -109,7 +109,7 @@ export function DeliveryChannelControlsPanel({ userId }: DeliveryChannelControls
         {saveStatus === 'saved' && (
           <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: '500' }}>Saved successfully</span>
         )}
-        <button
+        <button type="button"
           onClick={handleSave}
           disabled={!hasChanges || saveStatus === 'saving'}
           style={{

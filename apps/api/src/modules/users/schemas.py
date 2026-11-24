@@ -1,6 +1,10 @@
-from datetime import datetime
 import uuid
-from pydantic import BaseModel, ConfigDict, EmailStr, model_validator
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+
+from src.core.security import normalize_email
+from src.modules.auth.schemas import validate_new_password
 
 
 class UserProfileResponse(BaseModel):
@@ -8,6 +12,8 @@ class UserProfileResponse(BaseModel):
     email: str
     is_active: bool
     is_admin: bool
+    email_verified: bool = False
+    pending_email: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -16,9 +22,31 @@ class UserProfileResponse(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     email: EmailStr | None = None
+    # Required whenever ``email`` changes: a stolen token alone must not be able to repoint
+    # the account's recovery address.
+    current_password: str | None = None
+
+    @field_validator("email")
+    @classmethod
+    def normalize(cls, v: str | None) -> str | None:
+        return normalize_email(v) if v is not None else v
 
     @model_validator(mode="after")
     def check_not_empty(self) -> "UpdateProfileRequest":
         if self.email is None:
             raise ValueError("At least one field must be provided for update")
         return self
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def check_password(cls, v: str) -> str:
+        return validate_new_password(v)
+
+
+class DeleteAccountRequest(BaseModel):
+    current_password: str = Field(min_length=1)
