@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { createHmac, hkdfSync } from "node:crypto";
+import { Pool } from "pg";
 import { APP_ENV, type AppEnv } from "../config/env";
-import { PrismaService } from "../prisma/prisma.service";
 import { LocalWindowLimiter } from "./local-window";
 
 export interface Hit {
@@ -15,6 +15,7 @@ const CLEANUP_BATCH = 2_000;
 /** Arbitrary constant: only one API instance at a time purges expired buckets. */
 const CLEANUP_LOCK = 7_261_024;
 /** After this many store failures in a row the store is skipped for a short while instead of slowing every request. */
+const POOL_SIZE = 4;
 const BREAKER_FAILURES = 3;
 const BREAKER_OPEN_MS = 5_000;
 const ERROR_LOG_EVERY_MS = 30_000;
@@ -41,13 +42,34 @@ export class RateLimitService implements OnModuleInit, OnModuleDestroy {
   private lastFailureAt: number | null = null;
   private timer: NodeJS.Timeout | undefined;
 
-  constructor(
-    private readonly prisma: PrismaService,
-    @Inject(APP_ENV) private readonly env: AppEnv
-  ) {
+  /**
+   * The limiter has its own small connection pool. A statement that is waiting on a lock or a slow disk would otherwise
+   * keep a connection from the pool the whole application shares, even after the request that started it gave up.
+   * Here the server itself ends such statements (lock_timeout, statement_timeout) and the pool is capped, so a
+   * trouble with this table can use at most a few connections and never starves anything else.
+   */
+  private readonly pool: Pool;
+
+  constructor(@Inject(APP_ENV) private readonly env: AppEnv) {
     this.hmacKey = Buffer.from(
       hkdfSync("sha256", env.JWT_ACCESS_SECRET, "sidewalk", "ratelimit-key-v1", 32)
     );
+    const url = new URL(env.DATABASE_URL);
+    const schema = url.searchParams.get("schema") ?? "public";
+    url.searchParams.delete("schema");
+    const limit = env.RATE_LIMIT_STORE_TIMEOUT_MS;
+    this.pool = new Pool({
+      connectionString: url.toString(),
+      max: POOL_SIZE,
+      connectionTimeoutMillis: limit,
+      idleTimeoutMillis: 30_000,
+      // Seen by the server, so a statement is cancelled there, not merely abandoned here.
+      lock_timeout: limit,
+      statement_timeout: limit * 2,
+      options: /^[A-Za-z_][A-Za-z0-9_]*$/.test(schema) ? `-c search_path=${schema}` : undefined
+    });
+    // An idle connection dropped by the server must not crash the process; the next use reconnects.
+    this.pool.on("error", () => undefined);
   }
 
   onModuleInit(): void {
@@ -55,8 +77,9 @@ export class RateLimitService implements OnModuleInit, OnModuleDestroy {
     this.timer.unref();
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
     clearInterval(this.timer);
+    await this.pool.end().catch(() => undefined);
   }
 
   /** A stable, non-reversible identifier for a person or address within one policy. */
@@ -70,16 +93,18 @@ export class RateLimitService implements OnModuleInit, OnModuleDestroy {
   /** Counts one hit in the key's current window (starting a window if none is open). */
   async hit(key: string, windowMs: number): Promise<Hit> {
     const stored = await this.guarded(async () => {
-      const rows = await this.prisma.$queryRaw<Array<{ hits: number; ttlMs: number }>>`
-        INSERT INTO "RateLimitBucket" ("key", "hits", "expiresAt")
-        VALUES (${key}, 1, now() + (${windowMs}::double precision * interval '1 millisecond'))
-        ON CONFLICT ("key") DO UPDATE SET
-          "hits" = CASE WHEN "RateLimitBucket"."expiresAt" <= now() THEN 1 ELSE "RateLimitBucket"."hits" + 1 END,
-          "expiresAt" = CASE WHEN "RateLimitBucket"."expiresAt" <= now()
-                             THEN now() + (${windowMs}::double precision * interval '1 millisecond')
-                             ELSE "RateLimitBucket"."expiresAt" END
-        RETURNING "hits", ceil(extract(epoch FROM ("expiresAt" - now())) * 1000)::int AS "ttlMs"`;
-      const row = rows[0] as { hits: number; ttlMs: number };
+      const result = await this.pool.query<{ hits: number; ttlMs: number }>(
+        `INSERT INTO "RateLimitBucket" ("key", "hits", "expiresAt")
+         VALUES ($1, 1, now() + ($2::double precision * interval '1 millisecond'))
+         ON CONFLICT ("key") DO UPDATE SET
+           "hits" = CASE WHEN "RateLimitBucket"."expiresAt" <= now() THEN 1 ELSE "RateLimitBucket"."hits" + 1 END,
+           "expiresAt" = CASE WHEN "RateLimitBucket"."expiresAt" <= now()
+                              THEN now() + ($2::double precision * interval '1 millisecond')
+                              ELSE "RateLimitBucket"."expiresAt" END
+         RETURNING "hits", ceil(extract(epoch FROM ("expiresAt" - now())) * 1000)::int AS "ttlMs"`,
+        [key, windowMs]
+      );
+      const row = result.rows[0] as { hits: number; ttlMs: number };
       return { hits: Number(row.hits), ttlMs: Number(row.ttlMs) };
     });
     if (stored) return stored;
@@ -90,10 +115,12 @@ export class RateLimitService implements OnModuleInit, OnModuleDestroy {
   /** The current count without adding to it. */
   async peek(key: string): Promise<Hit> {
     const stored = await this.guarded(async () => {
-      const rows = await this.prisma.$queryRaw<Array<{ hits: number; ttlMs: number }>>`
-        SELECT "hits", ceil(extract(epoch FROM ("expiresAt" - now())) * 1000)::int AS "ttlMs"
-        FROM "RateLimitBucket" WHERE "key" = ${key} AND "expiresAt" > now()`;
-      const row = rows[0];
+      const result = await this.pool.query<{ hits: number; ttlMs: number }>(
+        `SELECT "hits", ceil(extract(epoch FROM ("expiresAt" - now())) * 1000)::int AS "ttlMs"
+         FROM "RateLimitBucket" WHERE "key" = $1 AND "expiresAt" > now()`,
+        [key]
+      );
+      const row = result.rows[0];
       return row ? { hits: Number(row.hits), ttlMs: Number(row.ttlMs) } : { hits: 0, ttlMs: 0 };
     });
     // During an outage, what this process remembers is the best information there is.
@@ -102,7 +129,9 @@ export class RateLimitService implements OnModuleInit, OnModuleDestroy {
 
   async clear(key: string): Promise<void> {
     this.local.delete(key);
-    await this.guarded(() => this.prisma.rateLimitBucket.deleteMany({ where: { key } }));
+    await this.guarded(() =>
+      this.pool.query(`DELETE FROM "RateLimitBucket" WHERE "key" = $1`, [key])
+    );
   }
 
   /** Deletes expired buckets in small batches, so the table cannot grow without bound. Returns rows removed. */
@@ -110,16 +139,14 @@ export class RateLimitService implements OnModuleInit, OnModuleDestroy {
     const removed = await this.guarded(async () => {
       let total = 0;
       for (let i = 0; i < 50; i++) {
-        const n = await this.prisma.$transaction(async (tx) => {
-          const [lock] = await tx.$queryRaw<
-            Array<{ ok: boolean }>
-          >`SELECT pg_try_advisory_xact_lock(${CLEANUP_LOCK}) AS ok`;
-          if (!lock?.ok) return -1; // another instance is already cleaning
-          return tx.$executeRaw`
-            DELETE FROM "RateLimitBucket" WHERE "key" IN (
-              SELECT "key" FROM "RateLimitBucket" WHERE "expiresAt" <= now() LIMIT ${CLEANUP_BATCH})`;
-        });
-        if (n <= 0) break;
+        // One statement: the advisory lock is held only while it runs, and only one instance deletes at a time.
+        const result = await this.pool.query(
+          `WITH gate AS (SELECT pg_try_advisory_xact_lock($1) AS ok)
+           DELETE FROM "RateLimitBucket" WHERE (SELECT ok FROM gate) AND "key" IN (
+             SELECT "key" FROM "RateLimitBucket" WHERE "expiresAt" <= now() LIMIT $2)`,
+          [CLEANUP_LOCK, CLEANUP_BATCH]
+        );
+        const n = result.rowCount ?? 0;
         total += n;
         if (n < CLEANUP_BATCH) break;
       }

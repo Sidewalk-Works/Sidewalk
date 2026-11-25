@@ -14,22 +14,32 @@ export interface ActivityInput {
 }
 
 type Payload = {
-  actorRole?: "REPORTER" | "STAFF" | "SYSTEM";
+  actorRole?: "REPORTER" | "STAFF" | "SYSTEM" | "ORGANIZATION";
+  /** Set for events made on an organization's behalf. Only the name and address: verification is looked up when shown. */
+  organization?: { slug: string; name: string };
+  responseId?: string;
+  responseType?: string;
   from?: ReportStatus;
   to?: ReportStatus;
-  basis?: "REPORTER_CLAIM" | "STAFF_REVIEW";
+  basis?: "REPORTER_CLAIM" | "STAFF_REVIEW" | "ORGANIZATION_STATEMENT";
   note?: string | null;
   fields?: string[];
   kind?: string;
   authorName?: string;
 };
 
-const roleLabel = (role: Payload["actorRole"], reporterName: string | null): string =>
-  role === "STAFF"
-    ? "Sidewalk staff"
-    : role === "REPORTER"
-      ? (reporterName ?? "The reporter")
-      : "Sidewalk";
+const roleLabel = (
+  role: Payload["actorRole"],
+  reporterName: string | null,
+  organization?: Payload["organization"]
+): string =>
+  role === "ORGANIZATION"
+    ? (organization?.name ?? "An organization")
+    : role === "STAFF"
+      ? "Sidewalk staff"
+      : role === "REPORTER"
+        ? (reporterName ?? "The reporter")
+        : "Sidewalk";
 
 @Injectable()
 export class ActivityService {
@@ -58,7 +68,21 @@ export class ActivityService {
         type: e.type,
         createdAt: e.createdAt.toISOString(),
         actorRole: p.actorRole ?? "SYSTEM",
-        actorLabel: roleLabel(p.actorRole, reporterName),
+        actorLabel: roleLabel(p.actorRole, reporterName, p.organization),
+        // A placeholder badge: the report page replaces it with the organization's current verification state.
+        ...(p.organization
+          ? {
+              organization: {
+                slug: p.organization.slug,
+                name: p.organization.name,
+                verified: false,
+                verificationStatus: "UNVERIFIED" as const,
+                suspended: false
+              }
+            }
+          : {}),
+        ...(p.responseType ? { responseType: p.responseType } : {}),
+        ...(p.responseId ? { responseId: p.responseId } : {}),
         ...(e.type === "STATUS_CHANGED"
           ? { fromStatus: p.from, toStatus: p.to, basis: p.basis }
           : {}),
@@ -91,7 +115,11 @@ export class ActivityService {
     return rows.map((e) => {
       const p = (e.payload ?? {}) as Payload;
       const actorLabel =
-        p.actorRole === "STAFF" ? "Sidewalk staff" : (p.authorName ?? "A resident");
+        p.actorRole === "ORGANIZATION"
+          ? (p.organization?.name ?? "An organization")
+          : p.actorRole === "STAFF"
+            ? "Sidewalk staff"
+            : (p.authorName ?? "A resident");
       let summary: string;
       switch (e.type) {
         case "STATUS_CHANGED":
@@ -105,6 +133,12 @@ export class ActivityService {
           break;
         case "RESOLUTION_VERIFIED":
           summary = "Verified the resolution";
+          break;
+        case "OFFICIAL_RESPONSE":
+          summary = `${p.organization?.name ?? "An organization"} responded`;
+          break;
+        case "ORGANIZATION_LINKED":
+          summary = "An organization was connected to the report";
           break;
         default:
           summary = "Updated the report";

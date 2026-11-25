@@ -8,6 +8,7 @@ const staffTabs = [
   { href: "/admin", label: "Flag queue" },
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/comments", label: "Comments" },
+  { href: "/admin/organizations", label: "Organizations" },
   { href: "/admin/history", label: "History" }
 ];
 const adminTabs = [

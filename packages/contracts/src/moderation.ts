@@ -44,7 +44,7 @@ export const MODERATION_POLICY_LABELS: Record<ModerationPolicy, string> = {
 export const MODERATION_ACTIONS = ["HIDE", "REMOVE", "RESTORE", "DISMISS"] as const;
 export type ModerationActionType = (typeof MODERATION_ACTIONS)[number];
 
-export const CONTENT_TARGETS = ["REPORT", "COMMENT"] as const;
+export const CONTENT_TARGETS = ["REPORT", "COMMENT", "OFFICIAL_RESPONSE"] as const;
 export type ContentTarget = (typeof CONTENT_TARGETS)[number];
 
 export const COMMENT_KINDS = ["CITIZEN", "STAFF", "OFFICIAL"] as const;

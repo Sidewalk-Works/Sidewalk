@@ -20,8 +20,10 @@ Internet ─► TLS-terminating reverse proxy / CDN ─► Next.js web server �
   If the web server is exposed directly to the internet, set `WEB_TRUSTED_PROXY_HOPS=0` (limits then fall back to a
   shared bucket) or, better, put a proxy in front.
 - The server-rendered pages call the API with the same identity, so page views are limited per visitor, not as one.
-- **Production refuses to start** without `INTERNAL_PROXY_SECRET` (or `TRUST_PROXY`), with placeholder secrets,
-  insecure cookies, rate limiting disabled or weakened, or the public OSM geocoder.
+- **Production refuses to start** without `INTERNAL_PROXY_SECRET` (or `TRUST_PROXY`) or `OUTBOX_ENCRYPTION_KEYS`, with
+  placeholder secrets, the development database password or storage keys that ship in `docker-compose.yml`, insecure
+  cookies, rate limiting disabled or weakened, a non-https `WEB_ORIGIN`, a loopback SMTP host, a test sender domain, or
+  the public OSM geocoder. The mail connection must upgrade to TLS and its certificate is verified.
 
 ## Authentication and session design (verified)
 
@@ -33,13 +35,14 @@ Internet ─► TLS-terminating reverse proxy / CDN ─► Next.js web server �
 | Refresh token        | 256-bit opaque, hashed at rest, rotated on every use, reuse outside a 10 s grace revokes the family                                                                                                                  | `auth.spec`                         |
 | CSRF                 | `Origin` allow-list + double-submit token whenever cookies are present, on every unsafe method                                                                                                                       | `auth.spec`, `hardening.spec`       |
 | Role/privilege       | Role read from the database per request; admin endpoints guarded _and_ re-checked in services; self-promotion and self-demotion impossible; role changes serialised under an advisory lock and re-validated under it | `moderation.spec`, `hardening.spec` |
-| Login brute force    | Per-IP limit + per-account brake (10 failures/15 min, bounded memory)                                                                                                                                                | `auth.spec`, `hardening.spec`       |
+| Login brute force    | Shared (PostgreSQL) per-route limits plus a sign-in brake keyed per account-and-address and per address; it paces, and never locks, an account                                                                       | `auth.spec`, `hardening.spec`       |
 | Secrets in URLs      | Forms declare `method="post"` and stay disabled until the page is interactive                                                                                                                                        | E2E `validation`, `journey`         |
 | Email confirmation   | Single-use hashed link (24 h), required for every write action; see “Account recovery and email” below                                                                                                               | `account-lifecycle.spec`, E2E       |
 | Password reset       | Single-use hashed link (30 min); ends every session; never signs in; emails a notice                                                                                                                                 | `account-lifecycle.spec`, E2E       |
 
-Known trade-offs: the per-account brake can be used to lock a victim out for 15 minutes (it protects against
-distributed guessing; the alternative is no protection). Registration, resend and password-reset requests answer
+Known trade-offs: the brake cannot be used to lock someone else out (see “Rate limiting”), at the price that
+guessing spread over many addresses is slowed to a few hundred tries per account per 15 minutes instead of being
+stopped. Registration, resend and password-reset requests answer
 identically whether or not an address has an account (see below), so the account-existence oracle that registration
 used to be is closed; login is still timing-equalised against a dummy hash.
 
@@ -90,19 +93,45 @@ their purpose). Optional notification email respects the user's three preference
 Notifications contain no moderator reasons or internal notes, only the decision and the policy label.
 
 **The outbox.** Email is queued inside the transaction that causes it and sent only after commit, so a rolled-back
-change never emails anyone (tested by forcing a rollback). Payloads are AES-256-GCM encrypted (key derived from
-`JWT_ACCESS_SECRET` with HKDF) and erased once sent. Bounded retries (6 attempts, 1 min → 6 h backoff), then `DEAD`,
-visible to administrators at `/admin/email`. Delivery is at-least-once; the stable `Message-ID` and a `dedupeKey` per
-event prevent avoidable duplicates. **Operational coupling:** rotating `JWT_ACCESS_SECRET` makes queued, unsent
-messages undecryptable; they become `DEAD` and the affected people simply request a new link. Drain the queue
-(`/admin/email` shows `pending = 0`) before rotating if that matters.
+change never emails anyone (tested by forcing a rollback). Bounded retries (6 attempts, 1 min → 6 h backoff), then
+`DEAD`, visible to administrators at `/admin/email`. Delivery is at-least-once; the stable `Message-ID` and a
+`dedupeKey` per event prevent avoidable duplicates, and a worker re-asserts its claim on a message immediately before
+sending it, so a slow batch cannot send a message another worker has since taken over.
+
+**Outbox encryption.** Queued content (it can hold a one-time link) is encrypted at rest and erased once sent. The keys
+are independent of every other secret:
+
+- `OUTBOX_ENCRYPTION_KEYS` is `id:base64key[,id:base64key…]` (32 random bytes each). The **first** key encrypts; the rest
+  only decrypt, so rotating never strands a queued message. It is required in production (a placeholder or malformed
+  key is refused at startup, and error messages never echo key material). In development a key derived from the JWT
+  secret is used when none is set.
+- Each message is stored as `v1.<keyId>.<base64url(iv ‖ tag ‖ ciphertext)>`: AES-256-GCM, a fresh random IV, and the
+  key id and the **outbox row id** as authenticated data. A ciphertext copied onto another row, re-labelled with another
+  key id, or altered anywhere fails authentication.
+- **A missing key is not a dead message.** If the key a message needs is not configured, the message is _held_: kept,
+  no attempt consumed, rechecked every 10 minutes, shown at `/admin/email` and by `pnpm ops:check` as a failure. After a
+  week it becomes `DEAD` with its content retained, so an administrator can still retry it once the key is back. If a
+  configured key id is present but its material is wrong (or the content was altered) the message is `DEAD` at once,
+  also with its content retained, and can be retried after the configuration is fixed.
+- **Legacy rows.** Before keys were independent, content was encrypted with a key derived from `JWT_ACCESS_SECRET`
+  and has no envelope. While `OUTBOX_LEGACY_JWT_DECRYPT=true` (the default) and the JWT secret is unchanged those rows
+  still decrypt. `pnpm outbox:keys rewrap` re-encrypts them under the active key; afterwards set the flag to `false`.
+  **Limitation:** if the JWT secret was already rotated while legacy rows were queued, those rows cannot be decrypted
+  and nothing can recover them. They are held and then `DEAD`; the affected people request a new link. There is no
+  key history to restore from.
+- Tools: `pnpm outbox:keys generate | status | rewrap [--dry-run]`. `status` reports which key each queued message needs
+  and whether it can be read; `rewrap` rewrites a row only if it still holds the ciphertext that was read (a worker
+  sending it at that moment is never overwritten), and leaves unreadable rows untouched. Retire a key only when `status`
+  shows no rows under it. **Back the keys up in a secret manager, separately from database backups**: a restored
+  database without them has queued messages that cannot be read. Rotation and recovery steps: docs/operations.md.
 
 **Worker lifecycle and scaling.** One embedded worker per API process is the default and is correct for a single
 instance. With several instances either run exactly one dedicated `pnpm worker` (and set `OUTBOX_WORKER_ENABLED=false`
 on the APIs) or leave several enabled: rows are claimed with `FOR UPDATE SKIP LOCKED`, so a message is processed by one
 worker, and a worker that dies mid-send is recovered after five minutes. Stop workers with `SIGTERM`; they finish the
-message in flight. Alert on `failed + dead > 0` and on a growing `pending` count (both shown at `/admin/email`).
-Per-IP and per-account throttles are still in-memory (see “Rate limiting”).
+message in flight (and one killed outright, which cannot, leaves its messages claimed until the five minutes pass).
+Alert on `failed + dead > 0`, held messages and a growing oldest-due age: `pnpm ops:check` and `/admin/email` show all
+three. Rate limits are shared between instances through the database (see “Rate limiting”).
 
 ## Report lifecycle integrity (verified)
 
@@ -117,6 +146,56 @@ Per-IP and per-account throttles are still in-memory (see “Rate limiting”).
   `UPDATE` and `DELETE` even from direct SQL; coordinates are range-checked; `VERIFIED` is impossible unless
   `RESOLVED`; `RESOLVED` always has a timestamp. (`TRUNCATE` is deliberately not blocked so disposable test databases
   can be emptied; it needs table-owner rights.)
+
+## Verified organizations: identity, authority and abuse (verified by tests)
+
+The threat is not a stranger reading data; it is someone **speaking in an institution’s name** (to excuse an agency, to
+discredit one, or to mislead residents), and the quieter failures: stale authority, rewritten history, and a claim of a
+fix mistaken for a fix. Controls, and where each is tested (`apps/api/test/organization-*.spec.ts`,
+`official-responses.spec.ts`, and `apps/web/tests/organizations.spec.ts` in a real browser):
+
+- **No inferred verification.** Only an administrator’s approval of a submitted application sets `VERIFIED`. Registering,
+  being invited, owning a work email address, or being named by a resident does not. One verified organization per
+  normalized name is enforced by a unique index, so two simultaneous approvals cannot both win, and a lookalike of a
+  verified name is refused. Applications for similar names are shown to staff with the overlap listed; a match is a reason
+  to look closer, never proof.
+- **Authority is read from the database on every request**, never from the session or token. Removing a member,
+  suspending the organization or withdrawing verification stops that person’s next request even though their sign-in is
+  still valid (tested through the API and in the browser). Publishing re-checks authority **inside the transaction, under a
+  lock on the report**, so a revocation that lands mid-request still wins.
+- **Separation of duties.** Nobody reviews or decides their own application (a check constraint plus a service check).
+  Staff who belong to an organization cannot decide, suspend, moderate or verify the work of it. A staff member who belonged to
+  the claiming organization at any time since the claim, or who belongs to any organization connected to the report,
+  cannot verify the resolution. The organization that claims a fix can never verify it.
+- **Append-only records.** `VerificationDecision` and `OfficialResponse` reject UPDATE and DELETE from direct SQL (the
+  only column that may change on a response is `moderationState`). Corrections and withdrawals are new rows. Names are
+  snapshotted so a rename cannot rewrite who said what.
+- **Invitations.** 256-bit token, SHA-256 at rest, in the URL **fragment** only (never in a path, query, log or
+  Referer; the accept page sends `no-referrer` and removes it from the address bar). Bound to one confirmed address: a
+  different account is refused without consuming it. Expiry, revocation, rotation on resend (the old link dies and its
+  queued email is skipped), a per-day cap and a resend cooldown. Responses to “is there an account for this address” are
+  identical. The token never appears in an audit row or notification.
+- **Private applicant documents.** Same sniffing and re-encoding as evidence (images only, metadata stripped), stored under
+  a separate prefix, served only by an authorization-aware route to the applicant and staff with `Cache-Control: private,
+no-store`; the object-store address never leaves the API. `storage:reconcile` covers the prefix.
+- **Evidence for claims.** Organization photographs are uploaded for one organization, kind `RESOLUTION`, attached to one
+  response, cannot be reused for another claim, and are locked once staff verify. A claim without its own photograph is
+  refused.
+- **Leakage.** Public responses and profiles are built from explicit allow-lists (no author ids or emails, no reviewer
+  notes, no unlisted parents or members); an unlisted organization and a nonexistent one return the same 404; hidden
+  statements are visible only to staff and the organization that wrote them; hidden reports take their statements, metrics
+  and profile entries with them.
+- **Abuse limits.** Route limits on application creation, submission, documents, invitations, publishing, flagging,
+  connecting and governance (see the route inventory test, which fails if a new write route has none). Per-report cap on
+  suggested organizations; per-person cap on open applications; per-day cap on invitations. All writes need the CSRF token
+  and a same-site origin like every other route.
+- **Text.** Statements, notes and names are stored as text, control characters removed, rendered escaped by React. There
+  is no markup, no link rendering in statements and no remote content.
+
+What this does **not** give you: cryptographic or registry-backed proof that a body is who it says it is. The control is
+a trained person checking independent sources (see [operations.md](operations.md#verifying-an-organization)). A determined
+impersonator who can pass that review passes it; the audit record, the immediate suspension and the visible history are
+the response.
 
 ## Evidence and uploads (verified)
 
@@ -141,6 +220,7 @@ Per-IP and per-account throttles are still in-memory (see “Rate limiting”).
 | Account (email, name, password hash)                   | Deleting an account **erases** these immediately and ends every session.                                                                                                                                                                 |
 | Reports, comments, evidence by that account            | **Retained, unattributed** (“a resident” / “Former resident”). They are public civic records and part of other people's discussions; removing them would rewrite history. Retention is documented on `/privacy` and in account settings. |
 | Requests to remove content for safety or legal reasons | Moderators hide it; administrators can remove it. Removed content stays in the database for staff review and legal hold; physical purge is a manual operation (next milestone).                                                          |
+| Rate-limit counters                                    | Keyed hashes only (no address, email or id), each living for its window (at most 15 minutes) and purged every minute; emptied by a database crash.                                                                                       |
 | Sessions                                               | Revoked/expired sessions are deleted after 30 days.                                                                                                                                                                                      |
 | Email links (`AuthToken`)                              | Only hashes are stored. Deleted one week after expiry, and immediately when the account is deleted.                                                                                                                                      |
 | Email outbox                                           | Content is erased when a message is sent. Sent/skipped rows are deleted after 30 days, dead ones after 90. Deleting an account blanks queued mail and replaces stored addresses with a placeholder.                                      |
@@ -149,16 +229,51 @@ Per-IP and per-account throttles are still in-memory (see “Rate limiting”).
 | Logs                                                   | Structured, no query strings, no IP addresses, credentials redacted by key name and credential-shaped text removed from error messages. Database client errors log only their type and code, because they embed query data.              |
 | Evidence objects                                       | Deleted from storage when evidence is removed; orphans found by `storage:reconcile`.                                                                                                                                                     |
 
-## Rate limiting: is in-memory acceptable?
+## Rate limiting
 
-**Yes for exactly one API instance**, which is the intended initial deployment. Limits are enforced per process, so
-with N instances each visitor effectively gets N× the allowance and the login brake resets per instance.
-**Before running more than one API instance**, move both to a shared store:
+Limits are counted in PostgreSQL, so they are exact across any number of API processes and survive restarts. Redis was
+considered and not needed: measured on a laptop, the limiter adds about 2.6 ms at the median and the API still serves
+roughly 3,500 requests/s (versus 4,600 without it) on the cheapest endpoint, far above this deployment's load.
 
-1. Add Redis (`REDIS_URL`) and a Redis `ThrottlerStorage` for `@nestjs/throttler` (for example
-   `@nest-lab/throttler-storage-redis`): `ThrottlerModule.forRootAsync({ useFactory: (env) => ({ storage: new ThrottlerStorageRedisService(env.REDIS_URL), … }) })` in `app.module.ts`. Keys, limits and trackers stay as they are.
-2. Replace `AuthService.failures` with `INCR` + `EXPIRE` on `login-fail:{email}`.
-3. Until then, route all traffic to one instance (sticky routing is not enough for the brake).
+**How it works.** One atomic `INSERT … ON CONFLICT DO UPDATE` per hit on a row in `RateLimitBucket`; the database clock
+decides when a window ends. Each route has its own bucket per caller (signed-in users per account, everyone else per
+client address); a route with no explicit limit gets 300 requests/minute. Keys are HMACs of the route and the caller,
+so **no address, email or account id is stored**. Expired rows are deleted every minute in bounded batches by whichever
+instance holds an advisory lock, so the table cannot grow without bound.
+
+**Client identity and proxy trust.** The address is the web server's declared client, accepted only with the correct
+`INTERNAL_PROXY_SECRET`, or the proxy hop an operator explicitly trusts with `TRUST_PROXY`; a client-supplied
+`X-Forwarded-For` or `X-Sidewalk-Client-IP` is ignored (tested with rotating headers). IPv4-mapped IPv6 addresses are
+the same client as their IPv4 form, and IPv6 is limited per **/64**, because one connection normally controls a whole
+/64. An address that cannot be parsed shares one `unknown` bucket rather than getting a fresh one.
+
+**The sign-in brake** counts failed sign-ins per _account and address_ (10 per 15 minutes), per _address_ across
+accounts (30), and per _account_ from everywhere. The first two pause the guesser only: someone typing a victim's email
+cannot stop the real owner signing in from elsewhere. The third, which catches guessing spread over many addresses,
+never blocks: past 50 failures it allows one attempt per account every two seconds. Unknown emails are counted exactly
+like known ones, so the brake reveals nothing about which accounts exist, and a success clears only that
+account-and-address counter. Shared NAT is the one cost: many people behind one address share its 30-per-15-minutes.
+
+**When PostgreSQL is slow or unavailable.** The limiter has its **own** small connection pool (4 connections) with
+server-side `lock_timeout` equal to `RATE_LIMIT_STORE_TIMEOUT_MS` and `statement_timeout` of twice that, so a locked
+or stuck table can neither starve the rest of the application of connections nor leave abandoned statements running
+(regression-tested with a real table lock). `RATE_LIMIT_STORE_TIMEOUT_MS` (default 750, allowed 50–10000) is how long a
+check may wait; beyond it, or on any store error, the request is counted in a bounded in-memory counter in that process
+and its limit still applies. After three failures in a row the store is skipped for five seconds so a sick store does
+not add latency to every request. The state is logged once per 30 seconds (type only, never keys), counted in
+`fallbackHits`, and shown on `/admin/email` and by `pnpm ops:check`. A request that outlived the timeout may still be
+recorded by the database when it finishes, so during a slow-store episode a few hits can be counted twice: harmless
+for abuse protection, never lost. If the whole database is down the API cannot serve most requests anyway, and
+liveness (`/health`, exempt from limits) keeps answering.
+
+**Trade-offs, stated plainly.**
+
+- Windows are fixed, not sliding: a client can send up to twice a limit across a window boundary.
+- The table is `UNLOGGED` for cheap writes, which means PostgreSQL empties it after a **crash** (and it is not
+  replicated to a standby): limits and the sign-in brake start from zero. This is standard PostgreSQL behaviour for
+  unlogged tables; it was not exercised by crashing a server in testing.
+- Rotating `JWT_ACCESS_SECRET` changes the HMAC key, which also just resets the counters.
+- During a store outage each API process enforces limits on its own, so N instances allow up to N times the limit.
 
 ## Abuse controls in place
 
@@ -231,6 +346,6 @@ allow-list in `pnpm-workspace.yaml`.
 
 ## Not covered yet (see the next-milestone plan)
 
-Two-factor authentication for staff, bounce/complaint suppression, digest emails, a way to change the account email
+Two-factor authentication for staff (the people who verify organizations are protected only by a password and a confirmed address), registry-backed organization identity checks, periodic re-verification, bounce/complaint suppression, digest emails, a way to change the account email
 address (a verified change flow), account lockout recovery for staff without mail access beyond the operator CLI, a malware/NSFW scan of uploads, physical purge of
 removed content, WAF/bot challenge on registration, and a CAPTCHA fallback if registration abuse appears.

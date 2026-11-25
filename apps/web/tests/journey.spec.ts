@@ -97,7 +97,10 @@ test.describe.serial("citizen journey", () => {
     // The thumbnails really load from the evidence endpoint.
     const first = page.getByRole("list", { name: "Reporter photograph" }).locator("img").first();
     await expect(first).toBeVisible();
-    expect(await first.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    // Visible is not yet loaded, so wait for the pixels.
+    await expect
+      .poll(() => first.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
   });
 
   test("3. another visitor finds it in public discovery and opens it", async ({

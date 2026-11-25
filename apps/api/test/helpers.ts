@@ -109,6 +109,14 @@ export async function createApp(
 export async function resetDatabase(prisma: PrismaService): Promise<void> {
   const tables = [
     "RateLimitBucket",
+    "OfficialResponse",
+    "ReportOrganization",
+    "OrganizationDocument",
+    "OrganizationInvitation",
+    "OrganizationMember",
+    "VerificationDecision",
+    "OrganizationApplication",
+    "Organization",
     "EmailOutbox",
     "Notification",
     "ReportFollow",

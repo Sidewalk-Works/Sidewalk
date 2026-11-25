@@ -25,6 +25,8 @@ import { generateReference } from "../common/utils/reference";
 import { cleanLine, cleanText, excerpt, likeEscape } from "../common/utils/text";
 import { toEvidenceDto } from "../evidence/evidence.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { OfficialResponsesReader } from "../organizations/official-responses.reader";
+import { OrganizationNotifier } from "../organizations/organization-notifier";
 import { Prisma } from "../generated/prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import type {
@@ -44,7 +46,9 @@ export class ReportsService {
     private readonly prisma: PrismaService,
     private readonly activity: ActivityService,
     private readonly audit: AuditService,
-    private readonly notifications: NotificationsService
+    private readonly notifications: NotificationsService,
+    private readonly organizations: OfficialResponsesReader,
+    private readonly orgNotifier: OrganizationNotifier
   ) {}
 
   // ───────────────────────────── discovery ─────────────────────────────
@@ -234,7 +238,10 @@ export class ReportsService {
       where: { reference },
       include: {
         ...summaryInclude,
-        evidence: { orderBy: { createdAt: "asc" } },
+        evidence: {
+          orderBy: { createdAt: "asc" },
+          include: { organization: { select: { slug: true, name: true } } }
+        },
         activity: { where: { isPublic: true }, orderBy: { createdAt: "asc" } },
         moderation: {
           orderBy: { createdAt: "desc" },
@@ -276,18 +283,56 @@ export class ReportsService {
       ...report,
       evidence: report.evidence.filter((e) => e.kind === "REPORT").slice(0, 1)
     });
+    // What organizations have said and how they are connected, as this viewer is allowed to see it. The timeline's
+    // organization badges are then given their current verification state.
+    const [org, viewerOrganizations] = await Promise.all([
+      this.organizations.forReport(report.id, viewer),
+      this.organizations.viewerOrganizations(report.id, viewer)
+    ]);
+    const badges = new Map<string, (typeof org.organizations)[number]["organization"]>();
+    for (const o of org.organizations) badges.set(o.organization.slug, o.organization);
+    for (const r of org.responses) badges.set(r.organization.slug, r.organization);
+    // A statement that moderators hid is hidden everywhere its words appear: the timeline excerpt, the resolution note a
+    // claim copied onto the report, and the photographs attached to it. The status change itself stays on the record.
+    const withheld = org.withheldResponseIds;
+    const timeline = this.activity
+      .toTimeline(report.activity, reporterName)
+      .map((e) => (e.responseId && withheld.has(e.responseId) ? { ...e, note: null } : e))
+      .map((e) =>
+        e.organization
+          ? { ...e, organization: badges.get(e.organization.slug) ?? e.organization }
+          : e
+      );
+    let resolutionNote = report.resolutionNote;
+    if (resolutionNote && withheld.size > 0) {
+      const claim = await this.prisma.reportStatusHistory.findFirst({
+        where: { reportId: report.id, toStatus: "RESOLVED" },
+        orderBy: { createdAt: "desc" },
+        select: { responseId: true }
+      });
+      if (claim?.responseId && withheld.has(claim.responseId)) resolutionNote = null;
+    }
     return {
       ...summary,
       evidenceCount: report.evidence.filter((e) => e.kind === "REPORT").length,
       description: report.description,
       verification: report.verification,
-      resolutionNote: report.resolutionNote,
+      resolutionNote,
       resolvedAt: report.resolvedAt?.toISOString() ?? null,
       updatedAt: report.updatedAt.toISOString(),
       evidence: report.evidence.filter((e) => e.kind === "REPORT").map(toEvidenceDto),
-      resolutionEvidence: report.evidence.filter((e) => e.kind === "RESOLUTION").map(toEvidenceDto),
-      timeline: this.activity.toTimeline(report.activity, reporterName),
+      resolutionEvidence: report.evidence
+        .filter((e) => e.kind === "RESOLUTION" && !(e.responseId && withheld.has(e.responseId)))
+        .map((e) => ({
+          ...toEvidenceDto(e),
+          organization: e.organization,
+          responseId: e.responseId
+        })),
+      timeline,
+      organizations: org.organizations,
+      officialResponses: org.responses,
       viewer: {
+        organizations: viewerOrganizations,
         isOwner: owner,
         isStaff: staff,
         canEdit:
@@ -724,6 +769,27 @@ export class ReportsService {
           .filter(Boolean)
           .join(" ")
       });
+      if (dto.status === "REOPENED") {
+        // The organization that claimed the fix (and any connected to the report) learns it is being disputed.
+        const claim = await tx.reportStatusHistory.findFirst({
+          where: { reportId: report.id, toStatus: "RESOLVED" },
+          orderBy: { createdAt: "desc" },
+          select: { organizationId: true }
+        });
+        await this.orgNotifier.tellReportOrganizations(
+          tx,
+          report.id,
+          user.id,
+          {
+            type: "REOPENED",
+            title: `${reference} was reopened`,
+            body: note ? excerpt(note, 160) : "The resolution is being disputed.",
+            url: `/issues/${reference}`,
+            dedupeKey: `reopened-org:${history.id}`
+          },
+          claim?.organizationId ? [claim.organizationId] : []
+        );
+      }
       if (staff) {
         await this.audit.record(
           {
@@ -789,6 +855,39 @@ export class ReportsService {
           "SELF_VERIFICATION",
           "A resolution you recorded must be verified by a different staff member."
         );
+      // Independence extends to organizations: a staff member who belongs to the organization that claimed the fix (now,
+      // or at any time since the claim), or to one connected to this report, cannot be the second pair of eyes.
+      const claim = report.statusHistory[0];
+      const connected = await tx.reportOrganization.findMany({
+        where: { reportId: report.id, status: { not: "REMOVED" } },
+        select: { organizationId: true }
+      });
+      const involved = [
+        ...new Set([
+          ...connected.map((c) => c.organizationId),
+          ...(claim?.organizationId ? [claim.organizationId] : [])
+        ])
+      ];
+      if (involved.length > 0) {
+        const conflict = await tx.organizationMember.findFirst({
+          where: {
+            userId: user.id,
+            organizationId: { in: involved },
+            OR: [
+              { status: "ACTIVE" },
+              ...(claim?.organizationId
+                ? [{ organizationId: claim.organizationId, revokedAt: { gte: claim.createdAt } }]
+                : [])
+            ]
+          },
+          select: { id: true }
+        });
+        if (conflict)
+          throw AppError.conflict(
+            "ORGANIZATION_CONFLICT",
+            "You belong to an organization connected to this report, or to the one that claimed its resolution, so you cannot verify it."
+          );
+      }
       if (!report.evidence.some((e) => e.uploaderId !== user.id))
         throw AppError.conflict(
           "EVIDENCE_REQUIRED",
@@ -816,6 +915,19 @@ export class ReportsService {
         title: `The fix on ${reference} was verified`,
         body: "A Sidewalk staff member checked the photographs of the repair and marked the resolution as verified."
       });
+      await this.orgNotifier.tellReportOrganizations(
+        tx,
+        report.id,
+        user.id,
+        {
+          type: "RESOLUTION_VERIFIED",
+          title: `The resolution of ${reference} was verified`,
+          body: "Sidewalk staff independently checked the evidence and marked the resolution as verified.",
+          url: `/issues/${reference}`,
+          dedupeKey: `verified-org:${verifiedEvent.id}`
+        },
+        claim?.organizationId ? [claim.organizationId] : []
+      );
       await this.audit.record(
         {
           actorId: user.id,

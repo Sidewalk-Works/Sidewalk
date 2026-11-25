@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { MessageSquare, ShieldCheck, FileText, RotateCcw, Scale, CircleCheck } from "lucide-react";
+import {
+  Building2,
+  CircleCheck,
+  FileText,
+  Landmark,
+  MessageSquare,
+  RotateCcw,
+  Scale,
+  ShieldCheck
+} from "lucide-react";
 import type { NotificationDto, NotificationType } from "@sidewalk/contracts";
 import { api } from "@/lib/client-api";
 import { timeAgo } from "@/lib/format";
@@ -16,7 +25,10 @@ const ICON: Record<NotificationType, typeof FileText> = {
   COMMENT: MessageSquare,
   STAFF_UPDATE: ShieldCheck,
   MODERATION: Scale,
-  REPORT_UPDATE: FileText
+  REPORT_UPDATE: FileText,
+  OFFICIAL_RESPONSE: Landmark,
+  RESOLUTION_CLAIMED: CircleCheck,
+  ORGANIZATION: Building2
 };
 
 /**

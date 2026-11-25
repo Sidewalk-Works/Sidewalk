@@ -37,3 +37,36 @@ test("outcome transitions require an explanation", () => {
   }
   assert.equal(transitionRequiresNote("ACKNOWLEDGED"), false);
 });
+
+test("an organization can acknowledge, record progress or claim a resolution, and nothing else", () => {
+  assert.deepEqual(allowedTransitions("SUBMITTED", "ORGANIZATION"), ["ACKNOWLEDGED", "RESOLVED"]);
+  assert.deepEqual(allowedTransitions("ACKNOWLEDGED", "ORGANIZATION"), ["IN_PROGRESS", "RESOLVED"]);
+  assert.deepEqual(allowedTransitions("IN_PROGRESS", "ORGANIZATION"), ["RESOLVED"]);
+  assert.deepEqual(allowedTransitions("REOPENED", "ORGANIZATION"), [
+    "ACKNOWLEDGED",
+    "IN_PROGRESS",
+    "RESOLVED"
+  ]);
+});
+
+test("an organization can never reject, close as a duplicate, or reopen a report, and cannot touch a closed one", () => {
+  for (const from of REPORT_STATUSES) {
+    for (const forbidden of ["REJECTED", "DUPLICATE", "REOPENED", "UNDER_REVIEW"] as const) {
+      assert.equal(
+        canTransition(from, forbidden, "ORGANIZATION"),
+        false,
+        `${from} -> ${forbidden}`
+      );
+    }
+  }
+  assert.deepEqual(allowedTransitions("RESOLVED", "ORGANIZATION"), []);
+  assert.deepEqual(allowedTransitions("REJECTED", "ORGANIZATION"), []);
+  assert.deepEqual(allowedTransitions("DUPLICATE", "ORGANIZATION"), []);
+});
+
+test("an organization's powers are always a subset of staff's, so it can never do something staff cannot", () => {
+  for (const from of REPORT_STATUSES) {
+    const staff = allowedTransitions(from, "STAFF");
+    for (const to of allowedTransitions(from, "ORGANIZATION")) assert.ok(staff.includes(to));
+  }
+});

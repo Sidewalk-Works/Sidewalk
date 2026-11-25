@@ -50,6 +50,17 @@ export class ModerationController {
     await this.moderation.flagComment(user, id, dto);
   }
 
+  @RateLimit(20, 3600)
+  @HttpCode(204)
+  @Post("official-responses/:id/flags")
+  async flagResponse(
+    @CurrentUser() user: AuthUser,
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: CreateFlagDto
+  ): Promise<void> {
+    await this.moderation.flagResponse(user, id, dto);
+  }
+
   // Everything below is staff only: guard here, re-checked inside the service.
   @Roles("MODERATOR", "ADMIN")
   @Get("moderation/flags")
@@ -95,6 +106,17 @@ export class ModerationController {
     @Body() dto: ModerationActionDto
   ) {
     return this.moderation.actOnComment(user, id, dto);
+  }
+
+  @Roles("MODERATOR", "ADMIN")
+  @HttpCode(200)
+  @Post("moderation/official-responses/:id/actions")
+  actOnResponse(
+    @CurrentUser() user: AuthUser,
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: ModerationActionDto
+  ) {
+    return this.moderation.actOnResponse(user, id, dto);
   }
 
   @Roles("MODERATOR", "ADMIN")

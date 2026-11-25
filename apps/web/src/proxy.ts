@@ -9,7 +9,16 @@ import {
   SITE_URL
 } from "./lib/env";
 
-const PROTECTED = ["/dashboard", "/report", "/account", "/admin", "/notifications"];
+const PROTECTED = [
+  "/dashboard",
+  "/report",
+  "/account",
+  "/admin",
+  "/notifications",
+  "/organizations/apply",
+  "/organizations/mine",
+  "/organizations/applications"
+];
 
 interface Renewed {
   ok: boolean;

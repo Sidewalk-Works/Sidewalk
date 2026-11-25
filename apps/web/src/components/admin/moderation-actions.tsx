@@ -19,7 +19,7 @@ export function ModerateButton({
   label = "Moderate"
 }: {
   endpoint: string;
-  subject: "report" | "comment";
+  subject: "report" | "comment" | "statement";
   state: ModerationState;
   isAdmin: boolean;
   label?: string;

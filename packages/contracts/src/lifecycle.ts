@@ -18,11 +18,15 @@ export type ReportStatus = (typeof REPORT_STATUSES)[number];
 export const ROLES = ["CITIZEN", "MODERATOR", "ADMIN"] as const;
 export type Role = (typeof ROLES)[number];
 
-/** Who is attempting a transition. Staff means a MODERATOR or ADMIN of Sidewalk. */
-export type TransitionActor = "OWNER" | "STAFF";
+/**
+ * Who is attempting a transition. Staff means a MODERATOR or ADMIN of Sidewalk. ORGANIZATION is an authorized
+ * representative of a verified, active organization: it can say work has begun or that it considers the issue fixed,
+ * but it cannot reject, close as a duplicate, reopen, or verify anything.
+ */
+export type TransitionActor = "OWNER" | "STAFF" | "ORGANIZATION";
 
 /** Why a transition happened; shown publicly so claims stay distinguishable from verification. */
-export const STATUS_BASES = ["REPORTER_CLAIM", "STAFF_REVIEW"] as const;
+export const STATUS_BASES = ["REPORTER_CLAIM", "STAFF_REVIEW", "ORGANIZATION_STATEMENT"] as const;
 export type StatusBasis = (typeof STATUS_BASES)[number];
 
 export const RESOLUTION_VERIFICATIONS = ["NONE", "CLAIMED", "VERIFIED"] as const;
@@ -43,12 +47,17 @@ export const STATUS_TRANSITIONS: Record<ReportStatus, readonly ReportStatus[]> =
 /** Targets each kind of actor may choose. Owners can only make claims about the outcome. */
 const OWNER_TARGETS: readonly ReportStatus[] = ["RESOLVED", "REOPENED"];
 
+/** Targets a verified organization's representative may choose. A resolution is only ever its claim. */
+const ORGANIZATION_TARGETS: readonly ReportStatus[] = ["ACKNOWLEDGED", "IN_PROGRESS", "RESOLVED"];
+
 /** Targets that must carry a public explanation. */
 const NOTE_REQUIRED: readonly ReportStatus[] = ["RESOLVED", "REOPENED", "REJECTED", "DUPLICATE"];
 
 export function allowedTransitions(from: ReportStatus, actor: TransitionActor): ReportStatus[] {
   const legal = STATUS_TRANSITIONS[from];
-  return actor === "STAFF" ? [...legal] : legal.filter((s) => OWNER_TARGETS.includes(s));
+  if (actor === "STAFF") return [...legal];
+  const targets = actor === "ORGANIZATION" ? ORGANIZATION_TARGETS : OWNER_TARGETS;
+  return legal.filter((s) => targets.includes(s));
 }
 
 export function canTransition(
@@ -91,7 +100,8 @@ export const STATUS_INFO: Record<ReportStatus, StatusInfo> = {
   },
   ACKNOWLEDGED: {
     label: "Acknowledged",
-    meaning: "Sidewalk staff have confirmed the report is valid and recorded it as an open issue."
+    meaning:
+      "Sidewalk staff or a verified organization have recorded the report as an open issue. Acknowledging a report is not accepting responsibility for it."
   },
   IN_PROGRESS: {
     label: "In progress",

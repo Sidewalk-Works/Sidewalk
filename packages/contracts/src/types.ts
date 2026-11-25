@@ -1,5 +1,11 @@
 import type { ReportStatus, ResolutionVerification, Role, StatusBasis } from "./lifecycle";
 import type {
+  OfficialResponseDto,
+  OrganizationBadgeDto,
+  ReportOrganizationDto,
+  ViewerOrganizationDto
+} from "./organizations";
+import type {
   CommentKind,
   ContentTarget,
   EvidenceKind,
@@ -49,6 +55,10 @@ export interface EvidenceDto {
   fullUrl: string;
   createdAt: string;
   moderationState?: ModerationState;
+  /** Set when a representative uploaded it for an organization (resolution evidence). */
+  organization?: { slug: string; name: string } | null;
+  /** Set once attached to an official response; such evidence is part of the record. */
+  responseId?: string | null;
 }
 
 export interface ReportSummaryDto {
@@ -79,10 +89,16 @@ export interface TimelineEventDto {
     | "EVIDENCE_ADDED"
     | "EDITED"
     | "COMMENT_ADDED"
-    | "RESOLUTION_VERIFIED";
+    | "RESOLUTION_VERIFIED"
+    | "OFFICIAL_RESPONSE"
+    | "ORGANIZATION_LINKED";
   createdAt: string;
   actorLabel: string;
-  actorRole: "REPORTER" | "STAFF" | "SYSTEM";
+  actorRole: "REPORTER" | "STAFF" | "SYSTEM" | "ORGANIZATION";
+  /** The organization behind an official response, a connection, or a status change it made. */
+  organization?: OrganizationBadgeDto | null;
+  responseType?: string;
+  responseId?: string;
   fromStatus?: ReportStatus;
   toStatus?: ReportStatus;
   basis?: StatusBasis;
@@ -113,7 +129,13 @@ export interface ReportDetailDto extends ReportSummaryDto {
   evidence: EvidenceDto[];
   resolutionEvidence: EvidenceDto[];
   timeline: TimelineEventDto[];
+  /** Organizations connected to this report. Connected does not mean responsible. */
+  organizations: ReportOrganizationDto[];
+  /** Everything organizations have said, oldest first. Corrections and withdrawals are separate entries. */
+  officialResponses: OfficialResponseDto[];
   viewer: {
+    /** Organizations the viewer belongs to, and what each may do here. */
+    organizations: ViewerOrganizationDto[];
     isOwner: boolean;
     isStaff: boolean;
     canEdit: boolean;
@@ -170,7 +192,10 @@ export const NOTIFICATION_TYPES = [
   "COMMENT",
   "STAFF_UPDATE",
   "MODERATION",
-  "REPORT_UPDATE"
+  "REPORT_UPDATE",
+  "OFFICIAL_RESPONSE",
+  "RESOLUTION_CLAIMED",
+  "ORGANIZATION"
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -217,6 +242,14 @@ export interface FlagDto {
     id: string;
     body: string;
     moderationState: ModerationState;
+    authorName: string;
+  } | null;
+  response?: {
+    id: string;
+    body: string;
+    type: string;
+    moderationState: ModerationState;
+    organizationName: string;
     authorName: string;
   } | null;
 }

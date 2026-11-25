@@ -41,3 +41,16 @@ export async function uploadAll(
   }
   return outcomes;
 }
+
+/** A photograph of a fix, uploaded for an organization the signed-in person represents. Attached to a claim afterwards. */
+export async function uploadOrganizationEvidence(
+  reference: string,
+  file: File,
+  organizationSlug: string
+): Promise<EvidenceDto> {
+  const form = new FormData();
+  form.set("file", file);
+  form.set("kind", "RESOLUTION");
+  form.set("organization", organizationSlug);
+  return api<EvidenceDto>(`/reports/${reference}/evidence`, { method: "POST", body: form });
+}

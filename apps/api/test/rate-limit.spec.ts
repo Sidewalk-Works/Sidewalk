@@ -1,4 +1,5 @@
 import { Logger } from "@nestjs/common";
+import { Client as Pg, type Pool } from "pg";
 import request from "supertest";
 import {
   ORIGIN,
@@ -17,7 +18,6 @@ import {
   PAIR_LIMIT
 } from "../src/auth/login-brake.service";
 import { rateLimitAddress } from "../src/ratelimit/address";
-import { PrismaService } from "../src/prisma/prisma.service";
 import { LocalWindowLimiter } from "../src/ratelimit/local-window";
 import { RateLimitService } from "../src/ratelimit/rate-limit.service";
 
@@ -28,6 +28,7 @@ EventEmitter.defaultMaxListeners = 100;
 
 const SECRET = "internal-secret-for-tests-0123456789abcdef";
 const via = (ip: string) => ({ "x-sidewalk-proxy-secret": SECRET, "x-sidewalk-client-ip": ip });
+const pgOf = (url: string) => url.replace(/\?schema=.*/, "");
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const statuses = (responses: Array<{ status: number }>) => {
   const count: Record<number, number> = {};
@@ -183,16 +184,15 @@ describe("Shared rate limiting", () => {
   });
 
   describe("when the shared store is unavailable", () => {
-    const failStore = (prisma: PrismaService, behaviour: "reject" | "hang") => {
-      const real = prisma.$queryRaw.bind(prisma) as (...a: unknown[]) => unknown;
-      return jest.spyOn(prisma, "$queryRaw").mockImplementation(((...args: unknown[]) => {
-        const sql = Array.isArray(args[0]) ? (args[0] as string[]).join("?") : "";
-        if (!sql.includes('"RateLimitBucket"')) return real(...args);
-        return behaviour === "reject"
-          ? Promise.reject(new Error("store down"))
-          : new Promise(() => undefined);
-      }) as never);
-    };
+    /** The limiter's own connection pool: the one place its queries go. */
+    const poolOf = (t: TestApp) => (t.app.get(RateLimitService) as unknown as { pool: Pool }).pool;
+    const failStore = (t: TestApp, behaviour: "reject" | "hang") =>
+      jest
+        .spyOn(poolOf(t), "query")
+        .mockImplementation((() =>
+          behaviour === "reject"
+            ? Promise.reject(new Error("store down"))
+            : new Promise(() => undefined)) as never);
 
     it("keeps enforcing limits per process, keeps serving, reports it, and recovers", async () => {
       const t = await start({ RATE_LIMIT_STORE_TIMEOUT_MS: "100" });
@@ -200,7 +200,7 @@ describe("Shared rate limiting", () => {
       const logSpy = jest
         .spyOn(Logger.prototype, "error")
         .mockImplementation((...args: unknown[]) => void errors.push(args.map(String).join(" ")));
-      const spy = failStore(t.prisma, "reject");
+      const spy = failStore(t, "reject");
       try {
         const results = await Promise.all(
           Array.from({ length: 50 }, () => ready(t, "198.51.100.40"))
@@ -233,9 +233,89 @@ describe("Shared rate limiting", () => {
       expect((await rows()).length).toBeGreaterThan(0); // counting in the database again
     });
 
+    /** A store that answers correctly, but only after `ms`. */
+    const slowStore = (t: TestApp, ms: number) => {
+      const pool = poolOf(t);
+      const real = pool.query.bind(pool) as (...a: unknown[]) => Promise<unknown>;
+      return jest
+        .spyOn(pool, "query")
+        .mockImplementation(((...args: unknown[]) => sleep(ms).then(() => real(...args))) as never);
+    };
+
+    it("waits for a slow store when RATE_LIMIT_STORE_TIMEOUT_MS allows it, and counts in the database", async () => {
+      const t = await start({ RATE_LIMIT_STORE_TIMEOUT_MS: "2000" });
+      const spy = slowStore(t, 300);
+      try {
+        const res = await ready(t, "198.51.100.60");
+        expect(res.status).toBe(200);
+        expect(t.app.get(RateLimitService).status()).toMatchObject({
+          store: "ok",
+          fallbackHits: 0
+        });
+        expect((await rows()).length).toBe(1);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it("abandons the same slow store under a tight timeout and counts in this process instead", async () => {
+      const t = await start({ RATE_LIMIT_STORE_TIMEOUT_MS: "100" });
+      const spy = slowStore(t, 600);
+      try {
+        const began = Date.now();
+        const res = await ready(t, "198.51.100.61");
+        expect(res.status).toBe(200);
+        expect(Date.now() - began).toBeLessThan(550); // answered at the timeout, not after the store
+        expect(t.app.get(RateLimitService).status().fallbackHits).toBe(1);
+        // The limit still applies on the fallback: a rapid burst is stopped at 30.
+        const burst = await Promise.all(
+          Array.from({ length: 40 }, () => ready(t, "198.51.100.61"))
+        );
+        expect(statuses(burst)[429]).toBeGreaterThanOrEqual(10);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it("a locked rate-limit table cannot starve the rest of the API of database connections", async () => {
+      const t = await start({ RATE_LIMIT_STORE_TIMEOUT_MS: "200" });
+      const locker = new Pg({ connectionString: pgOf(process.env.DATABASE_URL as string) });
+      await locker.connect();
+      await locker.query("BEGIN");
+      await locker.query('LOCK TABLE "RateLimitBucket" IN ACCESS EXCLUSIVE MODE');
+      // Whatever happens, the lock is released: a failing test must not deadlock the suite.
+      const safety = setTimeout(() => void locker.query("ROLLBACK").catch(() => undefined), 15_000);
+      try {
+        // A burst of simultaneous requests all try the locked table. Each must be answered at the timeout...
+        const began = Date.now();
+        const burst = await Promise.all(
+          Array.from({ length: 30 }, (_, i) => ready(t, `198.51.101.${i + 1}`))
+        );
+        expect(burst.every((r) => r.status === 200)).toBe(true);
+        expect(Date.now() - began).toBeLessThan(3000);
+        // ...and the abandoned statements must not keep connections the rest of the application needs.
+        const answered = await Promise.race([
+          t.prisma.user.count().then(() => true),
+          sleep(1500).then(() => false)
+        ]);
+        expect(answered).toBe(true);
+        const waiting = await first.prisma.$queryRaw<Array<{ n: bigint }>>`
+          SELECT count(*) AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND query ILIKE '%RateLimitBucket%'`;
+        expect(Number(waiting[0]?.n ?? 0)).toBe(0);
+      } finally {
+        clearTimeout(safety);
+        await locker.query("ROLLBACK").catch(() => undefined);
+        await locker.end();
+      }
+      // The lock is gone: the store works again once the breaker closes.
+      await sleep(5200);
+      expect((await ready(t, "198.51.101.200")).status).toBe(200);
+      expect(t.app.get(RateLimitService).status().store).toBe("ok");
+    });
+
     it("does not let a hanging store hold requests up: it gives up after the timeout and falls back", async () => {
       const t = await start({ RATE_LIMIT_STORE_TIMEOUT_MS: "100" });
-      const spy = failStore(t.prisma, "hang");
+      const spy = failStore(t, "hang");
       try {
         const began = Date.now();
         const res = await ready(t, "198.51.100.50");

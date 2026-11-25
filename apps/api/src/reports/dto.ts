@@ -194,4 +194,9 @@ export class UploadEvidenceDto {
   @IsString()
   @MaxLength(LIMITS.caption.max)
   caption?: string;
+
+  /** Upload on behalf of an organization you represent (resolution evidence only). */
+  @IsOptional()
+  @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/)
+  organization?: string;
 }

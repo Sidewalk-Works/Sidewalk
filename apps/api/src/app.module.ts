@@ -17,6 +17,7 @@ import { EnvModule } from "./config/env.module";
 import { EmailModule } from "./email/email.module";
 import { EvidenceModule } from "./evidence/evidence.module";
 import { HealthModule } from "./health/health.module";
+import { OrganizationsModule } from "./organizations/organizations.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { LocationsModule } from "./locations/locations.module";
 import { ModerationModule } from "./moderation/moderation.module";
@@ -47,6 +48,7 @@ import { UsersModule } from "./users/users.module";
     EvidenceModule,
     LocationsModule,
     NotificationsModule,
+    OrganizationsModule,
     ReportsModule,
     CommentsModule,
     ModerationModule,

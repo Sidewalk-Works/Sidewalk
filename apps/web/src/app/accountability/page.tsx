@@ -41,6 +41,11 @@ export default function AccountabilityPage() {
             staff”, never a person’s name.
           </li>
           <li>
+            <strong>A verified organization’s representative</strong> can acknowledge a report, say
+            work has started, or claim it is resolved, always labelled as that organization’s own
+            statement. See “Organizations” below.
+          </li>
+          <li>
             <strong>Nobody else.</strong> Residents cannot acknowledge a report on anyone’s behalf,
             and the system refuses it.
           </li>
@@ -48,6 +53,49 @@ export default function AccountabilityPage() {
         <p>
           Staff are Sidewalk’s own reviewers. They are not government officials, and a staff update
           is not a statement from any agency.
+        </p>
+      </Block>
+      <Block id="organizations" heading="Organizations that answer reports">
+        <p>
+          A public institution can have a profile on Sidewalk. Having a profile does not make it
+          official. An organization is <strong>verified</strong> only after a Sidewalk administrator
+          reviews evidence that it is the institution it says it is, and that the applicant may
+          speak for it. Registering, being invited, or using a work email address never verifies
+          anyone. Verification can be withdrawn, and an organization can be suspended, with
+          immediate effect.
+        </p>
+        <ul>
+          <li>
+            Every response names the organization <em>and</em> the person who wrote it. It cannot be
+            edited. A correction or withdrawal is added beside it, and the original stays visible as
+            replaced.
+          </li>
+          <li>
+            An <strong>acknowledgement</strong> means the organization has seen the report. It is
+            not an acceptance of responsibility or a promise to act.
+          </li>
+          <li>
+            “<strong>Outside our remit</strong>” is the organization’s own statement. Sidewalk has
+            not checked it, and staff decide who is responsible.
+          </li>
+          <li>
+            A <strong>resolution claim</strong> from an organization needs its own photograph and is
+            shown as “claimed, not verified”. It becomes verified only when independent Sidewalk
+            staff, who do not belong to that organization, check the evidence.
+          </li>
+          <li>
+            Organization pages show plain counts only: reports connected, acknowledged, claimed
+            resolved, and claims independently verified. They show no rates, rankings or response
+            times, because those would need a denominator and a time window that could mislead.
+          </li>
+        </ul>
+        <p>
+          Statements can be flagged like any other content. Moderators can hide one, with a recorded
+          reason, and the organization can still see it.{" "}
+          <Link href="/organizations" className="link">
+            Browse organizations
+          </Link>
+          .
         </p>
       </Block>
       <Block id="verification" heading="Claimed versus verified">
@@ -97,9 +145,10 @@ export default function AccountabilityPage() {
       <Block id="limits" heading="What Sidewalk does not claim">
         <ul>
           <li>
-            No government agency has been verified on Sidewalk, and none has endorsed it. Official
-            agency responses are planned, but until an organisation is verified, nothing is labelled
-            as official.
+            No government agency has endorsed Sidewalk. “Verified organization” means Sidewalk staff
+            checked an institution’s identity from sources they could reach themselves. It is not a
+            government accreditation, it does not make the organization’s statements true, and it
+            can be withdrawn.
           </li>
           <li>
             Sidewalk does not guarantee that a problem will be fixed, or that a report is accurate.

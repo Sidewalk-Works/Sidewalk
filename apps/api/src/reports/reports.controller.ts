@@ -200,7 +200,8 @@ export class ReportsController {
       user,
       file,
       kind: dto.kind,
-      caption: dto.caption
+      caption: dto.caption,
+      organizationSlug: dto.organization
     });
   }
 

@@ -30,6 +30,26 @@ describe("environment validation", () => {
     );
   });
 
+  describe("RATE_LIMIT_STORE_TIMEOUT_MS", () => {
+    it("defaults to 750 ms and accepts values from 50 to 10000", () => {
+      expect(loadEnv({ ...base }).RATE_LIMIT_STORE_TIMEOUT_MS).toBe(750);
+      expect(
+        loadEnv({ ...base, RATE_LIMIT_STORE_TIMEOUT_MS: "50" }).RATE_LIMIT_STORE_TIMEOUT_MS
+      ).toBe(50);
+      expect(
+        loadEnv({ ...base, RATE_LIMIT_STORE_TIMEOUT_MS: "10000" }).RATE_LIMIT_STORE_TIMEOUT_MS
+      ).toBe(10000);
+    });
+
+    it("rejects values that are too small, too large, fractional or not numbers, naming the variable", () => {
+      for (const bad of ["49", "0", "-5", "10001", "1.5", "fast", ""]) {
+        expect(() => loadEnv({ ...base, RATE_LIMIT_STORE_TIMEOUT_MS: bad })).toThrow(
+          /RATE_LIMIT_STORE_TIMEOUT_MS/
+        );
+      }
+    });
+  });
+
   describe("in production", () => {
     const prod = {
       ...base,

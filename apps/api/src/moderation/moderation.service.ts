@@ -12,6 +12,7 @@ import { cleanLine, cleanText, excerpt, likeEscape } from "../common/utils/text"
 import { AuditService } from "../audit/audit.service";
 import type { ModerationState, Prisma } from "../generated/prisma/client";
 import { NotificationsService } from "../notifications/notifications.service";
+import { OrganizationAccessService } from "../organizations/organization-access.service";
 import { PrismaService } from "../prisma/prisma.service";
 import type { ContentListQuery, CreateFlagDto, FlagListQuery, ModerationActionDto } from "./dto";
 
@@ -46,7 +47,8 @@ export class ModerationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
-    private readonly notifications: NotificationsService
+    private readonly notifications: NotificationsService,
+    private readonly organizations: OrganizationAccessService
   ) {}
 
   // ───────────────────────────── citizen flagging ─────────────────────────────
@@ -92,20 +94,58 @@ export class ModerationService {
     });
   }
 
+  /**
+   * Anyone signed in with a confirmed address may challenge an official response (a misleading claim, a resolution
+   * that did not happen). The organization's own members may not flag its statements.
+   */
+  async flagResponse(user: AuthUser, responseId: string, dto: CreateFlagDto): Promise<void> {
+    assertVerifiedEmail(user);
+    const response = await this.prisma.officialResponse.findUnique({
+      where: { id: responseId },
+      include: { report: { select: { moderationState: true } } }
+    });
+    if (
+      !response ||
+      response.moderationState !== "VISIBLE" ||
+      response.report.moderationState !== "VISIBLE"
+    )
+      throw AppError.notFound("We could not find that statement.");
+    if (await this.organizations.isMember(user.id, response.organizationId))
+      throw AppError.badRequest(
+        "OWN_CONTENT",
+        "You belong to the organization that published this statement. Correct or withdraw it instead."
+      );
+    await this.createFlag({
+      user,
+      target: "OFFICIAL_RESPONSE",
+      reportId: response.reportId,
+      commentId: null,
+      responseId: response.id,
+      dto
+    });
+  }
+
   private async createFlag(p: {
     user: AuthUser;
-    target: "REPORT" | "COMMENT";
+    target: "REPORT" | "COMMENT" | "OFFICIAL_RESPONSE";
     reportId: string;
     commentId: string | null;
+    responseId?: string | null;
     dto: CreateFlagDto;
   }): Promise<void> {
-    const targetKey = p.target === "REPORT" ? `report:${p.reportId}` : `comment:${p.commentId}`;
+    const targetKey =
+      p.target === "REPORT"
+        ? `report:${p.reportId}`
+        : p.target === "COMMENT"
+          ? `comment:${p.commentId}`
+          : `response:${p.responseId}`;
     try {
       await this.prisma.contentFlag.create({
         data: {
           target: p.target,
           reportId: p.reportId,
           commentId: p.commentId,
+          responseId: p.responseId ?? null,
           targetKey,
           reporterId: p.user.id,
           reason: p.dto.reason,
@@ -128,7 +168,9 @@ export class ModerationService {
     assertStaff(user);
     const where: Prisma.ContentFlagWhereInput =
       query.status === "ALL" ? {} : { status: query.status };
-    const [total, rows] = await this.prisma.$transaction([
+    // Two plain reads rather than one batch transaction: this query joins four relations, and Prisma runs those
+    // concurrently on the batch's single connection.
+    const [total, rows] = await Promise.all([
       this.prisma.contentFlag.count({ where }),
       this.prisma.contentFlag.findMany({
         where,
@@ -144,6 +186,16 @@ export class ModerationService {
               body: true,
               moderationState: true,
               author: { select: { displayName: true } }
+            }
+          },
+          response: {
+            select: {
+              id: true,
+              body: true,
+              type: true,
+              moderationState: true,
+              organizationName: true,
+              authorName: true
             }
           }
         }
@@ -164,6 +216,16 @@ export class ModerationService {
             body: f.comment.body,
             moderationState: f.comment.moderationState,
             authorName: f.comment.author.displayName
+          }
+        : null,
+      response: f.response
+        ? {
+            id: f.response.id,
+            body: f.response.body,
+            type: f.response.type,
+            moderationState: f.response.moderationState,
+            organizationName: f.response.organizationName,
+            authorName: f.response.authorName
           }
         : null
     }));
@@ -376,19 +438,86 @@ export class ModerationService {
     return { moderationState: next };
   }
 
+  /**
+   * Hides, removes or restores an official response. Only its visibility changes: the text, author and time stay in the
+   * database and in the audit trail. Staff who belong to the responding organization cannot decide on its statements.
+   */
+  async actOnResponse(
+    user: AuthUser,
+    responseId: string,
+    dto: ModerationActionDto
+  ): Promise<{ moderationState: ModerationState }> {
+    assertStaff(user);
+    const response = await this.prisma.officialResponse.findUnique({
+      where: { id: responseId },
+      select: { id: true, reportId: true, organizationId: true, moderationState: true }
+    });
+    if (!response) throw AppError.notFound("We could not find that statement.");
+    if (await this.organizations.isMember(user.id, response.organizationId))
+      throw AppError.conflict(
+        "REVIEW_CONFLICT",
+        "You belong to the organization that published this statement, so you cannot moderate it."
+      );
+    const next = resolveTarget(dto.action, response.moderationState, user.role);
+    const reason = this.cleanReason(dto.reason);
+    await this.prisma.$transaction(async (tx) => {
+      const claimed = await tx.officialResponse.updateMany({
+        where: { id: response.id, moderationState: response.moderationState },
+        data: { moderationState: next }
+      });
+      if (claimed.count === 0)
+        throw AppError.conflict(
+          "STALE_STATE",
+          "This content changed while you were reviewing it. Reload and try again."
+        );
+      // Notifications (and the emails built from them when sent) carry an excerpt of the statement. Once it is
+      // withheld, the excerpt must not live on in anyone's inbox: keep the fact and the caveats, drop the words.
+      // Restoring does not bring the excerpt back; the statement itself is visible again on the report.
+      if (next !== "VISIBLE") {
+        const where = { dedupeKey: `response:${response.id}` };
+        const withheld = "The text of this statement is currently withheld from public view.";
+        await tx.notification.updateMany({
+          where: { ...where, type: "RESOLUTION_CLAIMED" },
+          data: {
+            body: `This is the organization's claim. It has not been independently verified. ${withheld}`
+          }
+        });
+        await tx.notification.updateMany({
+          where: { ...where, type: "OFFICIAL_RESPONSE" },
+          data: { body: withheld }
+        });
+      }
+      await this.recordAction(tx, {
+        user,
+        target: "OFFICIAL_RESPONSE",
+        reportId: response.reportId,
+        commentId: null,
+        responseId: response.id,
+        action: dto.action,
+        policy: dto.policy,
+        reason,
+        previous: response.moderationState,
+        next
+      });
+    });
+    return { moderationState: next };
+  }
+
   async dismissFlag(user: AuthUser, flagId: string, reason: string): Promise<void> {
     assertStaff(user);
     const flag = await this.prisma.contentFlag.findUnique({
       where: { id: flagId },
       include: {
         report: { select: { moderationState: true } },
-        comment: { select: { moderationState: true } }
+        comment: { select: { moderationState: true } },
+        response: { select: { moderationState: true } }
       }
     });
     if (!flag) throw AppError.notFound("We could not find that flag.");
     if (flag.status !== "OPEN")
       throw AppError.conflict("FLAG_HANDLED", "This flag has already been handled.");
-    const current = (flag.comment?.moderationState ??
+    const current = (flag.response?.moderationState ??
+      flag.comment?.moderationState ??
       flag.report.moderationState) as ModerationState;
     await this.prisma.$transaction(async (tx) => {
       await tx.contentFlag.update({
@@ -401,6 +530,7 @@ export class ModerationService {
           target: flag.target,
           reportId: flag.reportId,
           commentId: flag.commentId,
+          responseId: flag.responseId,
           action: "DISMISS",
           policy: null,
           reason: this.cleanReason(reason),
@@ -424,9 +554,10 @@ export class ModerationService {
     tx: Prisma.TransactionClient,
     p: {
       user: AuthUser;
-      target: "REPORT" | "COMMENT";
+      target: "REPORT" | "COMMENT" | "OFFICIAL_RESPONSE";
       reportId: string;
       commentId: string | null;
+      responseId?: string | null;
       action: Action;
       policy: ModerationActionDto["policy"];
       reason: string;
@@ -440,6 +571,7 @@ export class ModerationService {
         target: p.target,
         reportId: p.reportId,
         commentId: p.commentId,
+        responseId: p.responseId ?? null,
         action: p.action,
         policy: p.policy,
         reason: p.reason,
@@ -457,16 +589,25 @@ export class ModerationService {
     const author =
       p.target === "REPORT"
         ? report.reporterId
-        : (
-            await tx.comment.findUniqueOrThrow({
-              where: { id: p.commentId as string },
-              select: { authorId: true }
-            })
-          ).authorId;
+        : p.target === "OFFICIAL_RESPONSE"
+          ? (
+              await tx.officialResponse.findUniqueOrThrow({
+                where: { id: p.responseId as string },
+                select: { authorId: true }
+              })
+            ).authorId
+          : (
+              await tx.comment.findUniqueOrThrow({
+                where: { id: p.commentId as string },
+                select: { authorId: true }
+              })
+            ).authorId;
     const what =
       p.target === "REPORT"
         ? `your report ${report.reference}`
-        : `your comment on ${report.reference}`;
+        : p.target === "OFFICIAL_RESPONSE"
+          ? `your organization's statement on ${report.reference}`
+          : `your comment on ${report.reference}`;
     const did = p.action === "HIDE" ? "hid" : p.action === "REMOVE" ? "removed" : "restored";
     await this.notifications.notifyUser(tx, {
       userId: author,
@@ -486,7 +627,12 @@ export class ModerationService {
       await tx.contentFlag.updateMany({
         where: {
           status: "OPEN",
-          targetKey: p.target === "REPORT" ? `report:${p.reportId}` : `comment:${p.commentId}`
+          targetKey:
+            p.target === "REPORT"
+              ? `report:${p.reportId}`
+              : p.target === "COMMENT"
+                ? `comment:${p.commentId}`
+                : `response:${p.responseId}`
         },
         data: { status: "ACTIONED", handledById: p.user.id, handledAt: new Date() }
       });
@@ -495,8 +641,14 @@ export class ModerationService {
       {
         actorId: p.user.id,
         action: `moderation.${p.action.toLowerCase()}`,
-        entityType: p.target === "REPORT" ? "Report" : "Comment",
-        entityId: p.target === "REPORT" ? p.reportId : p.commentId,
+        entityType:
+          p.target === "REPORT"
+            ? "Report"
+            : p.target === "COMMENT"
+              ? "Comment"
+              : "OfficialResponse",
+        entityId:
+          p.target === "REPORT" ? p.reportId : p.target === "COMMENT" ? p.commentId : p.responseId,
         metadata: { policy: p.policy, from: p.previous, to: p.next }
       },
       tx

@@ -9,6 +9,11 @@ import {
   type Paginated,
   type ReportDetailDto
 } from "@sidewalk/contracts";
+import { ConnectOrganization } from "@/components/organizations/connect-organization";
+import { OrganizationPanel } from "@/components/organizations/organization-panel";
+import { ReportOrganizations } from "@/components/organizations/report-organizations";
+import { ResponseCard } from "@/components/organizations/response-card";
+import { StaffConnections } from "@/components/organizations/staff-connections";
 import { CommentSection } from "@/components/report/comments";
 import { EvidenceGallery } from "@/components/report/evidence-gallery";
 import { FlagDialog } from "@/components/report/flag-dialog";
@@ -199,6 +204,37 @@ export default async function ReportPage({ params }: { params: Promise<Params> }
             </section>
           )}
 
+          <ReportOrganizations items={report.organizations} />
+
+          <section aria-labelledby="responses">
+            <h2 id="responses" className="display-md">
+              What organizations have said
+            </h2>
+            <p className="mb-6 mt-2 max-w-xl text-muted">
+              Official responses are published under an organization’s name and the name of the
+              person who wrote them. An organization’s claim is not an independent finding.
+              Corrections and withdrawals are added; nothing is rewritten.
+            </p>
+            {report.officialResponses.length === 0 ? (
+              <p className="border-y border-dashed border-ink/40 py-6 text-muted">
+                No organization has responded yet.
+              </p>
+            ) : (
+              <div className="space-y-5">
+                {report.officialResponses.map((r) => (
+                  <ResponseCard
+                    key={r.id}
+                    response={r}
+                    signedIn={Boolean(user)}
+                    canFlag={
+                      !report.viewer.organizations.some((o) => o.slug === r.organization.slug)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
           <section aria-labelledby="history">
             <h2 id="history" className="display-md">
               What has happened
@@ -230,7 +266,22 @@ export default async function ReportPage({ params }: { params: Promise<Params> }
 
         <aside className="space-y-8" aria-label="Details and actions">
           {report.viewer.isOwner && <OwnerPanel report={report} />}
+          <OrganizationPanel
+            reference={report.reference}
+            status={report.status}
+            items={report.viewer.organizations}
+            responses={report.officialResponses}
+          />
+          {report.viewer.isOwner && !hidden && (
+            <ConnectOrganization reference={report.reference} mode="suggest" />
+          )}
           {report.viewer.isStaff && <StaffPanel report={report} isAdmin={user?.role === "ADMIN"} />}
+          {report.viewer.isStaff && !hidden && (
+            <div className="space-y-3">
+              <ConnectOrganization reference={report.reference} mode="assign" />
+              <StaffConnections reference={report.reference} items={report.organizations} />
+            </div>
+          )}
 
           <section aria-labelledby="where" className="space-y-3">
             <h2 id="where" className="eyebrow">

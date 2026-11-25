@@ -57,6 +57,11 @@ const PUBLIC_ROUTES = [
   "GET /health/ready",
   "GET /locations/reverse",
   "GET /locations/search",
+  // Organization discovery: only listed profiles are ever returned (the service enforces it, and tests prove it).
+  "GET /organizations",
+  "GET /organizations/:slug",
+  "GET /organizations/:slug/reports",
+  "GET /organizations/:slug/responses",
   "GET /reports",
   "GET /reports/stats",
   "GET /reports/:reference",
@@ -70,7 +75,9 @@ const PUBLIC_ROUTES = [
   "POST /auth/refresh",
   "POST /auth/register",
   "POST /auth/verification/confirm",
-  "POST /auth/verification/resend"
+  "POST /auth/verification/resend",
+  // Looks at an invitation link without using it. Rate limited, and reveals nothing without the secret token.
+  "POST /organization-invitations/check"
 ];
 
 describe("Route inventory: every endpoint's access rules are deliberate", () => {
@@ -128,7 +135,19 @@ describe("Route inventory: every endpoint's access rules are deliberate", () => 
       "POST /reports/:reference/flags",
       "POST /reports/:reference/evidence",
       "POST /users/me/password",
-      "POST /admin/email-outbox/:id/retry"
+      "POST /admin/email-outbox/:id/retry",
+      "POST /organization-applications",
+      "POST /organization-applications/:id/submit",
+      "POST /organization-applications/:id/documents",
+      "POST /organizations/:slug/invitations",
+      "POST /organization-invitations/accept",
+      "POST /reports/:reference/official-responses",
+      "POST /reports/:reference/organizations",
+      "POST /official-responses/:id/flags",
+      "POST /admin/organizations",
+      "POST /admin/organizations/applications/:id/decision",
+      "POST /admin/organizations/:id/suspend",
+      "POST /admin/organizations/:id/revoke-verification"
     ];
     const missing = mustBeLimited.filter((k) => !routes.some((r) => key(r) === k && r.limited));
     expect(missing).toEqual([]);

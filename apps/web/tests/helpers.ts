@@ -150,3 +150,21 @@ export async function newActor(
   });
   return { context, page: await context.newPage() };
 }
+
+/** A state-changing API call made as the page's signed-in user, with the CSRF token the web app would send. */
+export async function apiPost(page: Page, apiPath: string, data: unknown = {}) {
+  const cookies = await page.context().cookies();
+  const csrf = cookies.find((c) => c.name === "sw_csrf")?.value ?? "";
+  return page.request.post(`/api/v1${apiPath}`, { data, headers: { "x-csrf-token": csrf } });
+}
+
+/** Signs a freshly made, confirmed account in through the real form, and returns it. */
+export async function newSignedInUser(
+  browser: Browser,
+  baseURL: string | undefined,
+  label: string
+) {
+  const actor = await newActor(browser, baseURL);
+  const user = await registerViaApi(actor.page, uniqueUser(label));
+  return { ...actor, user };
+}

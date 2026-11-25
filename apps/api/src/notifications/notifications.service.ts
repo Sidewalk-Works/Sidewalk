@@ -20,7 +20,8 @@ export interface ReportEvent {
 
 export interface DirectEvent extends Omit<ReportEvent, "reportId"> {
   userId: string;
-  reportId: string;
+  /** Null for news that is not about a report (an application decision, an invitation). */
+  reportId: string | null;
   url: string;
 }
 
@@ -86,7 +87,7 @@ export class NotificationsService {
   private async deliver(
     tx: Prisma.TransactionClient,
     userIds: string[],
-    event: Omit<ReportEvent, "reportId"> & { reportId: string; url: string }
+    event: Omit<ReportEvent, "reportId"> & { reportId: string | null; url: string }
   ): Promise<void> {
     if (userIds.length === 0) return;
     const users = await tx.user.findMany({

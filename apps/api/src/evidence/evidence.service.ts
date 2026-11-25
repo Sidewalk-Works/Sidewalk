@@ -11,6 +11,7 @@ import { type AuthUser, assertVerifiedEmail, isStaff } from "../common/auth-type
 import { cleanLine } from "../common/utils/text";
 import { AuditService } from "../audit/audit.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { OrganizationAccessService } from "../organizations/organization-access.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { processImage } from "./image-processor";
 import { STORAGE, type StorageProvider } from "./storage/storage.provider";
@@ -49,7 +50,8 @@ export class EvidenceService {
     private readonly prisma: PrismaService,
     @Inject(STORAGE) private readonly storage: StorageProvider,
     private readonly audit: AuditService,
-    private readonly notifications: NotificationsService
+    private readonly notifications: NotificationsService,
+    private readonly organizations: OrganizationAccessService
   ) {}
 
   async upload(params: {
@@ -58,6 +60,8 @@ export class EvidenceService {
     file: Express.Multer.File | undefined;
     kind: EvidenceKind;
     caption?: string;
+    /** Upload on behalf of an organization the user represents (resolution evidence only). */
+    organizationSlug?: string;
   }): Promise<EvidenceDto> {
     const { reference, user, file, kind } = params;
     assertVerifiedEmail(user);
@@ -68,7 +72,13 @@ export class EvidenceService {
 
     const report = await this.prisma.report.findUnique({
       where: { reference },
-      select: { id: true, reporterId: true, status: true, moderationState: true }
+      select: {
+        id: true,
+        reporterId: true,
+        status: true,
+        moderationState: true,
+        verification: true
+      }
     });
     if (
       !report ||
@@ -82,7 +92,34 @@ export class EvidenceService {
         "This report is hidden, so evidence cannot be added to it.",
         "REPORT_NOT_VISIBLE"
       );
-    if (!owner && !(isStaff(user) && kind === "RESOLUTION")) {
+    // A representative of a verified, active organization connected to the report may add RESOLUTION evidence for it.
+    // The authority is checked here, from the database, exactly as when publishing a response.
+    let organizationId: string | null = null;
+    let organization: { slug: string; name: string } | null = null;
+    if (params.organizationSlug) {
+      if (kind !== "RESOLUTION")
+        throw AppError.badRequest(
+          "ORGANIZATION_EVIDENCE_KIND",
+          "An organization can only add evidence of a resolution."
+        );
+      const { org } = await this.organizations.responder(user, params.organizationSlug);
+      const relation = await this.prisma.reportOrganization.findUnique({
+        where: { reportId_organizationId: { reportId: report.id, organizationId: org.id } },
+        select: { status: true }
+      });
+      if (!relation || relation.status === "REMOVED" || relation.status === "OUTSIDE_REMIT")
+        throw AppError.conflict(
+          "NOT_CONNECTED",
+          "Your organization is not connected to this report, so it cannot add evidence to it."
+        );
+      if (report.verification === "VERIFIED")
+        throw AppError.conflict(
+          "EVIDENCE_LOCKED",
+          "This resolution has been verified. Evidence can no longer be added to it."
+        );
+      organizationId = org.id;
+      organization = { slug: org.slug, name: org.name };
+    } else if (!owner && !(isStaff(user) && kind === "RESOLUTION")) {
       throw AppError.forbidden("Only the person who filed this report can add evidence to it.");
     }
     if (kind === "REPORT" && (report.status === "REJECTED" || report.status === "DUPLICATE")) {
@@ -145,6 +182,7 @@ export class EvidenceService {
             width: processed.width,
             height: processed.height,
             sha256: processed.sha256,
+            organizationId,
             caption: params.caption ? cleanLine(params.caption).slice(0, LIMITS.caption.max) : null
           }
         });
@@ -154,12 +192,17 @@ export class EvidenceService {
             type: "EVIDENCE_ADDED",
             actorId: user.id,
             isPublic: true,
-            payload: { kind, evidenceId: row.id, actorRole: owner ? "REPORTER" : "STAFF" }
+            payload: {
+              kind,
+              evidenceId: row.id,
+              actorRole: organization ? "ORGANIZATION" : owner ? "REPORTER" : "STAFF",
+              ...(organization ? { organization } : {})
+            }
           }
         });
         await tx.report.update({ where: { id: report.id }, data: { lastActivityAt: new Date() } });
         // Evidence from staff (the reporter already knows about their own uploads) is news worth sending.
-        if (!owner) {
+        if (!owner && !organization) {
           await this.notifications.notifyReport(tx, {
             reportId: report.id,
             actorId: user.id,
@@ -171,7 +214,7 @@ export class EvidenceService {
         }
         return row;
       });
-      return toEvidenceDto(created);
+      return { ...toEvidenceDto(created), organization, responseId: null };
     } catch (e) {
       await Promise.allSettled([this.storage.delete(storageKey), this.storage.delete(thumbKey)]);
       throw e;
@@ -200,6 +243,13 @@ export class EvidenceService {
     const uploader = evidence.uploaderId === user.id;
     if (!uploader && !staff)
       throw AppError.forbidden("You can only remove photographs you uploaded.");
+    // Evidence attached to an organization's official response is part of that statement. The organization cannot
+    // take it back; only Sidewalk staff can remove it (and that is audited below).
+    if (evidence.responseId && !staff)
+      throw AppError.conflict(
+        "EVIDENCE_LOCKED",
+        "This photograph is attached to an official response, so it is part of the record and cannot be removed."
+      );
     if (!staff) {
       const editable =
         evidence.kind === "RESOLUTION"
@@ -257,13 +307,25 @@ export class EvidenceService {
         storageKey: true,
         thumbKey: true,
         sha256: true,
-        report: { select: { moderationState: true, reporterId: true } }
+        organizationId: true,
+        report: { select: { moderationState: true, reporterId: true } },
+        response: { select: { moderationState: true } }
       }
     });
     if (!evidence) throw AppError.notFound("We could not find that photograph.");
-    const isPublic = evidence.report.moderationState === "VISIBLE";
+    let isPublic = evidence.report.moderationState === "VISIBLE";
     if (!isPublic && !(viewer && (isStaff(viewer) || viewer.id === evidence.report.reporterId))) {
       throw AppError.notFound("We could not find that photograph.");
+    }
+    // A photograph attached to a statement that moderators hid goes with it: only staff and the organization see it.
+    if (evidence.response && evidence.response.moderationState !== "VISIBLE") {
+      const member =
+        !!viewer &&
+        !!evidence.organizationId &&
+        (await this.organizations.isMember(viewer.id, evidence.organizationId));
+      if (!viewer || !(isStaff(viewer) || member))
+        throw AppError.notFound("We could not find that photograph.");
+      isPublic = false;
     }
     let object;
     try {

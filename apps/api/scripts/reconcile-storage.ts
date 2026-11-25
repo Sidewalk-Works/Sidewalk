@@ -1,4 +1,5 @@
-// Finds evidence objects that no database row references (orphans) and evidence rows whose files are missing.
+// Finds evidence and application-document objects that no database row references (orphans) and rows whose files are
+// missing.
 //
 //   pnpm --filter @sidewalk/api storage:reconcile              report only
 //   pnpm --filter @sidewalk/api storage:reconcile -- --delete  also delete orphans older than one hour

@@ -28,8 +28,8 @@ export default function GuidelinesPage() {
           <li>Post advertising, spam or unrelated content.</li>
           <li>Report private disputes. Sidewalk is for shared, public problems.</li>
           <li>
-            Pretend to speak for an agency. Only Sidewalk staff updates are labelled, and they are
-            not government statements.
+            Pretend to speak for an agency. Only verified organizations can post official responses,
+            and Sidewalk staff updates are labelled as staff and are not government statements.
           </li>
         </ul>
       </Block>

@@ -30,7 +30,7 @@ export default async function AuditPage({
         Privileged actions across the platform. The log is append-only and never contains passwords,
         tokens or message text.
       </p>
-      <div className="mt-6 overflow-x-auto">
+      <div className="relative mt-6 overflow-x-auto">
         <table className="w-full min-w-[44rem] border-t-2 border-ink text-left">
           <caption className="sr-only">Audit log entries, newest first</caption>
           <thead>

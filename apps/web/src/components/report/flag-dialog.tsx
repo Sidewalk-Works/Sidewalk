@@ -14,7 +14,7 @@ import { useAction } from "@/lib/use-action";
 interface Props {
   /** API path that receives the flag, for example /reports/SW-ABC123/flags. */
   endpoint: string;
-  subject: "report" | "comment";
+  subject: "report" | "comment" | "statement";
   signedIn: boolean;
   alreadyFlagged?: boolean;
   compact?: boolean;

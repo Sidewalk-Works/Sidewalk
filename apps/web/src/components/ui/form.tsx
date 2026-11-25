@@ -112,7 +112,7 @@ export function Checkbox({ label, hint, className, id, ...rest }: CheckProps) {
       <input
         id={cid}
         type="checkbox"
-        className="mt-1 size-5 shrink-0 cursor-pointer accent-laterite"
+        className="mt-1 size-6 shrink-0 cursor-pointer accent-laterite"
         {...rest}
       />
       <label htmlFor={cid} className="cursor-pointer leading-snug">

@@ -1,7 +1,7 @@
 "use client";
 
 import * as Menu from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, LogOut, ShieldCheck, User } from "lucide-react";
+import { ChevronDown, Landmark, LogOut, ShieldCheck, User } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/client-api";
 import { hardNavigate } from "@/lib/navigate";
@@ -51,6 +51,11 @@ export function AccountMenu({ name, role }: { name: string; role: string }) {
           <Menu.Item asChild>
             <Link href="/dashboard" className={item}>
               My reports
+            </Link>
+          </Menu.Item>
+          <Menu.Item asChild>
+            <Link href="/organizations/mine" className={item}>
+              <Landmark className="size-4" aria-hidden /> My organizations
             </Link>
           </Menu.Item>
           <Menu.Item asChild>

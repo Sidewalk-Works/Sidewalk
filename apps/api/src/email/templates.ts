@@ -164,6 +164,31 @@ export const templates = {
     });
   },
 
+  organizationInvitation(d: {
+    organizationName: string;
+    inviterName: string;
+    roleLabel: string;
+    url: string;
+    days: number;
+  }): RenderedEmail {
+    return layout({
+      subject: `You have been invited to join ${d.organizationName} on Sidewalk`,
+      preheader: `${d.inviterName} invited you. The link works once and expires in ${d.days} days.`,
+      heading: `Join ${d.organizationName} on Sidewalk`,
+      paragraphs: [
+        `${d.inviterName} invited this email address to join ${d.organizationName} on Sidewalk as: ${d.roleLabel}.`,
+        "To accept, sign in to Sidewalk with this email address (or create an account with it and confirm it) and use the button below. An invitation does not verify the organization and does not give you any Sidewalk staff powers.",
+        "If you do not recognise this invitation, ignore this message. Nothing happens unless you accept."
+      ],
+      action: { label: "Review the invitation", url: d.url },
+      afterAction: [
+        `The link works once and expires in ${d.days} days.`,
+        "It only works for the account that uses this email address."
+      ],
+      footer: SECURITY_FOOTER
+    });
+  },
+
   notification(d: {
     name: string;
     title: string;

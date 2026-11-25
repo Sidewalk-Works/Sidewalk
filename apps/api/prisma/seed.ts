@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import { config } from "dotenv";
 import argon2 from "argon2";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { normalizeOrganizationName } from "@sidewalk/contracts";
 import { PrismaClient, type ReportStatus } from "../src/generated/prisma/client";
 
 config({
@@ -297,6 +298,142 @@ const REPORTS: SeedReport[] = [
   }
 ];
 
+/**
+ * Two invented institutions, named as such. They exist so the interface has something to show; they are not real
+ * agencies and nothing here implies a real body has been verified. The "verified" one is verified the way a real one
+ * would be (an application, a staff decision on record), by the synthetic administrator, and says so in the reason.
+ */
+async function seedOrganizations(uid: (k: string) => string): Promise<void> {
+  const exists = await prisma.organization.findUnique({ where: { slug: "sample-roads-agency" } });
+  if (exists) return;
+  const admin = uid("admin");
+  const now = new Date();
+
+  const roads = await prisma.organization.create({
+    data: {
+      slug: "sample-roads-agency",
+      name: "Sample State Roads Agency (synthetic)",
+      normalizedName: normalizeOrganizationName("Sample State Roads Agency (synthetic)"),
+      aliases: ["Sample Roads"],
+      type: "AGENCY",
+      level: "STATE",
+      jurisdiction: "Sample State (synthetic)",
+      serviceAreas: ["Sample City"],
+      description:
+        "An invented agency used in the development seed. It is not a real institution. [Synthetic seed data.]",
+      website: "https://roads.sample.test",
+      publicEmail: "info@roads.sample.test",
+      verificationStatus: "VERIFIED",
+      verifiedAt: now,
+      publicProfile: true,
+      createdById: uid("orgadmin")
+    }
+  });
+  const application = await prisma.organizationApplication.create({
+    data: {
+      organizationId: roads.id,
+      applicantId: uid("orgadmin"),
+      status: "APPROVED",
+      roleTitle: "Seed administrator",
+      authorityStatement: "Synthetic seed account.",
+      reviewerId: admin,
+      submittedAt: now,
+      decidedAt: now,
+      decisionReason: "Synthetic seed organization. Not a real verification."
+    }
+  });
+  await prisma.verificationDecision.create({
+    data: {
+      organizationId: roads.id,
+      applicationId: application.id,
+      action: "APPROVED",
+      actorId: admin,
+      reason: "Synthetic seed organization. Not a real verification.",
+      previous: { verificationStatus: "UNVERIFIED", status: "ACTIVE" },
+      next: { verificationStatus: "VERIFIED", status: "ACTIVE" }
+    }
+  });
+  await prisma.organizationMember.createMany({
+    data: [
+      { organizationId: roads.id, userId: uid("orgadmin"), role: "ADMIN" },
+      { organizationId: roads.id, userId: uid("orgrep"), role: "REPRESENTATIVE" }
+    ]
+  });
+
+  // A second, unlisted and unverified, with an application waiting for a decision, so the staff queue is not empty.
+  const drainage = await prisma.organization.create({
+    data: {
+      slug: "sample-ward-drainage-office",
+      name: "Sample Ward Drainage Office (synthetic)",
+      normalizedName: normalizeOrganizationName("Sample Ward Drainage Office (synthetic)"),
+      type: "DEPARTMENT",
+      level: "LOCAL",
+      jurisdiction: "Sample Ward (synthetic)",
+      description: "An invented office. It has applied for verification and has not been verified.",
+      publicProfile: false,
+      createdById: uid("1")
+    }
+  });
+  await prisma.organizationApplication.create({
+    data: {
+      organizationId: drainage.id,
+      applicantId: uid("1"),
+      status: "SUBMITTED",
+      roleTitle: "Ward officer (claimed)",
+      authorityStatement: "Synthetic application waiting for review.",
+      officialReferences: [
+        { kind: "Website", label: "Ward page", value: "https://ward.sample.test" }
+      ],
+      submittedAt: now
+    }
+  });
+
+  // One acknowledgement on a seeded report that is already acknowledged, so a response shows on a real page.
+  const target = await prisma.report.findFirst({
+    where: { status: "ACKNOWLEDGED", reference: { startsWith: "SW-SD" } },
+    orderBy: { reference: "asc" }
+  });
+  if (target) {
+    await prisma.reportOrganization.create({
+      data: {
+        reportId: target.id,
+        organizationId: roads.id,
+        basis: "ORGANIZATION_ADDED",
+        status: "ACTIVE",
+        addedById: uid("orgrep"),
+        acknowledgedAt: now
+      }
+    });
+    await prisma.officialResponse.create({
+      data: {
+        reportId: target.id,
+        organizationId: roads.id,
+        authorId: uid("orgrep"),
+        type: "ACKNOWLEDGEMENT",
+        body: "We have received this report and a crew will inspect the site. [Synthetic seed data.]",
+        organizationName: roads.name,
+        organizationSlug: roads.slug,
+        authorName: "Seed Organization Representative",
+        verifiedAtPublication: now
+      }
+    });
+    await prisma.activityEvent.create({
+      data: {
+        reportId: target.id,
+        type: "OFFICIAL_RESPONSE",
+        actorId: uid("orgrep"),
+        isPublic: true,
+        payload: {
+          actorRole: "ORGANIZATION",
+          organization: { slug: roads.slug, name: roads.name },
+          responseType: "ACKNOWLEDGEMENT",
+          note: "We have received this report and a crew will inspect the site."
+        }
+      }
+    });
+  }
+}
+
 async function main(): Promise<void> {
   const generated = !process.env.SEED_PASSWORD;
   const password = process.env.SEED_PASSWORD || randomBytes(12).toString("base64url");
@@ -341,6 +478,18 @@ async function main(): Promise<void> {
       key: "3",
       email: "resident3@seed.sidewalk.test",
       displayName: "Seed Resident Three",
+      role: "CITIZEN" as const
+    },
+    {
+      key: "orgadmin",
+      email: "org-admin@seed.sidewalk.test",
+      displayName: "Seed Organization Administrator",
+      role: "CITIZEN" as const
+    },
+    {
+      key: "orgrep",
+      email: "org-rep@seed.sidewalk.test",
+      displayName: "Seed Organization Representative",
       role: "CITIZEN" as const
     }
   ];
@@ -531,6 +680,8 @@ async function main(): Promise<void> {
       }
     });
   }
+
+  await seedOrganizations(uid);
 
   console.log(`\nSeed complete: ${made} new synthetic reports, ${CATEGORIES.length} categories.\n`);
   const created = [...users.entries()].filter(([, v]) => v.created).length;

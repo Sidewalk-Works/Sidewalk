@@ -30,6 +30,17 @@ interface Health {
 /** Waiting longer than this for a due message to be picked up means the worker is not running. */
 const STALLED_SECONDS = 120;
 
+/** What an operator should read for a message, in words: internal failure codes are translated. */
+function describe(r: Row): string {
+  const reason = r.lastError ?? "";
+  const key = /^key_unavailable: key "([^"]+)"/.exec(reason);
+  if (key)
+    return `Held: the encryption key “${key[1]}” is not configured. It is kept and retried; nothing is lost.${r.status === "FAILED" ? ` Next check ${formatDateTime(r.nextAttemptAt)}.` : ""}`;
+  if (r.status === "SENT" && r.sentAt) return `Sent ${formatDateTime(r.sentAt)}`;
+  if (r.status === "FAILED") return `Next try ${formatDateTime(r.nextAttemptAt)}. ${reason}`;
+  return reason;
+}
+
 const STATUSES = ["ALL", "FAILED", "DEAD", "PENDING", "SENDING", "SENT", "SKIPPED"];
 const MEANING: Record<string, string> = {
   PENDING: "Waiting for the worker",
@@ -152,7 +163,47 @@ export default async function EmailDeliveryPage({
         ))}
       </nav>
 
-      <div className="mt-6 overflow-x-auto">
+      {/* Small screens: one card per message, so the Retry button is never off to the side. */}
+      <ul aria-label="Queued and delivered email" className="mt-6 border-t-2 border-ink md:hidden">
+        {data.items.map((r) => (
+          <li key={r.id} className="space-y-1.5 border-b border-rule py-4 text-[0.9rem]">
+            <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+              <span className="font-mono text-[0.78rem]">{r.kind.toLowerCase()}</span>
+              <span className="text-[0.78rem] text-muted">{formatDateTime(r.createdAt)}</span>
+            </p>
+            <p className="font-mono text-[0.8rem] [overflow-wrap:anywhere]">{r.to}</p>
+            <p>
+              <span
+                className={clsx(
+                  "font-semibold",
+                  (r.status === "DEAD" || r.status === "FAILED") && "text-danger"
+                )}
+              >
+                {r.status.toLowerCase()}
+              </span>
+              <span className="text-[0.75rem] text-muted">
+                {" "}
+                · {r.attempts} attempt{r.attempts === 1 ? "" : "s"}
+              </span>
+            </p>
+            {describe(r) && (
+              <p className="text-[0.8rem] text-muted [overflow-wrap:anywhere]">{describe(r)}</p>
+            )}
+            {(r.status === "DEAD" || r.status === "FAILED") && (
+              <div className="pt-1">
+                <RetryEmailButton id={r.id} label={`${r.kind.toLowerCase()} email to ${r.to}`} />
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <div
+        className="relative mt-6 hidden overflow-x-auto md:block"
+        role="region"
+        aria-label="Queued and delivered email"
+        tabIndex={0}
+      >
         <table className="w-full min-w-[46rem] border-t-2 border-ink text-left">
           <caption className="sr-only">Queued and delivered email, newest first</caption>
           <thead>
@@ -182,7 +233,9 @@ export default async function EmailDeliveryPage({
               <tr key={r.id} className="border-b border-rule align-top text-[0.9rem]">
                 <td className="whitespace-nowrap py-3.5 pr-4">{formatDateTime(r.createdAt)}</td>
                 <td className="py-3.5 pr-4 font-mono text-[0.78rem]">{r.kind.toLowerCase()}</td>
-                <td className="py-3.5 pr-4 font-mono text-[0.8rem]">{r.to}</td>
+                <td className="py-3.5 pr-4 font-mono text-[0.8rem] [overflow-wrap:anywhere]">
+                  {r.to}
+                </td>
                 <td className="py-3.5 pr-4">
                   <span
                     className={clsx(
@@ -196,22 +249,23 @@ export default async function EmailDeliveryPage({
                     {r.attempts} attempt{r.attempts === 1 ? "" : "s"}
                   </span>
                 </td>
-                <td className="max-w-xs py-3.5 pr-4 text-[0.8rem] text-muted">
-                  {r.status === "SENT" && r.sentAt
-                    ? `Sent ${formatDateTime(r.sentAt)}`
-                    : r.status === "FAILED"
-                      ? `Next try ${formatDateTime(r.nextAttemptAt)}. ${r.lastError ?? ""}`
-                      : (r.lastError ?? "")}
+                <td className="max-w-xs py-3.5 pr-4 text-[0.8rem] text-muted [overflow-wrap:anywhere]">
+                  {describe(r)}
                 </td>
                 <td className="py-3.5 text-right">
-                  {(r.status === "DEAD" || r.status === "FAILED") && <RetryEmailButton id={r.id} />}
+                  {(r.status === "DEAD" || r.status === "FAILED") && (
+                    <RetryEmailButton
+                      id={r.id}
+                      label={`${r.kind.toLowerCase()} email to ${r.to}`}
+                    />
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {data.items.length === 0 && <p className="py-8 text-muted">No messages in this state.</p>}
       </div>
+      {data.items.length === 0 && <p className="py-8 text-muted">No messages in this state.</p>}
       <div className="mt-8">
         <Pagination
           page={data.page}

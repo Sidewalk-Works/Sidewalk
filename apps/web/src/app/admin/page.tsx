@@ -66,12 +66,17 @@ export default async function FlagQueuePage({
         <ul className="mt-4 border-t-2 border-ink">
           {flags.items.map((f) => {
             const isComment = f.target === "COMMENT" && f.comment;
+            const isResponse = f.target === "OFFICIAL_RESPONSE" && f.response;
             const endpoint = isComment
               ? `/moderation/comments/${f.comment?.id}/actions`
-              : `/moderation/reports/${f.report.reference}/actions`;
+              : isResponse
+                ? `/moderation/official-responses/${f.response?.id}/actions`
+                : `/moderation/reports/${f.report.reference}/actions`;
             const state = isComment
               ? (f.comment?.moderationState ?? "VISIBLE")
-              : f.report.moderationState;
+              : isResponse
+                ? (f.response?.moderationState ?? "VISIBLE")
+                : f.report.moderationState;
             return (
               <li
                 key={f.id}
@@ -79,7 +84,9 @@ export default async function FlagQueuePage({
               >
                 <div className="min-w-0">
                   <p className="eyebrow flex flex-wrap gap-x-3">
-                    <span>{isComment ? "Comment" : "Report"}</span>
+                    <span>
+                      {isComment ? "Comment" : isResponse ? "Official response" : "Report"}
+                    </span>
                     <span>{FLAG_REASON_LABELS[f.reason]}</span>
                     <span className={clsx(f.status === "OPEN" ? "text-laterite" : "text-muted")}>
                       {f.status}
@@ -101,6 +108,15 @@ export default async function FlagQueuePage({
                       </footer>
                     </blockquote>
                   )}
+                  {isResponse && f.response && (
+                    <blockquote className="mt-3 max-w-2xl border-l-4 border-ink bg-paper-deep px-4 py-3 text-[0.95rem]">
+                      <p className="whitespace-pre-line">{f.response.body}</p>
+                      <footer className="mt-1 text-[0.8rem] text-muted">
+                        {f.response.type.toLowerCase().replace("_", " ")} by {f.response.authorName}{" "}
+                        for {f.response.organizationName}
+                      </footer>
+                    </blockquote>
+                  )}
                   {f.details && (
                     <p className="mt-3 max-w-2xl text-[0.95rem]">Flagged with: “{f.details}”</p>
                   )}
@@ -113,7 +129,7 @@ export default async function FlagQueuePage({
                   <div className="flex flex-wrap items-start gap-2 lg:justify-end">
                     <ModerateButton
                       endpoint={endpoint}
-                      subject={isComment ? "comment" : "report"}
+                      subject={isComment ? "comment" : isResponse ? "statement" : "report"}
                       state={state}
                       isAdmin={isAdmin}
                       label="Review and decide"

@@ -22,6 +22,14 @@ if (!/_(test|e2e)$/.test(dbName)) {
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
 const tables = [
   "RateLimitBucket",
+  "OfficialResponse",
+  "ReportOrganization",
+  "OrganizationDocument",
+  "OrganizationInvitation",
+  "OrganizationMember",
+  "VerificationDecision",
+  "OrganizationApplication",
+  "Organization",
   "EmailOutbox",
   "Notification",
   "ReportFollow",

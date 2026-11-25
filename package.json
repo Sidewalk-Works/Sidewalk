@@ -29,6 +29,9 @@
     "outbox:keys": "pnpm --filter @sidewalk/api outbox:keys",
     "account:upgrade": "pnpm --filter @sidewalk/api account:upgrade",
     "ops:check": "pnpm --filter @sidewalk/api ops:check",
+    "ops:drill": "pnpm --filter @sidewalk/api build && pnpm --filter @sidewalk/api ops:drill",
+    "ops:prodlike": "pnpm --filter @sidewalk/api build && pnpm --filter @sidewalk/api ops:prodlike",
+    "ops:restore-check": "scripts/ops/backup-restore-check.sh",
     "worker": "pnpm --filter @sidewalk/api build && pnpm --filter @sidewalk/api worker"
   },
   "devDependencies": {

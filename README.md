@@ -9,6 +9,9 @@ public record of what was **claimed** versus what was **verified**.
 - **Data:** PostgreSQL via Prisma (committed migrations), S3-compatible evidence storage
 - **Accounts and email:** email verification, password recovery and in-app + email notifications, delivered through a
   transactional outbox and any SMTP provider (Mailpit captures everything locally)
+- **Verified organizations:** public institutions can apply to be verified by Sidewalk staff, then answer reports with
+  attributable, append-only official responses. An organization’s claim that a problem is fixed stays separate from
+  independent verification by staff. See [Organizations](#verified-organizations-and-official-responses) below.
 - **Tests:** Jest + Supertest (API), Playwright + axe (browser, accessibility)
 
 ## Prerequisites
@@ -71,6 +74,13 @@ Administrators can see delivery health, retry failed messages and read the failu
 | Administrator | `admin@sidewalk.test`                                           |
 | Moderator     | `moderator@sidewalk.test`                                       |
 | Residents     | `resident1@seed.sidewalk.test` … `resident3@seed.sidewalk.test` |
+| Org admin     | `org-admin@seed.sidewalk.test` (Sample State Roads Agency)      |
+| Org rep       | `org-rep@seed.sidewalk.test` (same organization)                |
+
+The seed also creates two **invented** organizations, labelled “(synthetic)”: a verified “Sample State Roads Agency”
+with one acknowledgement on a seeded report, and a “Sample Ward Drainage Office” whose application is waiting for review
+(resident 1 is its applicant), so the staff queue is not empty. Neither is a real institution and neither verification
+is real; the seed never runs in production.
 
 These accounts are created with their email already confirmed. Accounts created through the registration form are
 not: they must confirm through Mailpit. Their password is `SEED_PASSWORD` from your `.env`. If that is blank, the seed generates a random one and prints it
@@ -79,18 +89,26 @@ report.]” and carries no invented photographs.
 
 ## Commands
 
-| Command                                              | What it does                                                   |
-| ---------------------------------------------------- | -------------------------------------------------------------- |
-| `pnpm dev`                                           | API (watch mode, with the email worker) and web (Turbopack)    |
-| `pnpm worker`                                        | Standalone email-delivery worker (see above)                   |
-| `pnpm build`                                         | Production build of contracts, API and web                     |
-| `pnpm start`                                         | Run the production builds                                      |
-| `pnpm lint` / `pnpm typecheck` / `pnpm format:check` | Static checks                                                  |
-| `pnpm test`                                          | Contracts + API unit/integration tests (needs `pnpm infra:up`) |
-| `pnpm test:e2e`                                      | Playwright against a real production build, API and database   |
-| `pnpm db:migrate:dev`                                | Create a new migration after editing `schema.prisma`           |
-| `pnpm db:seed` / `pnpm db:reset`                     | Seed / rebuild the development database                        |
-| `pnpm infra:up` / `pnpm infra:down`                  | Start / stop Docker services                                   |
+| Command                                                 | What it does                                                   |
+| ------------------------------------------------------- | -------------------------------------------------------------- |
+| `pnpm dev`                                              | API (watch mode, with the email worker) and web (Turbopack)    |
+| `pnpm worker`                                           | Standalone email-delivery worker (see above)                   |
+| `pnpm build`                                            | Production build of contracts, API and web                     |
+| `pnpm start`                                            | Run the production builds                                      |
+| `pnpm lint` / `pnpm typecheck` / `pnpm format:check`    | Static checks                                                  |
+| `pnpm test`                                             | Contracts + API unit/integration tests (needs `pnpm infra:up`) |
+| `pnpm test:e2e`                                         | Playwright against a real production build, API and database   |
+| `pnpm db:migrate:dev`                                   | Create a new migration after editing `schema.prisma`           |
+| `pnpm db:seed` / `pnpm db:reset`                        | Seed / rebuild the development database                        |
+| `pnpm infra:up` / `pnpm infra:down`                     | Start / stop Docker services                                   |
+| `pnpm ops:check [--storage] [--strict] [--json]`        | Deployment health: exit 0 healthy, 1 failed (for cron)         |
+| `pnpm outbox:keys generate\|status\|rewrap`             | Create, inspect and rotate the email-encryption keys           |
+| `pnpm account:upgrade preflight\|verify\|confirm-email` | Upgrade a deployment that already has accounts                 |
+| `pnpm ops:restore-check [database]`                     | Real backup, restore into a scratch DB, compare every table    |
+| `pnpm ops:drill` / `pnpm ops:prodlike`                  | Kill-the-worker and production-mode rehearsals (disposable DB) |
+
+Operator procedures for all of these are in [docs/operations.md](docs/operations.md). Evidence reconciliation and the
+first administrator use `pnpm --filter @sidewalk/api storage:reconcile -- --check` and `… admin:promote`.
 
 ## Testing
 
@@ -99,11 +117,18 @@ pnpm infra:up
 pnpm test                              # API: runs migrations on sidewalk_test, then Jest + Supertest
 pnpm test:e2e                          # builds and boots the full stack against sidewalk_e2e, then Playwright
 SCREENSHOTS=1 pnpm test:e2e -- screenshots.spec.ts   # refresh docs/visual-review
+SCREENSHOTS=1 pnpm test:e2e -- organizations-screenshots.spec.ts --grep "organizations desktop"   # then run again with "organizations mobile"
 ```
 
 - API tests use the real application, real HTTP and a real Postgres database (`sidewalk_test`). Nothing is mocked.
 - E2E uses its own ports (API 4020, web 3020) and database (`sidewalk_e2e`), so it can run beside `pnpm dev`.
 - `.env.test` and `.env.e2e` contain only non-secret values for throwaway databases and are committed on purpose.
+- The API suite also rehearses the **upgrade of an existing deployment** (a database built at the old schema, real
+  migration, real sessions and operator commands), the outbox under three database time zones, the encryption-key
+  lifecycle, rate limiting across two application instances (including a locked limiter table), and an inventory that
+  fails if any route becomes public, unthrottled or loses its role. Process-level rehearsals need Docker and a fresh
+  build: `pnpm ops:drill` (worker killed mid-send, mail outage, exactly-once recovery) and `pnpm ops:prodlike` (two API
+  processes plus a worker in `NODE_ENV=production`, TLS mail, shared limits).
 
 ## Repository layout
 
@@ -119,7 +144,8 @@ apps/
   web/            Next.js app (src/app routes, src/components, src/lib), Playwright tests in tests/
 packages/
   contracts/      Shared lifecycle rules (status transitions), limits and API types
-docs/             architecture.md, visual-review/
+docs/             architecture.md, security.md, operations.md, visual-review/
+scripts/ops/      backup-restore-check.sh
 docker-compose.yml, .env.example, .env.test, .env.e2e, .github/workflows/ci.yml
 ```
 
@@ -131,7 +157,15 @@ decisions.
 Everything is configured through one root `.env` (see [.env.example](.env.example), every variable is documented).
 The API validates it at startup and refuses to boot with a readable list of problems.
 
-Required: `DATABASE_URL`, `JWT_ACCESS_SECRET` (32+ characters). Everything else has a development default.
+Required: `DATABASE_URL`, `JWT_ACCESS_SECRET` (32+ characters). In production also `OUTBOX_ENCRYPTION_KEYS`,
+`INTERNAL_PROXY_SECRET`, a real SMTP host, an https `WEB_ORIGIN` and non-development database and storage credentials; the
+API refuses to start otherwise, listing every problem. Everything else has a development default.
+
+Email encryption and rate limiting: `OUTBOX_ENCRYPTION_KEYS` (`id:base64key,…`; the first key encrypts, the rest only
+decrypt; independent of the JWT secret; `pnpm env:init` creates one for a new `.env`), `OUTBOX_LEGACY_JWT_DECRYPT` (read
+rows queued before the keyring existed; turn off after `pnpm outbox:keys rewrap`), `RATE_LIMIT_ENABLED`,
+`RATE_LIMIT_MULTIPLIER` (tests only) and `RATE_LIMIT_STORE_TIMEOUT_MS` (default 750; how long a rate-limit check may wait
+for PostgreSQL before that request is counted in memory instead; 50–10000).
 
 Email (verification, recovery, notifications): `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`/`SMTP_PASSWORD`,
 `EMAIL_FROM`, `OUTBOX_WORKER_ENABLED`, `OUTBOX_POLL_MS`. The development defaults point at Mailpit. Links inside emails
@@ -166,13 +200,50 @@ Optional integrations:
   the exact records and a rollout plan are in [docs/security.md](docs/security.md#email-authentication-spf-dkim-dmarc).
   Run exactly one delivery path per deployment style: the embedded worker for a single API instance, or
   `OUTBOX_WORKER_ENABLED=false` on the API plus one or more `pnpm worker` processes when you scale out.
-- **Upgrading an existing deployment:** apply the new migration (`pnpm db:migrate` / `prisma migrate deploy`). Accounts
-  that existed before this milestone have no confirmed email, so their owners can still sign in and read but must
-  confirm before they can file, comment or follow; they can request the link from the banner or `/verify-email`.
-  To grandfather accounts you have already vetted, set `"emailVerifiedAt"` for them in SQL deliberately; nothing does
-  it automatically.
-- Rate limiting is in memory, which is correct for one API instance. Use a shared store (for example Redis) if you scale
-  out. `GET /api/v1/health` is a liveness probe, `GET /api/v1/health/ready` checks the database and storage.
+- **Upgrading an existing deployment:** the migrations only add tables and columns, and existing addresses are **not**
+  marked confirmed (nobody has proved control of them). Existing sessions stay valid; residents can read and sign in but
+  must confirm before filing, commenting or following, and unconfirmed moderators and administrators cannot use staff
+  tools. Follow the procedure in [docs/operations.md](docs/operations.md#upgrading-an-existing-deployment): take a
+  backup, `pnpm account:upgrade preflight --check-smtp`, `pnpm db:migrate`, `pnpm account:upgrade verify`, and then staff
+  confirm by emailed link or an operator runs `pnpm account:upgrade confirm-email --staff --reason "…"` (a dry run until
+  `--apply`; every change is audited with the reason). Nothing marks an address confirmed automatically.
+- **Rate limiting** is counted in PostgreSQL and is exact across API instances; no Redis is required. If the database
+  is slow or unavailable the limiter falls back to per-process counters (limits still apply, per instance) and says so
+  on `/admin/email` and in `pnpm ops:check`. The counters are emptied by a database crash and windows are fixed (a burst
+  of up to twice a limit across a boundary is possible): see [docs/security.md](docs/security.md#rate-limiting).
+- **Monitoring and recovery:** `GET /api/v1/health` is liveness, `GET /api/v1/health/ready` checks the database and
+  storage, `pnpm ops:check` (cron or a systemd timer) covers migrations, the email queue, held messages, the limiter and
+  administrator access, and `/admin/email` shows the same to administrators with an audited retry. Run
+  `pnpm ops:restore-check` against a copy of real data on a schedule. Backups, key rotation, incident steps and what is
+  automated versus yours: [docs/operations.md](docs/operations.md).
+
+## Verified organizations and official responses
+
+Where to look: `/organizations` (directory and profiles), `/organizations/apply`, `/organizations/mine`,
+`/organizations/<slug>/team`, `/admin/organizations` (staff). The report page gains “Organizations connected” and “What
+organizations have said”, and a response composer for people who act for an organization.
+
+How it works, in one paragraph: anyone with a confirmed address can apply for an organization with references staff can
+check and private document photographs; a moderator reads and asks questions; **only an administrator’s approval makes it
+verified**. A verified organization’s ADMIN or REPRESENTATIVE can then connect it to a report and publish acknowledgements,
+updates, delays, “outside our remit”, corrections, withdrawals and resolution claims, each under the organization’s name
+and theirs. A claim needs the organization’s own photograph and is shown as “claimed, not verified” until independent
+staff (not members of that organization) verify it. Suspension, withdrawal and member removal apply on the next request.
+
+Staff-created records and invitations carry no trust: an invitation is single-use, bound to one confirmed address and
+carries no authority. What verified means, the permission matrix, how invitations and claims work, and the limits are in
+[docs/architecture.md](docs/architecture.md#verified-organizations-and-official-responses) and
+[docs/security.md](docs/security.md#verified-organizations-identity-authority-and-abuse-verified-by-tests); the manual
+review process and incident steps are in [docs/operations.md](docs/operations.md#verifying-an-organization).
+
+**Metric definitions** (profile page): reports connected (not removed); reports with a published acknowledgement; reports
+with a published resolution claim (each once); reports whose current resolution this organization last claimed and staff
+verified. All public reports, all time. No rates, averages, rankings or response times are shown or computed, because none
+could be stated honestly without a denominator and a window.
+
+**Limits you should know:** verification is a human review against sources, with no government-register integration;
+there is no re-verification schedule; an organization can connect itself to any public report (labelled, removable by
+staff); notifications and emails already sent are not recalled when a statement is later hidden.
 
 ## Security summary
 
@@ -181,11 +252,13 @@ Full details, policies and verification status: [docs/security.md](docs/security
 Argon2id password hashing · 15-minute access cookie tied to a live login (logout, password change and device
 revocation cut access immediately) + rotating refresh token with reuse detection · HttpOnly,
 SameSite=Lax cookies (never in `localStorage`) · double-submit CSRF token plus origin checks · per-route rate limits and
-a per-account login brake · strict DTO validation (unknown fields rejected) · uploads re-encoded server-side, validated by
+a sign-in brake that slows guessing without letting anyone lock out another person (shared across instances through
+PostgreSQL) · strict DTO validation (unknown fields rejected) · uploads re-encoded server-side, validated by
 content, metadata (EXIF/GPS) stripped, served only through visibility-checked endpoints · roles enforced in guards **and**
 service methods · append-only audit log · secrets and tokens redacted from logs · single-use hashed email links carried
 in the URL fragment, with every session ended after a password reset (no automatic sign-in) · email sent only after
-the database commit, through an encrypted outbox with bounded retries.
+the database commit, through an outbox encrypted with a versioned, rotatable keyring and sent with bounded retries,
+claim-checked workers and operator-visible dead letters.
 
 ## Known limitations
 

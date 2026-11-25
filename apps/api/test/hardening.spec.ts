@@ -701,6 +701,36 @@ describe("Hardening: storage reconciliation", () => {
     storage.objects.delete(row.thumbKey);
     expect(await findMissingObjects(storage, t.prisma)).toEqual([row.id]);
   });
+
+  it("covers organization application documents too", async () => {
+    const { findOrphans, findMissingObjects } = await import("../src/evidence/reconcile");
+    const { client } = await signedIn(t.app, t.prisma);
+    const created = await client.post("/organization-applications", {
+      organization: {
+        name: "Reconcile Test Roads Agency",
+        type: "AGENCY",
+        level: "STATE",
+        jurisdiction: "Ogun State"
+      }
+    });
+    expect(created.status).toBe(201);
+    const up = await client.upload(
+      `/organization-applications/${created.body.id}/documents`,
+      await pngImage(),
+      "letter.png"
+    );
+    expect(up.status).toBe(201);
+    storage.objects.set("org-documents/leftover/crashed.webp", Buffer.from("x"));
+
+    expect((await findOrphans(storage, t.prisma)).map((o) => o.key)).toEqual([
+      "org-documents/leftover/crashed.webp"
+    ]);
+    expect(await findMissingObjects(storage, t.prisma)).toEqual([]);
+
+    const row = await t.prisma.organizationDocument.findFirstOrThrow();
+    storage.objects.delete(row.storageKey);
+    expect(await findMissingObjects(storage, t.prisma)).toEqual([`document:${row.id}`]);
+  });
 });
 
 describe("Hardening: client address and rate limits behind the web server", () => {

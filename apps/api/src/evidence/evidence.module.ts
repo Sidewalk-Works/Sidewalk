@@ -1,6 +1,7 @@
 import { Inject, Logger, Module, OnModuleInit } from "@nestjs/common";
 import path from "node:path";
 import { APP_ENV, type AppEnv } from "../config/env";
+import { OrganizationAccessModule } from "../organizations/organization-access.module";
 import { EvidenceController } from "./evidence.controller";
 import { EvidenceService } from "./evidence.service";
 import { LocalStorageProvider } from "./storage/local-storage.provider";
@@ -8,6 +9,7 @@ import { S3StorageProvider } from "./storage/s3-storage.provider";
 import { STORAGE, type StorageProvider } from "./storage/storage.provider";
 
 @Module({
+  imports: [OrganizationAccessModule],
   controllers: [EvidenceController],
   providers: [
     {

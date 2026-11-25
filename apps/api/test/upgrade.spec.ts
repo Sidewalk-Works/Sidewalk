@@ -41,6 +41,8 @@ function cli(script: string, args: string[], url = upgradeUrl): { code: number; 
   }
 }
 
+const EXPECTED = expectedMigrations(path.join(API_DIR, "prisma/migrations"));
+
 describe("Upgrading a deployment that already has accounts", () => {
   jest.setTimeout(240_000);
   let pg: Pg;
@@ -112,7 +114,7 @@ describe("Upgrading a deployment that already has accounts", () => {
 
     // 1. The database as it was before this milestone: only the first two migrations.
     const all = expectedMigrations(path.join(API_DIR, "prisma/migrations"));
-    expect(all.length).toBeGreaterThanOrEqual(4);
+    expect(all.length).toBeGreaterThanOrEqual(5);
     const old = path.join(tmp, "migrations");
     mkdirSync(old);
     cpSync(
@@ -224,7 +226,8 @@ describe("Upgrading a deployment that already has accounts", () => {
     expect(preflight.out).toMatch(/WARNING\s+2 moderator\(s\) cannot use moderation tools/);
     expect(preflight.out).toMatch(/NOTE\s+3 resident\(s\) keep reading and signing in/);
     expect(preflight.out).toContain("Take a database backup now");
-    expect(preflight.out).toMatch(/2 pending/); // the two new migrations
+    // Everything after the two migrations this rehearsal started from is still to be applied.
+    expect(preflight.out).toContain(`${EXPECTED.length - 2} pending`);
     // It is read-only: the old schema is untouched.
     expect(preflight.out).not.toMatch(/emailVerifiedAt/);
   });
@@ -258,6 +261,45 @@ describe("Upgrading a deployment that already has accounts", () => {
         }
       )
     ).not.toThrow();
+  });
+
+  it("adds the organization tables empty, with their guards, and gives nobody new rights", async () => {
+    for (const table of [
+      "Organization",
+      "OrganizationApplication",
+      "OrganizationDocument",
+      "VerificationDecision",
+      "OrganizationMember",
+      "OrganizationInvitation",
+      "OfficialResponse",
+      "ReportOrganization"
+    ]) {
+      const rows = await t.prisma.$queryRawUnsafe<Array<{ n: bigint }>>(
+        `SELECT count(*) AS n FROM "${table}"`
+      );
+      expect([table, Number(rows[0]?.n)]).toEqual([table, 0]);
+    }
+    const triggers = await t.prisma.$queryRaw<Array<{ tgname: string }>>`
+      SELECT tgname FROM pg_trigger WHERE NOT tgisinternal AND tgname IN ('VerificationDecision_append_only', 'OfficialResponse_guard')`;
+    expect(triggers.map((r) => r.tgname).sort()).toEqual([
+      "OfficialResponse_guard",
+      "VerificationDecision_append_only"
+    ]);
+    // Existing evidence and status history gained nullable links, and nothing was attributed to an organization.
+    expect(await t.prisma.reportEvidence.count({ where: { organizationId: { not: null } } })).toBe(
+      0
+    );
+    expect(
+      await t.prisma.reportStatusHistory.count({ where: { organizationId: { not: null } } })
+    ).toBe(0);
+    // A legacy report reads as before, with no organization or official response on it.
+    const report = await t.prisma.report.findFirstOrThrow({ select: { reference: true } });
+    const res = await request(t.app.getHttpServer()).get(`/api/v1/reports/${report.reference}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ organizations: [], officialResponses: [] });
+    expect(res.body.viewer.organizations).toEqual([]);
+    // No organization is listed or verified, so nothing on the site is labelled official.
+    expect((await request(t.app.getHttpServer()).get("/api/v1/organizations")).body.total).toBe(0);
   });
 
   it("existing sessions and refresh tokens keep working; people can read and sign in", async () => {
@@ -297,7 +339,9 @@ describe("Upgrading a deployment that already has accounts", () => {
     expect(verifyBefore.out).toMatch(/FAIL\s+administrators\s+none of the 1 active administrator/);
     expect(verifyBefore.out).toContain("unconfirmed admin: administrator@legacy.test");
     expect(verifyBefore.out).toContain("unconfirmed moderator: moderator.one@legacy.test");
-    expect(verifyBefore.out).toMatch(/OK\s+migrations\s+4 applied, none pending/);
+    expect(verifyBefore.out).toMatch(
+      new RegExp(`OK\\s+migrations\\s+${EXPECTED.length} applied, none pending`)
+    );
   });
 
   it("confirming staff needs a reason, whom, and an explicit --apply (a dry run lists but changes nothing)", async () => {

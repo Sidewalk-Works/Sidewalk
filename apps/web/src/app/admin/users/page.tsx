@@ -43,7 +43,7 @@ export default async function UsersPage({
           </button>
         </form>
       </div>
-      <div className="mt-6 overflow-x-auto">
+      <div className="relative mt-6 overflow-x-auto">
         <table className="w-full min-w-[40rem] border-t-2 border-ink text-left">
           <caption className="sr-only">User accounts</caption>
           <thead>

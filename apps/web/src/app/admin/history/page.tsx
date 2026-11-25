@@ -26,7 +26,7 @@ export default async function HistoryPage({
         Every hide, removal, restoration and dismissed flag, with the reason given. Entries cannot
         be edited.
       </p>
-      <div className="mt-6 overflow-x-auto">
+      <div className="relative mt-6 overflow-x-auto">
         <table className="w-full min-w-[44rem] border-t-2 border-ink text-left">
           <caption className="sr-only">Moderation decisions, newest first</caption>
           <thead>

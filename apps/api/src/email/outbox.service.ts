@@ -1,6 +1,11 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { randomUUID } from "node:crypto";
-import { TOKEN_TTL } from "@sidewalk/contracts";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  MEMBER_ROLE_INFO,
+  ORGANIZATION_LIMITS,
+  TOKEN_TTL,
+  type MemberRole
+} from "@sidewalk/contracts";
 import { AppError } from "../common/app-error";
 import { APP_ENV, type AppEnv } from "../config/env";
 import { Prisma, type EmailOutbox, type OutboxKind } from "../generated/prisma/client";
@@ -27,6 +32,7 @@ const KEY_HOLD_MS = 7 * 86_400_000;
 export const PAYLOAD_INTEGRITY_CODE = "payload_integrity";
 /** One-time links stop working after this long, so a message carrying one is pointless to send later. */
 const LINK_LIFETIME_MS: Partial<Record<OutboxKind, number>> = {
+  ORGANIZATION_INVITATION: ORGANIZATION_LIMITS.invitationTtlDays * 86_400_000,
   EMAIL_VERIFICATION: TOKEN_TTL.emailVerificationHours * 3_600_000,
   PASSWORD_RESET: TOKEN_TTL.passwordResetMinutes * 60_000
 };
@@ -259,6 +265,29 @@ export class OutboxService {
           signInUrl: this.links.page("/login"),
           resetUrl: this.links.page("/forgot-password")
         });
+      case "ORGANIZATION_INVITATION": {
+        // The invitation may have been revoked, accepted, or replaced by a resend while this waited in the queue.
+        // Only the invitation's current link is ever sent.
+        const token = String(payload.token ?? "");
+        const invitation = await this.prisma.organizationInvitation.findUnique({
+          where: { id: String(payload.invitationId ?? "") },
+          select: { status: true, expiresAt: true, tokenHash: true }
+        });
+        if (
+          !invitation ||
+          invitation.status !== "PENDING" ||
+          invitation.expiresAt <= new Date() ||
+          invitation.tokenHash !== createHash("sha256").update(token).digest("hex")
+        )
+          return "skip";
+        return templates.organizationInvitation({
+          organizationName: String(payload.organizationName ?? "an organization"),
+          inviterName: String(payload.inviterName ?? "Someone"),
+          roleLabel: MEMBER_ROLE_INFO[payload.role as MemberRole]?.label ?? "Member",
+          url: this.links.withToken("/organizations/invitations/accept", token),
+          days: ORGANIZATION_LIMITS.invitationTtlDays
+        });
+      }
       case "NOTIFICATION": {
         const n = await this.prisma.notification.findUnique({
           where: { id: payload.notificationId as string }
@@ -397,5 +426,8 @@ export function wantsEmail(
 ): boolean {
   if (type === "COMMENT" || type === "STAFF_UPDATE") return user.notifyEmailComments;
   if (type === "MODERATION") return user.notifyEmailModeration;
+  // Account-management news about an organization (applications, invitations, membership, verification) is not
+  // optional: the people it concerns need to know. Everything else about reports follows the report-update switch.
+  if (type === "ORGANIZATION") return true;
   return user.notifyEmailReportUpdates;
 }

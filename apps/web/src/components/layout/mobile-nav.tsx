@@ -54,6 +54,9 @@ export function MobileNav({ links, user }: Props) {
                 <Link href="/dashboard" className={big}>
                   My reports
                 </Link>
+                <Link href="/organizations/mine" className={big}>
+                  My organizations
+                </Link>
                 <Link href="/notifications" className={big}>
                   Notifications{user.unread ? ` (${user.unread})` : ""}
                 </Link>
