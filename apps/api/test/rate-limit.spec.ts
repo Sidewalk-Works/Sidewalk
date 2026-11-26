@@ -233,18 +233,30 @@ describe("Shared rate limiting", () => {
       expect((await rows()).length).toBeGreaterThan(0); // counting in the database again
     });
 
-    /** A store that answers correctly, but only after `ms`. */
+    /**
+     * A store that answers correctly, but only after `ms`. A caller with a tighter timeout gives up first, yet its query
+     * is still sent when the delay ends. `drain` waits for all of them, so that none runs during a later test.
+     */
     const slowStore = (t: TestApp, ms: number) => {
       const pool = poolOf(t);
       const real = pool.query.bind(pool) as (...a: unknown[]) => Promise<unknown>;
-      return jest
-        .spyOn(pool, "query")
-        .mockImplementation(((...args: unknown[]) => sleep(ms).then(() => real(...args))) as never);
+      const delayed: Array<Promise<unknown>> = [];
+      const spy = jest.spyOn(pool, "query").mockImplementation(((...args: unknown[]) => {
+        const query = sleep(ms).then(() => real(...args));
+        delayed.push(query);
+        return query;
+      }) as never);
+      return {
+        async drain() {
+          spy.mockRestore();
+          await Promise.allSettled(delayed);
+        }
+      };
     };
 
     it("waits for a slow store when RATE_LIMIT_STORE_TIMEOUT_MS allows it, and counts in the database", async () => {
       const t = await start({ RATE_LIMIT_STORE_TIMEOUT_MS: "2000" });
-      const spy = slowStore(t, 300);
+      const store = slowStore(t, 300);
       try {
         const res = await ready(t, "198.51.100.60");
         expect(res.status).toBe(200);
@@ -254,13 +266,13 @@ describe("Shared rate limiting", () => {
         });
         expect((await rows()).length).toBe(1);
       } finally {
-        spy.mockRestore();
+        await store.drain();
       }
     });
 
     it("abandons the same slow store under a tight timeout and counts in this process instead", async () => {
       const t = await start({ RATE_LIMIT_STORE_TIMEOUT_MS: "100" });
-      const spy = slowStore(t, 600);
+      const store = slowStore(t, 600);
       try {
         const began = Date.now();
         const res = await ready(t, "198.51.100.61");
@@ -273,7 +285,7 @@ describe("Shared rate limiting", () => {
         );
         expect(statuses(burst)[429]).toBeGreaterThanOrEqual(10);
       } finally {
-        spy.mockRestore();
+        await store.drain();
       }
     });
 
@@ -299,16 +311,9 @@ describe("Shared rate limiting", () => {
           sleep(1500).then(() => false)
         ]);
         expect(answered).toBe(true);
-        const waiting = async () => {
-          const rows = await first.prisma.$queryRaw<Array<{ n: bigint }>>`
-            SELECT count(*) AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND query ILIKE '%RateLimitBucket%'`;
-          return Number(rows[0]?.n ?? 0);
-        };
-        // A request still queued for a connection can start its statement just as it gives up, so the last statements
-        // may briefly outlive the responses. The server must still end them itself, long before the lock is released.
-        const deadline = Date.now() + 2000;
-        while ((await waiting()) > 0 && Date.now() < deadline) await sleep(50);
-        expect(await waiting()).toBe(0);
+        const waiting = await first.prisma.$queryRaw<Array<{ n: bigint }>>`
+          SELECT count(*) AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND query ILIKE '%RateLimitBucket%'`;
+        expect(Number(waiting[0]?.n ?? 0)).toBe(0);
       } finally {
         clearTimeout(safety);
         await locker.query("ROLLBACK").catch(() => undefined);
