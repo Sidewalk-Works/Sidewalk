@@ -299,9 +299,16 @@ describe("Shared rate limiting", () => {
           sleep(1500).then(() => false)
         ]);
         expect(answered).toBe(true);
-        const waiting = await first.prisma.$queryRaw<Array<{ n: bigint }>>`
-          SELECT count(*) AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND query ILIKE '%RateLimitBucket%'`;
-        expect(Number(waiting[0]?.n ?? 0)).toBe(0);
+        const waiting = async () => {
+          const rows = await first.prisma.$queryRaw<Array<{ n: bigint }>>`
+            SELECT count(*) AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND query ILIKE '%RateLimitBucket%'`;
+          return Number(rows[0]?.n ?? 0);
+        };
+        // A request still queued for a connection can start its statement just as it gives up, so the last statements
+        // may briefly outlive the responses. The server must still end them itself, long before the lock is released.
+        const deadline = Date.now() + 2000;
+        while ((await waiting()) > 0 && Date.now() < deadline) await sleep(50);
+        expect(await waiting()).toBe(0);
       } finally {
         clearTimeout(safety);
         await locker.query("ROLLBACK").catch(() => undefined);
