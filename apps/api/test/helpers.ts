@@ -65,6 +65,9 @@ export class FakeEmailProvider implements EmailProvider {
 /** Runs the delivery worker until nothing is due, the way the real worker would over a few polls. */
 export async function deliverEmail(app: INestApplication): Promise<number> {
   const processor = app.get(OutboxProcessor);
+  // A new message is stamped by this process but judged due by the database's clock, and a database in a container VM
+  // can trail by a few milliseconds. Give it that long, or a message queued a moment ago may be passed over.
+  await new Promise((resolve) => setTimeout(resolve, 25));
   let total = 0;
   for (let i = 0; i < 20; i++) {
     const n = await processor.runOnce();
