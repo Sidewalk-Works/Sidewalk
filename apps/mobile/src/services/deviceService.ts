@@ -1,1 +1,0 @@
-export function registerDeviceToken(token: string) {\n  return Promise.resolve(token);\n}\n

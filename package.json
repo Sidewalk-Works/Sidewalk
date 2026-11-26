@@ -1,40 +1,41 @@
 {
   "name": "sidewalk",
-  "version": "0.1.0",
   "private": true,
-  "description": "Open source hackathon starter for Sidewalk.",
-  "packageManager": "pnpm@10.0.0",
+  "version": "0.1.0",
+  "description": "Civic accountability platform: report, track and verify community issues.",
+  "packageManager": "pnpm@11.15.1",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.19"
   },
   "scripts": {
-    "dev:api": "pnpm --filter @sidewalk/api dev",
-    "dev:web": "pnpm --filter @sidewalk/web dev",
-    "dev:mobile": "pnpm --filter @sidewalk/mobile dev",
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
-    "check": "turbo run lint typecheck build test && pnpm run check:api",
-    "lint:api": "pnpm --filter @sidewalk/api lint",
-    "typecheck:api": "pnpm --filter @sidewalk/api typecheck",
-    "test:api": "pnpm --filter @sidewalk/api test",
-    "check:api": "pnpm --filter @sidewalk/api check"
+    "setup": "node scripts/init-env.mjs && pnpm install && pnpm infra:up && pnpm --filter @sidewalk/contracts build && pnpm db:migrate && pnpm db:seed",
+    "infra:up": "docker compose up -d --wait",
+    "infra:down": "docker compose down",
+    "dev": "pnpm --filter @sidewalk/contracts build && concurrently -n api,web -c blue,magenta \"pnpm --filter @sidewalk/api dev\" \"pnpm --filter @sidewalk/web dev\"",
+    "build": "pnpm --filter @sidewalk/contracts build && pnpm --filter @sidewalk/api build && pnpm --filter @sidewalk/web build",
+    "start": "concurrently -n api,web \"pnpm --filter @sidewalk/api start\" \"pnpm --filter @sidewalk/web start\"",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm --filter @sidewalk/contracts build && pnpm -r --if-present typecheck",
+    "test": "pnpm --filter @sidewalk/contracts build && pnpm --filter @sidewalk/contracts test && pnpm --filter @sidewalk/api test",
+    "test:e2e": "pnpm --filter @sidewalk/web test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @sidewalk/api db:generate",
+    "db:migrate": "pnpm --filter @sidewalk/api db:migrate",
+    "db:migrate:dev": "pnpm --filter @sidewalk/api db:migrate:dev",
+    "db:seed": "pnpm --filter @sidewalk/api db:seed",
+    "db:reset": "pnpm --filter @sidewalk/api db:reset",
+    "env:init": "node scripts/init-env.mjs",
+    "outbox:keys": "pnpm --filter @sidewalk/api outbox:keys",
+    "account:upgrade": "pnpm --filter @sidewalk/api account:upgrade",
+    "ops:check": "pnpm --filter @sidewalk/api ops:check",
+    "ops:drill": "pnpm --filter @sidewalk/api build && pnpm --filter @sidewalk/api ops:drill",
+    "ops:prodlike": "pnpm --filter @sidewalk/api build && pnpm --filter @sidewalk/api ops:prodlike",
+    "ops:restore-check": "scripts/ops/backup-restore-check.sh",
+    "worker": "pnpm --filter @sidewalk/api build && pnpm --filter @sidewalk/api worker"
   },
   "devDependencies": {
-    "@eslint/js": "^9.27.0",
-    "@types/node": "^22.15.30",
-    "eslint": "^9.27.0",
-    "globals": "^15.15.0",
-    "prettier": "^3.4.2",
-    "turbo": "^2.5.3",
-    "typescript": "^5.6.3",
-    "typescript-eslint": "^8.32.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ]
+    "concurrently": "^9.2.1",
+    "prettier": "^3.6.2"
   }
 }

@@ -1,1 +1,0 @@
-export const themeColors = { light: {}, dark: {} };\n

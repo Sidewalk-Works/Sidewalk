@@ -1,1 +1,0 @@
-export const NETWORK_CONFIG = { host: '10.0.2.2' };\n

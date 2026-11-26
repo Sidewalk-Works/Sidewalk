@@ -1,0 +1,872 @@
+// Sidewalk data model. See docs/architecture.md for the reasoning behind each entity.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CITIZEN
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum ReportStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  REOPENED
+  REJECTED
+  DUPLICATE
+}
+
+enum ModerationState {
+  VISIBLE
+  HIDDEN
+  REMOVED
+}
+
+enum ResolutionVerification {
+  NONE
+  CLAIMED
+  VERIFIED
+}
+
+enum StatusBasis {
+  REPORTER_CLAIM
+  STAFF_REVIEW
+  /// A representative of a verified organization recorded the change. It is the organization's statement.
+  ORGANIZATION_STATEMENT
+}
+
+enum EvidenceKind {
+  REPORT
+  RESOLUTION
+}
+
+enum CommentKind {
+  CITIZEN
+  STAFF
+  // Reserved and unused: official statements live in OfficialResponse, which is append-only and attributable.
+  OFFICIAL
+}
+
+enum ContentTarget {
+  REPORT
+  COMMENT
+  OFFICIAL_RESPONSE
+}
+
+enum FlagReason {
+  SPAM
+  ABUSIVE
+  PRIVACY
+  MISLEADING
+  OFF_TOPIC
+  OTHER
+}
+
+enum FlagStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
+enum ModerationActionType {
+  HIDE
+  REMOVE
+  RESTORE
+  DISMISS
+}
+
+enum ModerationPolicy {
+  SPAM
+  ABUSE
+  PRIVACY_EXPOSURE
+  MISLEADING
+  OFF_TOPIC
+  ILLEGAL
+  OTHER
+}
+
+enum AuthTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum OutboxKind {
+  EMAIL_VERIFICATION
+  ACCOUNT_EXISTS
+  PASSWORD_RESET
+  PASSWORD_CHANGED
+  NOTIFICATION
+  /// Carries a one-time link. Security-class: sent regardless of notification preferences.
+  ORGANIZATION_INVITATION
+}
+
+enum OutboxStatus {
+  PENDING
+  SENDING
+  /// Delivered: the mail provider accepted the message. Never set merely because a send was queued.
+  SENT
+  /// A send attempt failed and another is scheduled.
+  FAILED
+  /// Gave up (permanent error or attempts exhausted). Visible to administrators, who can retry.
+  DEAD
+  /// No longer appropriate to send (account deleted, preference turned off, address unverified).
+  SKIPPED
+}
+
+enum NotificationType {
+  STATUS_CHANGED
+  REOPENED
+  RESOLUTION_VERIFIED
+  COMMENT
+  STAFF_UPDATE
+  MODERATION
+  REPORT_UPDATE
+  OFFICIAL_RESPONSE
+  RESOLUTION_CLAIMED
+  /// Account-management news about an organization (applications, invitations, membership, verification).
+  ORGANIZATION
+}
+
+enum ActivityType {
+  SUBMITTED
+  STATUS_CHANGED
+  EVIDENCE_ADDED
+  EDITED
+  COMMENT_ADDED
+  RESOLUTION_VERIFIED
+  OFFICIAL_RESPONSE
+  ORGANIZATION_LINKED
+}
+
+enum OrganizationType {
+  AGENCY
+  DEPARTMENT
+  PUBLIC_SERVICE_BODY
+  OTHER_PUBLIC_INSTITUTION
+}
+
+/// Institutions are not a single hierarchy: an agency can serve several areas or levels (MULTI_LEVEL).
+enum AdministrativeLevel {
+  LOCAL
+  STATE
+  FEDERAL
+  MULTI_LEVEL
+}
+
+/// Whether the organization may act. Separate from identity verification: a verified organization can be suspended.
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+/// Whether Sidewalk staff have decided the organization is who it says it is. Never inferred.
+enum OrgVerificationStatus {
+  UNVERIFIED
+  VERIFIED
+  REVOKED
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  INFO_REQUESTED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum MemberRole {
+  /// Manages members and may respond.
+  ADMIN
+  /// May respond to reports on the organization's behalf.
+  REPRESENTATIVE
+  /// Belongs to the organization; may not respond or manage anyone.
+  MEMBER
+}
+
+enum MemberStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
+enum ResponseType {
+  ACKNOWLEDGEMENT
+  UPDATE
+  DELAY
+  OUT_OF_REMIT
+  RESOLUTION_CLAIM
+  CORRECTION
+  WITHDRAWAL
+}
+
+enum RelationBasis {
+  REPORTER_SUGGESTED
+  STAFF_ASSIGNED
+  ORGANIZATION_ADDED
+}
+
+enum RelationStatus {
+  PROPOSED
+  ACTIVE
+  /// The organization says this is not its responsibility. A statement, not a finding.
+  OUTSIDE_REMIT
+  REMOVED
+}
+
+enum VerificationAction {
+  REVIEW_STARTED
+  INFO_REQUESTED
+  APPROVED
+  REJECTED
+  SUSPENDED
+  REINSTATED
+  REVOKED
+}
+
+model User {
+  id                       String     @id @default(uuid()) @db.Uuid
+  /// Always stored lower-cased and trimmed.
+  email                    String     @unique
+  passwordHash             String
+  displayName              String
+  role                     Role       @default(CITIZEN)
+  status                   UserStatus @default(ACTIVE)
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+  lastLoginAt              DateTime?
+  /// Set when the owner proved control of the address (verification link, or a password reset link).
+  emailVerifiedAt          DateTime?
+  /// Optional email preferences. In-app notifications are always on; security email is not optional.
+  notifyEmailReportUpdates Boolean    @default(true)
+  notifyEmailComments      Boolean    @default(true)
+  notifyEmailModeration    Boolean    @default(true)
+  /// Set when the account is anonymised. Personal data is wiped; authored content stays, unattributed.
+  deletedAt                DateTime?
+
+  sessions         Session[]
+  reports          Report[]
+  comments         Comment[]
+  evidence         ReportEvidence[]
+  flags            ContentFlag[]         @relation("FlagReporter")
+  handledFlags     ContentFlag[]         @relation("FlagHandler")
+  moderationAction ModerationAction[]
+  statusChanges    ReportStatusHistory[]
+  activity         ActivityEvent[]
+  internalNotes    InternalNote[]
+  auditLogs        AuditLog[]
+  authTokens       AuthToken[]
+  notifications    Notification[]
+  follows          ReportFollow[]
+  emailOutbox      EmailOutbox[]
+
+  organizationsCreated     Organization[]            @relation("OrganizationCreator")
+  organizationMemberships  OrganizationMember[]      @relation("MemberUser")
+  applications             OrganizationApplication[] @relation("ApplicationApplicant")
+  applicationsReviewed     OrganizationApplication[] @relation("ApplicationReviewer")
+  invitationsSent          OrganizationInvitation[]  @relation("InvitationSender")
+  invitationsAccepted      OrganizationInvitation[]  @relation("InvitationAcceptor")
+  verificationDecisions    VerificationDecision[]
+  organizationDocuments    OrganizationDocument[]
+  officialResponses        OfficialResponse[]        @relation("ResponseAuthor")
+  reportOrganizationsAdded ReportOrganization[]
+
+  @@index([role])
+}
+
+model Session {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  /// SHA-256 of the opaque refresh token. The token itself is never stored.
+  tokenHash    String    @unique
+  /// All rotations of one login share a family so token reuse can revoke the whole chain.
+  familyId     String    @db.Uuid
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime  @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?   @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  name        String   @unique
+  description String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reports Report[]
+}
+
+model Report {
+  id               String                 @id @default(uuid()) @db.Uuid
+  /// Public, human-readable identifier, for example SW-7K4M2Q.
+  reference        String                 @unique
+  title            String
+  description      String
+  categoryId       String                 @db.Uuid
+  status           ReportStatus           @default(SUBMITTED)
+  moderationState  ModerationState        @default(VISIBLE)
+  /// WGS84 decimal degrees. Plain doubles with a composite index; see docs/architecture.md for the PostGIS upgrade path.
+  latitude         Float
+  longitude        Float
+  addressText      String?
+  areaName         String?
+  reporterId       String                 @db.Uuid
+  showReporterName Boolean                @default(false)
+  /// Client-generated idempotency key so a double-click or retry cannot create two reports.
+  clientRequestId  String?
+  verification     ResolutionVerification @default(NONE)
+  resolutionNote   String?
+  resolvedAt       DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  lastActivityAt   DateTime               @default(now())
+
+  category          Category              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  reporter          User                  @relation(fields: [reporterId], references: [id], onDelete: Restrict)
+  evidence          ReportEvidence[]
+  statusHistory     ReportStatusHistory[]
+  comments          Comment[]
+  activity          ActivityEvent[]
+  flags             ContentFlag[]
+  moderation        ModerationAction[]
+  internalNotes     InternalNote[]
+  followers         ReportFollow[]
+  notifications     Notification[]
+  organizations     ReportOrganization[]
+  officialResponses OfficialResponse[]
+
+  @@unique([reporterId, clientRequestId])
+  @@index([moderationState, status, lastActivityAt(sort: Desc)])
+  @@index([moderationState, createdAt(sort: Desc)])
+  @@index([categoryId])
+  @@index([reporterId, lastActivityAt(sort: Desc)])
+  @@index([latitude, longitude])
+}
+
+model ReportEvidence {
+  id             String       @id @default(uuid()) @db.Uuid
+  reportId       String       @db.Uuid
+  uploaderId     String       @db.Uuid
+  kind           EvidenceKind @default(REPORT)
+  storageKey     String       @unique
+  thumbKey       String       @unique
+  mimeType       String
+  sizeBytes      Int
+  width          Int
+  height         Int
+  /// SHA-256 of the re-encoded image; stops the same photo being attached twice.
+  sha256         String
+  caption        String?
+  /// Set when a representative uploaded it on behalf of an organization (resolution evidence only).
+  organizationId String?      @db.Uuid
+  /// Set when the evidence was attached to an official response (a resolution claim). Linked evidence is locked.
+  responseId     String?      @db.Uuid
+  createdAt      DateTime     @default(now())
+
+  report       Report            @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  uploader     User              @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  organization Organization?     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  response     OfficialResponse? @relation(fields: [responseId], references: [id], onDelete: Restrict)
+
+  @@unique([reportId, sha256])
+  @@index([organizationId])
+  @@index([responseId])
+  @@index([reportId, kind, createdAt])
+}
+
+model ReportStatusHistory {
+  id             String        @id @default(uuid()) @db.Uuid
+  reportId       String        @db.Uuid
+  fromStatus     ReportStatus?
+  toStatus       ReportStatus
+  actorId        String        @db.Uuid
+  /// Role at the moment of the change, so later role changes never rewrite history.
+  actorRole      Role
+  basis          StatusBasis
+  publicNote     String?
+  /// Set when the change was made on behalf of an organization, with the response that carried it.
+  organizationId String?       @db.Uuid
+  responseId     String?       @db.Uuid
+  createdAt      DateTime      @default(now())
+
+  report       Report        @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  actor        User          @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+}
+
+model Comment {
+  id                String          @id @default(uuid()) @db.Uuid
+  reportId          String          @db.Uuid
+  authorId          String          @db.Uuid
+  kind              CommentKind     @default(CITIZEN)
+  body              String
+  moderationState   ModerationState @default(VISIBLE)
+  deletedByAuthorAt DateTime?
+  editedAt          DateTime?
+  createdAt         DateTime        @default(now())
+
+  report     Report             @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  author     User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  flags      ContentFlag[]
+  moderation ModerationAction[]
+
+  @@index([reportId, createdAt])
+  @@index([authorId])
+}
+
+model ActivityEvent {
+  id        String       @id @default(uuid()) @db.Uuid
+  reportId  String       @db.Uuid
+  type      ActivityType
+  actorId   String?      @db.Uuid
+  /// Only public events feed the public timeline. Payloads must never hold private data when isPublic.
+  isPublic  Boolean      @default(true)
+  payload   Json         @default("{}")
+  createdAt DateTime     @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  actor  User?  @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([reportId, createdAt])
+  @@index([createdAt])
+}
+
+model ContentFlag {
+  id          String        @id @default(uuid()) @db.Uuid
+  target      ContentTarget
+  reportId    String        @db.Uuid
+  commentId   String?       @db.Uuid
+  responseId  String?       @db.Uuid
+  /// "report:<id>", "comment:<id>" or "response:<id>". Lets a unique index stop one person flagging the same item twice.
+  targetKey   String
+  reporterId  String        @db.Uuid
+  reason      FlagReason
+  details     String?
+  status      FlagStatus    @default(OPEN)
+  handledById String?       @db.Uuid
+  handledAt   DateTime?
+  createdAt   DateTime      @default(now())
+
+  report    Report            @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  comment   Comment?          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  response  OfficialResponse? @relation(fields: [responseId], references: [id], onDelete: Restrict)
+  reporter  User              @relation("FlagReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  handledBy User?             @relation("FlagHandler", fields: [handledById], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, targetKey])
+  @@index([status, createdAt])
+  @@index([reportId])
+}
+
+model ModerationAction {
+  id            String               @id @default(uuid()) @db.Uuid
+  moderatorId   String               @db.Uuid
+  target        ContentTarget
+  reportId      String               @db.Uuid
+  commentId     String?              @db.Uuid
+  responseId    String?              @db.Uuid
+  action        ModerationActionType
+  /// Null for DISMISS: dismissing a flag is not a policy finding.
+  policy        ModerationPolicy?
+  reason        String
+  previousState ModerationState
+  newState      ModerationState
+  createdAt     DateTime             @default(now())
+
+  moderator User              @relation(fields: [moderatorId], references: [id], onDelete: Restrict)
+  report    Report            @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  comment   Comment?          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  response  OfficialResponse? @relation(fields: [responseId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@index([createdAt])
+}
+
+/// Staff-only notes. Kept in their own table so no public query can ever select them by accident.
+model InternalNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  reportId  String   @db.Uuid
+  authorId  String   @db.Uuid
+  body      String
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+}
+
+/// Append-only record of privileged actions. Never holds secrets, tokens or message bodies.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+}
+
+/// Single-use email verification and password-reset tokens. Only the SHA-256 of the token is stored.
+model AuthToken {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  purpose   AuthTokenPurpose
+  tokenHash String           @unique
+  /// The address the token was sent to; redeeming it for a different address fails.
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  /// Set when a newer token replaces this one or the account's credentials change.
+  revokedAt DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+/// People who asked to hear about a report. The reporter is always notified and needs no row.
+model ReportFollow {
+  userId    String   @db.Uuid
+  reportId  String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@id([userId, reportId])
+  @@index([reportId])
+}
+
+/// In-app notifications. Written in the same transaction as the event they describe.
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  reportId  String?          @db.Uuid
+  /// Safe, public-only text. Never moderation notes or personal data.
+  title     String
+  body      String
+  /// Relative web path the notification points at.
+  url       String
+  /// Deterministic per event (for example "status:<historyId>") so a retried transaction cannot duplicate it.
+  dedupeKey String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report Report? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+/// Shared rate-limit counters (one fixed window per key). The key is an HMAC of the route and the person or
+/// address, so no address is stored. The table is UNLOGGED (see the migration): counters are disposable and are
+/// allowed to reset after a database crash, in exchange for much cheaper writes. Expired rows are purged every
+/// minute by whichever API instance holds the cleanup advisory lock.
+model RateLimitBucket {
+  key       String   @id
+  hits      Int
+  expiresAt DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
+}
+
+/// Transactional outbox for email. Rows are inserted inside the transaction that caused them, so a message
+/// exists if and only if its event committed. A worker delivers them; nothing is sent from a request thread.
+model EmailOutbox {
+  id                String       @id @default(uuid()) @db.Uuid
+  kind              OutboxKind
+  userId            String?      @db.Uuid
+  toEmail           String
+  /// AES-256-GCM encrypted JSON (it can hold a one-time link). Cleared as soon as the message is sent.
+  payloadCiphertext String?
+  /// Makes enqueueing idempotent.
+  dedupeKey         String?      @unique
+  status            OutboxStatus @default(PENDING)
+  attempts          Int          @default(0)
+  nextAttemptAt     DateTime     @default(now())
+  lockedAt          DateTime?
+  /// Sanitised failure code and reason. Never an address, a link or a token.
+  lastError         String?
+  providerMessageId String?
+  sentAt            DateTime?
+  createdAt         DateTime     @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, nextAttemptAt])
+  @@index([userId, kind, createdAt])
+}
+
+// ───────────────────────────── organizations ─────────────────────────────
+
+/// A public institution or public-service body. Profiles are not trusted by default: only a staff decision makes one
+/// VERIFIED, and an email address or domain is never accepted as proof of identity.
+model Organization {
+  id                    String                @id @default(uuid()) @db.Uuid
+  slug                  String                @unique
+  name                  String
+  /// Lower-cased, punctuation-free name. Used to spot duplicates and impersonation; never as proof of anything.
+  normalizedName        String
+  aliases               String[]              @default([])
+  type                  OrganizationType
+  level                 AdministrativeLevel
+  /// Plain-language jurisdiction or area served, for example "Lagos State". Institutions do not share one hierarchy.
+  jurisdiction          String
+  serviceAreas          String[]              @default([])
+  /// Administrative parent where there is one. Optional: many bodies serve areas their parent does not.
+  parentId              String?               @db.Uuid
+  description           String?
+  website               String?
+  publicEmail           String?
+  publicPhone           String?
+  status                OrganizationStatus    @default(ACTIVE)
+  suspendedAt           DateTime?
+  verificationStatus    OrgVerificationStatus @default(UNVERIFIED)
+  verifiedAt            DateTime?
+  verificationRevokedAt DateTime?
+  /// Listed and viewable by the public. Set when verified, or deliberately by staff for a staff-created profile.
+  publicProfile         Boolean               @default(false)
+  createdById           String                @db.Uuid
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  parent        Organization?             @relation("OrganizationParent", fields: [parentId], references: [id], onDelete: SetNull)
+  children      Organization[]            @relation("OrganizationParent")
+  createdBy     User                      @relation("OrganizationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  applications  OrganizationApplication[]
+  members       OrganizationMember[]
+  invitations   OrganizationInvitation[]
+  decisions     VerificationDecision[]
+  responses     OfficialResponse[]
+  reports       ReportOrganization[]
+  evidence      ReportEvidence[]
+  statusChanges ReportStatusHistory[]
+
+  @@index([publicProfile, verificationStatus, name])
+  @@index([type, level])
+  @@index([normalizedName])
+}
+
+/// One person's request to have an organization verified. The record of what was claimed and decided.
+model OrganizationApplication {
+  id                 String            @id @default(uuid()) @db.Uuid
+  organizationId     String            @db.Uuid
+  applicantId        String            @db.Uuid
+  status             ApplicationStatus @default(DRAFT)
+  /// The applicant's position, and why they may speak for the institution. Staff weigh these; nothing is assumed.
+  roleTitle          String?
+  authorityStatement String?
+  /// Type-appropriate references: [{ kind, label, value }]. Institutions differ, so nothing here is mandatory beyond one.
+  officialReferences Json              @default("[]")
+  /// The latest question staff put to the applicant. Visible to the applicant.
+  infoRequest        String?
+  /// Why it was decided as it was. Visible to the applicant.
+  decisionReason     String?
+  /// Private to staff. Never shown to the applicant or the public.
+  reviewerNotes      String?
+  reviewerId         String?           @db.Uuid
+  decidedAt          DateTime?
+  submittedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  applicant    User                   @relation("ApplicationApplicant", fields: [applicantId], references: [id], onDelete: Restrict)
+  reviewer     User?                  @relation("ApplicationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  documents    OrganizationDocument[]
+
+  @@index([status, submittedAt])
+  @@index([applicantId])
+  @@index([organizationId])
+}
+
+/// A private supporting document (a photograph or scan). Same processing and storage as report evidence, but never public:
+/// only the applicant and Sidewalk staff can read it.
+model OrganizationDocument {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @db.Uuid
+  uploaderId    String   @db.Uuid
+  storageKey    String   @unique
+  mimeType      String
+  sizeBytes     Int
+  width         Int
+  height        Int
+  sha256        String
+  caption       String?
+  createdAt     DateTime @default(now())
+
+  application OrganizationApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  uploader    User                    @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+
+  @@unique([applicationId, sha256])
+  @@index([applicationId])
+}
+
+/// Belonging to an organization. Rows are kept when someone is removed, so the history is never rewritten.
+model OrganizationMember {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  userId         String       @db.Uuid
+  role           MemberRole
+  status         MemberStatus @default(ACTIVE)
+  /// Who put them here (an organization administrator, a Sidewalk administrator, or the approval decision).
+  addedById      String?      @db.Uuid
+  createdAt      DateTime     @default(now())
+  revokedAt      DateTime?
+  revokedById    String?      @db.Uuid
+  revokeReason   String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation("MemberUser", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([organizationId, status])
+}
+
+/// An offer to join an organization, bound to one address. Only the hash of the token is stored.
+model OrganizationInvitation {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  /// The invited address, normalised. Accepting requires being signed in as exactly this confirmed address.
+  email          String
+  role           MemberRole
+  tokenHash      String           @unique
+  status         InvitationStatus @default(PENDING)
+  invitedById    String           @db.Uuid
+  expiresAt      DateTime
+  sentCount      Int              @default(1)
+  lastSentAt     DateTime         @default(now())
+  acceptedById   String?          @db.Uuid
+  respondedAt    DateTime?
+  revokedById    String?          @db.Uuid
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  invitedBy    User         @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Restrict)
+  acceptedBy   User?        @relation("InvitationAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([email, status])
+}
+
+/// Every verification decision, append-only. Suspension, reinstatement and revocation are decisions too.
+model VerificationDecision {
+  id             String             @id @default(uuid()) @db.Uuid
+  organizationId String             @db.Uuid
+  applicationId  String?            @db.Uuid
+  action         VerificationAction
+  actorId        String             @db.Uuid
+  reason         String?
+  previous       Json?
+  next           Json?
+  createdAt      DateTime           @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor        User         @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+}
+
+/// An organization's public statement about a report. Append-only: a correction or withdrawal is a new row that points
+/// at the one it supersedes. Names are snapshotted so history stays truthful if an organization is renamed.
+model OfficialResponse {
+  id                    String          @id @default(uuid()) @db.Uuid
+  reportId              String          @db.Uuid
+  organizationId        String          @db.Uuid
+  authorId              String          @db.Uuid
+  type                  ResponseType
+  body                  String
+  supersedesId          String?         @db.Uuid
+  organizationName      String
+  organizationSlug      String
+  authorName            String
+  /// The organization's verification time when this was published: a statement is only "verified" if it was then.
+  verifiedAtPublication DateTime
+  statusHistoryId       String?         @db.Uuid
+  moderationState       ModerationState @default(VISIBLE)
+  createdAt             DateTime        @default(now())
+
+  report       Report             @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  author       User               @relation("ResponseAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  supersedes   OfficialResponse?  @relation("ResponseSupersedes", fields: [supersedesId], references: [id], onDelete: Restrict)
+  supersededBy OfficialResponse[] @relation("ResponseSupersedes")
+  evidence     ReportEvidence[]
+  flags        ContentFlag[]
+  moderation   ModerationAction[]
+
+  @@index([reportId, createdAt])
+  @@index([organizationId, createdAt])
+}
+
+/// That an organization is connected to a report, and on what basis. Being connected is not accepting responsibility.
+model ReportOrganization {
+  id             String         @id @default(uuid()) @db.Uuid
+  reportId       String         @db.Uuid
+  organizationId String         @db.Uuid
+  basis          RelationBasis
+  status         RelationStatus
+  addedById      String         @db.Uuid
+  /// Set by the first acknowledgement the organization publishes.
+  acknowledgedAt DateTime?
+  outsideRemitAt DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  report       Report       @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  addedBy      User         @relation(fields: [addedById], references: [id], onDelete: Restrict)
+
+  @@unique([reportId, organizationId])
+  @@index([organizationId, status])
+}

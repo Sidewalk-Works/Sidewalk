@@ -1,1 +1,0 @@
-export function LiveRegion() {\n  return <div aria-live='polite' />;\n}\n

@@ -1,0 +1,60 @@
+# Local development dependencies only. The apps themselves run on the host (pnpm dev).
+# The Postgres port is deliberately non-default (5442) so Sidewalk never collides with another
+# Postgres you already run on 5432. Override with POSTGRES_PORT / S3_PORT if needed.
+name: sidewalk
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sidewalk
+      POSTGRES_PASSWORD: sidewalk_dev_only
+      POSTGRES_DB: sidewalk
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5442}:5432"
+    volumes:
+      - sidewalk_pg:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sidewalk -d sidewalk"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # S3-compatible object storage for evidence (SeaweedFS; MinIO no longer publishes community images).
+  # Development only: it accepts any credentials. Production should use a real S3 provider.
+  s3:
+    image: chrislusf/seaweedfs:latest
+    restart: unless-stopped
+    command: server -s3 -s3.port=8333 -dir=/data -ip.bind=0.0.0.0
+    ports:
+      - "127.0.0.1:${S3_PORT:-8333}:8333"
+    volumes:
+      - sidewalk_s3:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/ || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  # Local email sink: every message the app sends is captured here and nothing leaves your machine.
+  # Read them at http://localhost:8025. SMTP is on 127.0.0.1:1025. Development and tests only.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: "500"
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  sidewalk_pg:
+  sidewalk_s3:

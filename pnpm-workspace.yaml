@@ -1,3 +1,28 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Build scripts we explicitly allow (native modules and Prisma engines). Everything else stays blocked.
+allowBuilds:
+  "@parcel/watcher": true
+  "@prisma/engines": true
+  "@scarf/scarf": false
+  argon2: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+
+# Releases younger than the pnpm default quiet period are allowed only where we verified them.
+minimumReleaseAgeExclude:
+  - "@aws-sdk/client-s3@3.1156.0"
+  - "@nestjs/common@11.2.8"
+  - "@nestjs/core@11.2.8"
+  - "@nestjs/platform-express@11.2.8"
+  - "@nestjs/testing@11.2.8"
+
+# Security overrides for transitive dependencies with published advisories.
+overrides:
+  js-yaml: ">=5.4.1"
+  multer: ">=2.5.0"
+  effect: "^3.22.4"

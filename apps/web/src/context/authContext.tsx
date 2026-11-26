@@ -1,1 +1,0 @@
-export function AuthProvider({ children }: { children: any }) {\n  return children;\n}\n

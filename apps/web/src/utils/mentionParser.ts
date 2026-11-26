@@ -1,1 +1,0 @@
-export function detectMentions(text: string, currentUserId: string) {\n  return [];\n}\n
