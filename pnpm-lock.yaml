@@ -2728,8 +2728,8 @@ packages:
     engines: {node: '>=16.17.0'}
     deprecated: This version has a bug in hash encoding and generates invalid hashes, please update to v0.45.2 or later
 
-  argparse@3.0.3:
-    resolution: {integrity: sha512-Sn98ftV3KfsO8xfLPHG6oT8y+b0yvbrLgZjgPDXsharNY15tTAjqIsIju4S32nl6/iEUNNE4v+yL2Zhm8ooP3w==}
+  argparse@3.0.4:
+    resolution: {integrity: sha512-fwWK3Zq22l4XJJjx5mcBHGikIk+hJqO+32dPm0Jur7+rtG5x1scOjSfdT9ZKeWHPpsya/l0HHK4tDImBkTrtvA==}
 
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
@@ -8356,7 +8356,7 @@ snapshots:
       node-addon-api: 8.9.2
       node-gyp-build: 4.8.4
 
-  argparse@3.0.3: {}
+  argparse@3.0.4: {}
 
   aria-hidden@1.2.6:
     dependencies:
@@ -10238,7 +10238,7 @@ snapshots:
 
   js-yaml@5.5.0:
     dependencies:
-      argparse: 3.0.3
+      argparse: 3.0.4
 
   jsesc@3.1.0: {}
 
